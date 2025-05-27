@@ -1,4 +1,5 @@
 // main.js
+import obtenerColorPorGenero from './obtenerColorPorGenero.js';
 
 window.addEventListener('DOMContentLoaded', () => {
 
@@ -291,26 +292,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     displayLibrary(libraryData);
   });
-  const generoColores = {};
 
-  const paletaTidal = [
-    "#b02121",
-    "#47237b",
-    "#6C5CE7",
-    "#00B894",
-    "#0984E3",
-    "#E17055",
-    "#74B9FF",
-    "#55EFC4" 
-  ];
-
-  function obtenerColorPorGenero(genero) {
-    if (!generoColores[genero]) {
-      const index = Object.keys(generoColores).length % paletaTidal.length;
-      generoColores[genero] = paletaTidal[index];
-    }
-    return generoColores[genero];
-  }
 
   function aplicarColoresPorGenero() {
 
