@@ -1,0 +1,16 @@
+{
+  "name": "musica-inventario",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "dev:full": "concurrently \"vite\" \"node ../../back/proxy-server/index.js\""
+  },
+  "type": "module",
+  "dependencies": {
+    
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "vite": "^5.0.0"
+  }
+}
