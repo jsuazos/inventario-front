@@ -1,5 +1,5 @@
-import obtenerGeneros from "./obtenerGeneros";
-import fillSelect from "./fillSelect";
+import obtenerGeneros from "./obtenerGeneros.js";
+import fillSelect from "./fillSelect.js";
 
 export default function populateFilters(libraryData) {
     const types = new Set(), genres = new Set(), artists = new Set(), years = new Set();

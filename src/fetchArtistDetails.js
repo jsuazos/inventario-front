@@ -1,5 +1,5 @@
-import fetchArtistMBID from "./fetchArtistMBID.JS";
-import fetchArtistBanner from "./fetchArtistBanner";
+import fetchArtistMBID from "./fetchArtistMBID.js";
+import fetchArtistBanner from "./fetchArtistBanner.js";
 
 let artistDetails = {};
 

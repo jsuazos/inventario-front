@@ -1,7 +1,7 @@
 // main.js
 import loadLibrary from './loadLibrary.js';
 import filterLibrary from './filterLibrary.js';
-import displayLibrary from "./displayLibrary";
+import displayLibrary from "./displayLibrary.js";
 
 window.addEventListener('DOMContentLoaded', () => {
 

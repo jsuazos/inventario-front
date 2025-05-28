@@ -1,4 +1,4 @@
-import displayLibrary from "./displayLibrary";
+import displayLibrary from "./displayLibrary.js";
 
 export default function filterLibrary(libraryData) {
     const searchText = searchInput.value.toLowerCase();

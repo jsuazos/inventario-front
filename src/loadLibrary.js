@@ -1,7 +1,7 @@
-import toggleLoader from "./toggleLoader";
-import populateFilters from "./populateFilters";
-import displayLibrary from "./displayLibrary";
-import aplicarColoresPorGenero from "./aplicarColoresPorGenero";
+import toggleLoader from "./toggleLoader.js";
+import populateFilters from "./populateFilters.js";
+import displayLibrary from "./displayLibrary.js";
+import aplicarColoresPorGenero from "./aplicarColoresPorGenero.js";
 
 export default async function loadLibrary(libraryData) {
     toggleLoader(true);

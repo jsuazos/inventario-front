@@ -1,6 +1,6 @@
-import toggleLoader from "./toggleLoader";
-import aplicarColoresPorGenero from "./aplicarColoresPorGenero";
-import fetchArtistDetails from "./fetchArtistDetails";
+import toggleLoader from "./toggleLoader.js";
+import aplicarColoresPorGenero from "./aplicarColoresPorGenero.js";
+import fetchArtistDetails from "./fetchArtistDetails.js";
 
 export default async function displayLibrary(items) {
     toggleLoader(true);
