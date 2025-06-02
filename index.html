@@ -9,11 +9,32 @@
     <link href="./src/style.css" rel="stylesheet">
   </head>
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark px-3">
-      <div class="ms-auto search-bar">
+  <nav class="navbar navbar-expand-lg navbar-dark px-3">
+    <div class="d-flex w-100 align-items-center gap-2">
+      <!-- Botón hamburguesa -->
+      <button id="toggleSidebar" class="btn btn-outline-light p-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
+        </svg>
+      </button>
+
+      <!-- Input de búsqueda -->
+      <div class="flex-grow-1">
         <input id="searchInput" class="form-control" type="search" placeholder="Buscar..." autocomplete="off">
       </div>
-    </nav>
+    </div>
+
+    <!-- Sidebar oculto -->
+    <aside id="sidebar" class="bg-dark text-white p-3 sidebar-custom">
+      <h5 class="mb-4">Explorar</h5>
+      <ul class="nav flex-column">
+        <li class="nav-item"><a class="nav-link text-white" href="#">🎵 Todos</a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="#">🎧 Electrónica</a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="#">🎸 Rock</a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="#">❤️ Favoritos</a></li>
+      </ul>
+    </aside>
+  </nav>
 
     <div class="container my-4">
       <div class="mb-3 text-end d-none d-lg-block">
@@ -48,8 +69,55 @@
       </div>
     </div>
 
+    <div id="alphabet-index" class="alphabet-index">
+      <a href="#letra-A">A</a>
+      <a href="#letra-B">B</a>
+      <a href="#letra-C">C</a>
+      <a href="#letra-D">D</a>
+      <a href="#letra-E">E</a>
+      <a href="#letra-F">F</a>
+      <a href="#letra-G">G</a>
+      <a href="#letra-H">H</a>
+      <a href="#letra-I">I</a>
+      <a href="#letra-J">J</a>
+      <a href="#letra-K">K</a>
+      <a href="#letra-L">L</a>
+      <a href="#letra-M">M</a>
+      <a href="#letra-N">N</a>
+      <a href="#letra-O">O</a>
+      <a href="#letra-P">P</a>
+      <a href="#letra-Q">Q</a>
+      <a href="#letra-R">R</a>
+      <a href="#letra-S">S</a>
+      <a href="#letra-T">T</a>
+      <a href="#letra-U">U</a>
+      <a href="#letra-V">V</a>
+      <a href="#letra-W">W</a>
+      <a href="#letra-X">X</a>
+      <a href="#letra-Y">Y</a>
+      <a href="#letra-Z">Z</a>
+    </div>
+
     <div id="app"></div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module" src="./src/main.js"></script>
   </body>
 </html>
+
+<script>
+  const toggleSidebar = document.getElementById("toggleSidebar");
+  const sidebar = document.getElementById("sidebar");
+
+  toggleSidebar.addEventListener("click", () => {
+    sidebar.classList.toggle("show");
+    document.body.classList.toggle("sidebar-open");
+  });
+
+  // Cerrar al hacer clic fuera
+  document.addEventListener("click", (e) => {
+    if (!sidebar.contains(e.target) && !toggleSidebar.contains(e.target)) {
+      sidebar.classList.remove("show");
+      document.body.classList.remove("sidebar-open");
+    }
+  });
+</script>

@@ -26,9 +26,19 @@ export default async function displayLibrary(items) {
                         item.imgFULL !== 'No matching results' && 
                         item.imgFULL !== '#ERROR!' ? 
                         item.imgFULL : item.img && item.img.length > 10 ? item.img : 'https://via.placeholder.com/80x80?text=🎵';
+
+        
+        const firstLetterPrev = grid.querySelector(`.letra-${item.Artista.toUpperCase().charAt(0)}`);
+        const firstLetter = item.Artista.toUpperCase().charAt(0);
+        let letterHeader = '';
+
+        const divLetra = document.createElement('div');
+        divLetra.id = `letra-${firstLetter}`;
+        divLetra.className = `letra-${firstLetter} text-uppercase text-left fw-bold fs-5 mt-3`;
+
         const card = document.createElement('div');
         const generoPrincipal = item.Genero.toLowerCase().split(',')[0];
-        card.className = 'col-xxl-2 col-xl-2 col-lg-2 col-md-4 col-sm-6 col-6 h-100';
+        card.className = `col-xxl-2 col-xl-2 col-lg-2 col-md-4 col-sm-6 col-6 h-100`;
         card.innerHTML = `
         <div class="card-with-border rounded-1">
             <div class ="card position-relative overflow-hidden border-0 rounded-1">
@@ -45,12 +55,16 @@ export default async function displayLibrary(items) {
                 <li><span class="badge badge-type mt-1">${item.Tipo}</span></li>
                 </ul>
             </div>
-            </div>
-            <div class="side-label px-1 py-3">${ item.Genero.toUpperCase().substring(0, 20) }</div>
-            <!--<img class="side-img" src="https://flagcdn.com/${item.OrigenISO.toLowerCase()}.svg" alt="Bandera de ${item.Origen}" title="${item.Origen}" width="25"/>-->
+          </div>
+          <div class="side-label px-1 py-3">${ item.Genero.toUpperCase().substring(0, 20) }</div>
+          <!--<img class="side-img" src="https://flagcdn.com/${item.OrigenISO.toLowerCase()}.svg" alt="Bandera de ${item.Origen}" title="${item.Origen}" width="25"/>-->
         </div>
         `;
         grid.appendChild(card);
+
+        if (!firstLetterPrev) {
+            card.before(divLetra);
+        }
     });
     aplicarColoresPorGenero();
     toggleLoader(false);
