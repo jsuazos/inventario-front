@@ -1,3 +1,4 @@
+
 # 🎵 Inventario Musical - jsuazos.github.io
 
 Este proyecto es un inventario visual de música, creado como una galería moderna de discos y artistas, inspirado en interfaces como Spotify y YouTube Music.  
@@ -24,3 +25,48 @@ https://jsuazos.github.io/inventario-front/
 
 ## 🗂️ Estructura de archivos
 
+```
+inventario-front/
+├── index.html         # Página principal
+├── style.css          # Estilos personalizados
+├── js/
+│   └── scripts.js     # Funciones para búsqueda y scroll por letra
+├── assets/
+│   └── img/           # Carátulas y gráficos
+└── README.md          # Descripción del proyecto (este archivo)
+```
+
+---
+
+## 🚀 Cómo usar / contribuir
+
+1. Clona el repositorio:
+   ```bash
+   git clone https://github.com/jsuazos/inventario-front.git
+   ```
+2. Abre `index.html` en tu navegador.
+3. Edita el contenido directamente en HTML, o extiende la lógica en JS.
+4. Haz tus mejoras, y si deseas contribuir, crea un Pull Request.
+
+---
+
+## 📌 Pendientes / mejoras futuras
+
+- [ ] Filtro dinámico por género desde el menú lateral.
+- [ ] Integración con APIs externas (Discogs, MusicBrainz, Fanart.tv).
+- [ ] Visualización por álbum, artista o formato.
+- [ ] Reproducción de previews (si se integra Spotify API).
+- [ ] Guardar favoritos localmente o vía backend.
+
+---
+
+## 🧑‍💻 Autor
+
+**Javier Suazo**  
+https://github.com/jsuazos
+
+---
+
+## 🖼️ Licencia
+
+Este proyecto es de uso personal y educativo. Puedes adaptarlo o inspirarte libremente, dando el crédito correspondiente.
