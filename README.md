@@ -57,6 +57,8 @@ inventario-front/
 - [ ] Visualización por álbum, artista o formato.
 - [ ] Reproducción de previews (si se integra Spotify API).
 - [ ] Guardar favoritos localmente o vía backend.
+- [ ] Crear login para realizar modificaciones.
+- [ ] Permitir agregar discos desde el sitio.
 
 ---
 
