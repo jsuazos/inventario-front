@@ -56,7 +56,7 @@ export default async function displayLibrary(items) {
                 </ul>
             </div>
           </div>
-          <div class="side-label px-1 py-3">${ item.Genero.toUpperCase().substring(0, 20) }</div>
+          <div class="side-label px-1 py-3">${ item.Genero.toUpperCase().substring(0, 15) }</div>
           <!--<img class="side-img" src="https://flagcdn.com/${item.OrigenISO.toLowerCase()}.svg" alt="Bandera de ${item.Origen}" title="${item.Origen}" width="25"/>-->
         </div>
         `;
