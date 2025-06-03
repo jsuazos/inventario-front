@@ -1,24 +1,28 @@
 <!-- index.html -->
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#000000">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Música</title>
-    <link rel="icon" type="image/x-icon" href="music_library_icon.ico">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    <link href="./src/style.css" rel="stylesheet">
-  </head>
-  <body>
+
+<head>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#000000">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Música</title>
+  <link rel="icon" type="image/x-icon" href="music_library_icon.ico">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+  <link href="./src/style.css" rel="stylesheet">
+</head>
+
+<body>
   <nav class="navbar navbar-expand-lg navbar-dark px-3 fixed-top">
     <div class="d-flex w-100 align-items-center gap-2">
       <!-- Botón hamburguesa -->
       <button id="toggleSidebar" class="btn btn-outline-light p-2">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
-          <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list"
+          viewBox="0 0 16 16">
+          <path fill-rule="evenodd"
+            d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
         </svg>
       </button>
 
@@ -36,95 +40,113 @@
         <li class="nav-item"><a class="nav-link text-white" href="#">🎧 Electrónica</a></li>
         <li class="nav-item"><a class="nav-link text-white" href="#">🎸 Rock</a></li>
         <li class="nav-item"><a class="nav-link text-white" href="#">❤️ Favoritos</a></li>
-        
+        <li class="nav-item mx-3">
+          <div class="top-estilos">
+            <h6>🔥 Top 10</h6>
+            <div id="top-estilos-list" class="top-lista mx-4"></div>
+          </div>
+        </li>
+
       </ul>
-      
+
+
       <!-- 🔁 Botón fijado al fondo del menú -->
       <div class="mt-auto pt-3 d-flex justify-content-end btn-clear-container">
         <button id="btn-clear-library" class="btn btn-outline-light">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
-            <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>
-            <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+            class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z" />
+            <path
+              d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
           </svg>
         </button>
       </div>
     </aside>
   </nav>
 
-    <div class="container my-4">
-      <div class="mb-3 text-end d-none d-lg-block">
-      </div>
-      <div class="row mb-3 d-none d-lg-flex">
-        <div class="col-md-3"><select id="filterType" class="form-select"><option value="">Tipo</option></select></div>
-        <div class="col-md-3"><select id="filterGenre" class="form-select"><option value="">Género</option></select></div>
-        <div class="col-md-3"><select id="filterArtist" class="form-select"><option value="">Artista</option></select></div>
-        <div class="col-md-2"><select id="filterYear" class="form-select"><option value="">Año</option></select></div>
-        <div class="col-md-1"><button id="resetButton" class="btn btn-secondary w-100">←</button></div>
-      </div>
-
-      <div id="resultCount" class="text-white mb-3"></div>
-      <div id="artistBanner"></div>
-      <div id="libraryGrid" class="row g-4 align-items-start mx-1"></div>
-      <div id="loader" class="text-center my-5" style="display: none;">
-        <div class="vinyl-loader"></div>
-        <p class="text-white mt-2">Cargando música...</p>
-      </div>  
+  <div class="container my-4">
+    <div class="mb-3 text-end d-none d-lg-block">
+    </div>
+    <div class="row mb-3 d-none d-lg-flex">
+      <div class="col-md-3"><select id="filterType" class="form-select">
+          <option value="">Tipo</option>
+        </select></div>
+      <div class="col-md-3"><select id="filterGenre" class="form-select">
+          <option value="">Género</option>
+        </select></div>
+      <div class="col-md-3"><select id="filterArtist" class="form-select">
+          <option value="">Artista</option>
+        </select></div>
+      <div class="col-md-2"><select id="filterYear" class="form-select">
+          <option value="">Año</option>
+        </select></div>
+      <div class="col-md-1"><button id="resetButton" class="btn btn-secondary w-100">←</button></div>
     </div>
 
-    <!-- Modal -->
-    <div class="modal fade" id="discoModal" tabindex="-1" aria-labelledby="discoModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="discoModalLabel">Título</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-          </div>
-          <div class="modal-body" id="discoModalBody"></div>
+    <div id="resultCount" class="text-white mb-3"></div>
+    <div id="artistBanner"></div>
+    <div id="libraryGrid" class="row g-4 align-items-start mx-1"></div>
+    <div id="loader" class="text-center my-5" style="display: none;">
+      <div class="vinyl-loader"></div>
+      <p class="text-white mt-2">Cargando música...</p>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="discoModal" tabindex="-1" aria-labelledby="discoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="discoModalLabel">Título</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
+        <div class="modal-body" id="discoModalBody"></div>
       </div>
     </div>
+  </div>
 
-    <div id="alphabet-index" class="alphabet-index">
-      <a href="#letra-A">A</a>
-      <a href="#letra-B">B</a>
-      <a href="#letra-C">C</a>
-      <a href="#letra-D">D</a>
-      <a href="#letra-E">E</a>
-      <a href="#letra-F">F</a>
-      <a href="#letra-G">G</a>
-      <a href="#letra-H">H</a>
-      <a href="#letra-I">I</a>
-      <a href="#letra-J">J</a>
-      <a href="#letra-K">K</a>
-      <a href="#letra-L">L</a>
-      <a href="#letra-M">M</a>
-      <a href="#letra-N">N</a>
-      <a href="#letra-O">O</a>
-      <a href="#letra-P">P</a>
-      <a href="#letra-Q">Q</a>
-      <a href="#letra-R">R</a>
-      <a href="#letra-S">S</a>
-      <a href="#letra-T">T</a>
-      <a href="#letra-U">U</a>
-      <a href="#letra-V">V</a>
-      <a href="#letra-W">W</a>
-      <a href="#letra-X">X</a>
-      <a href="#letra-Y">Y</a>
-      <a href="#letra-Z">Z</a>
-    </div>
+  <div id="alphabet-index" class="alphabet-index">
+    <a href="#letra-A">A</a>
+    <a href="#letra-B">B</a>
+    <a href="#letra-C">C</a>
+    <a href="#letra-D">D</a>
+    <a href="#letra-E">E</a>
+    <a href="#letra-F">F</a>
+    <a href="#letra-G">G</a>
+    <a href="#letra-H">H</a>
+    <a href="#letra-I">I</a>
+    <a href="#letra-J">J</a>
+    <a href="#letra-K">K</a>
+    <a href="#letra-L">L</a>
+    <a href="#letra-M">M</a>
+    <a href="#letra-N">N</a>
+    <a href="#letra-O">O</a>
+    <a href="#letra-P">P</a>
+    <a href="#letra-Q">Q</a>
+    <a href="#letra-R">R</a>
+    <a href="#letra-S">S</a>
+    <a href="#letra-T">T</a>
+    <a href="#letra-U">U</a>
+    <a href="#letra-V">V</a>
+    <a href="#letra-W">W</a>
+    <a href="#letra-X">X</a>
+    <a href="#letra-Y">Y</a>
+    <a href="#letra-Z">Z</a>
+  </div>
 
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then(() => console.log('Service Worker registrado'));
-      }
-    </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(() => console.log('Service Worker registrado'));
+    }
+  </script>
 
 
 
-    <div id="app"></div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script type="module" src="./src/main.js"></script>
-  </body>
+  <div id="app"></div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script type="module" src="./src/main.js"></script>
+</body>
+
 </html>

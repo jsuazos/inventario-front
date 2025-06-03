@@ -331,3 +331,18 @@ html {
 .btn-clear-container {
   padding-bottom: calc(1rem + env(safe-area-inset-bottom, 20px));
 }
+
+
+.top-estilos {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.top-estilos h6 {
+  margin-bottom: 0.3rem;
+  font-weight: bold;
+}
+
+.top-lista div {
+  line-height: 1.4;
+}
