@@ -5,8 +5,7 @@ import displayLibrary from "./displayLibrary.js";
 
 window.addEventListener('DOMContentLoaded', () => {
 
-  let recorder;
-  
+  let recorder;  
   let libraryData = navigator.onLine ? JSON.parse(localStorage.getItem('libraryData')) : [];
 
   searchInput.addEventListener('input', () => filterLibrary(libraryData));
