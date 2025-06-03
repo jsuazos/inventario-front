@@ -328,6 +328,6 @@ html {
   font-size: 1.2rem;
 }
 
-#sidebar .btn-clear-container {
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+.btn-clear-container {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 20px));
 }
