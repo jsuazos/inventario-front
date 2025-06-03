@@ -74,7 +74,7 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // Recorre cada enlace del índice alfabético
-  document.querySelectorAll('#alphabet-index a').forEach(link => {
+  document.querySelectorAll('#alphabet a').forEach(link => {
     const targetId = link.getAttribute('href').replace('#', ''); // ej: letra-A
     const target = document.getElementById(targetId);
 
@@ -112,5 +112,30 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/service-worker.js').then(reg => {
+    reg.onupdatefound = () => {
+      const newWorker = reg.installing;
+      newWorker.onstatechange = () => {
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          console.log("Nueva versión disponible. Recargando...");
+          window.location.reload(); // Forzar recarga si hay nueva versión
+        }
+      };
+    };
+  });
+}
+  // if (navigator.serviceWorker.controller) {
+  //   console.log("Service Worker activo y controlado por:", navigator.serviceWorker.controller);
+  // } else {
+  //   console.log("Service Worker no está activo.");
+  // }
+
+  // // Verificar si hay actualizaciones pendientes
+  // navigator.serviceWorker.ready.then(reg => {
+  //   if (reg.waiting) {
+  //     reg.waiting.postMessage({ action: 'skipWaiting' });
+  //   }
+  // });
 
 });

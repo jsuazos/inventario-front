@@ -37,9 +37,9 @@
       <h5 class="mb-4">Explorar</h5>
       <ul class="nav flex-column">
         <li class="nav-item"><a class="nav-link text-white" href="#">🎵 Todos</a></li>
-        <li class="nav-item"><a class="nav-link text-white" href="#">🎧 Electrónica</a></li>
+        <!-- <li class="nav-item"><a class="nav-link text-white" href="#">🎧 Electrónica</a></li>
         <li class="nav-item"><a class="nav-link text-white" href="#">🎸 Rock</a></li>
-        <li class="nav-item"><a class="nav-link text-white" href="#">❤️ Favoritos</a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="#">❤️ Favoritos</a></li> -->
         <li class="nav-item mx-3">
           <div class="top-estilos">
             <h6>🔥 Top 10</h6>
@@ -145,31 +145,6 @@
     <a href="#letra-Y" class="letra-tag">Y</a>
     <a href="#letra-Z" class="letra-tag">Z</a>
   </div>
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(registrations => {
-        for (let registration of registrations) {
-          registration.update();
-        }
-      });
-
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js').then(reg => {
-          reg.onupdatefound = () => {
-            const newWorker = reg.installing;
-            newWorker.onstatechange = () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // Se detectó una nueva versión
-                console.log("Nueva versión disponible. Recargando...");
-                window.location.reload(); // fuerza recarga con nueva versión
-              }
-            };
-          };
-        });
-      }
-    }
-  </script>
 
 
 
