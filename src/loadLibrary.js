@@ -2,6 +2,7 @@ import toggleLoader from "./toggleLoader.js";
 import populateFilters from "./populateFilters.js";
 import displayLibrary from "./displayLibrary.js";
 import aplicarColoresPorGenero from "./aplicarColoresPorGenero.js";
+import obtenerTopEstilos from './obtenerTopEstilos.js';
 
 export default async function loadLibrary(libraryData) {
     toggleLoader(true);
@@ -18,5 +19,6 @@ export default async function loadLibrary(libraryData) {
     populateFilters(libraryData);
     displayLibrary(libraryData);
     aplicarColoresPorGenero();
+    obtenerTopEstilos();
     toggleLoader(false);
   }
