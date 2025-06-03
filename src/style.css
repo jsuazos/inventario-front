@@ -332,6 +332,15 @@ html {
   padding-bottom: calc(1rem + env(safe-area-inset-bottom, 20px));
 }
 
+#alphabet {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .fixed-bottom-ios {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}
 
 .top-estilos {
   margin-top: 1rem;
