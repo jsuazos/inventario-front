@@ -346,3 +346,30 @@ html {
 .top-lista div {
   line-height: 1.4;
 }
+
+
+@keyframes rubberBand {
+  0%   { transform: scale3d(1, 1, 1); }
+  30%  { transform: scale3d(1.25, 0.75, 1); }
+  40%  { transform: scale3d(0.75, 1.25, 1); }
+  50%  { transform: scale3d(1.15, 0.85, 1); }
+  65%  { transform: scale3d(0.95, 1.05, 1); }
+  75%  { transform: scale3d(1.05, 0.95, 1); }
+  100% { transform: scale3d(1, 1, 1); }
+}
+
+/* .letra-tag {
+  display: inline-block;
+  padding: 6px 10px;
+  margin: 2px;
+  border-radius: 5px;
+  color: #fff;
+  text-decoration: none;
+  background-color: #222;
+  transition: background-color 0.2s;
+} */
+
+.letra-tag:hover {
+  animation: rubberBand 0.8s ease;
+  /* background-color: #444; */
+}

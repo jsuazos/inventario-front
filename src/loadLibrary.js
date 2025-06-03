@@ -19,6 +19,10 @@ export default async function loadLibrary(libraryData) {
     populateFilters(libraryData);
     displayLibrary(libraryData);
     aplicarColoresPorGenero();
-    obtenerTopEstilos();
+    // Llamar a obtenerTopEstilos después de aplicar los colores
+    // para asegurarnos de que los estilos están aplicados antes de calcular el top
+    requestAnimationFrame(() => {
+      obtenerTopEstilos();
+    });
     toggleLoader(false);
   }
