@@ -71,4 +71,43 @@ window.addEventListener('DOMContentLoaded', () => {
       document.body.classList.remove("sidebar-open");
     }
   });
+
+  // Recorre cada enlace del índice alfabético
+  document.querySelectorAll('#alphabet-index a').forEach(link => {
+    const targetId = link.getAttribute('href').replace('#', ''); // ej: letra-A
+    const target = document.getElementById(targetId);
+
+    if (!target) {
+      link.classList.add('text-muted'); // Añade clase para indicar que no hay destino
+      link.style.pointerEvents = 'none'; // Desactiva el enlace si no hay destino
+      // link.style.display = 'none'; // Oculta la letra si no hay destino
+    }
+  });
+
+  document.getElementById('btn-clear-library').addEventListener('click', () => {
+    Swal.fire({
+      title: '¿Limpiar biblioteca?',
+      text: 'Esta acción eliminará los datos guardados localmente.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, limpiar',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true,
+      background: '#1a1a1a',
+      color: '#fff',
+      backdrop: 'rgba(0,0,0,0.85)',
+      customClass: {
+        popup: 'animate__animated animate__zoomIn',
+        confirmButton: 'btn btn-danger',
+        cancelButton: 'btn btn-secondary me-2'
+      },
+      buttonsStyling: false
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem('libraryData');
+        location.reload();
+      }
+    });
+  });
+
 });

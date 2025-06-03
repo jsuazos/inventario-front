@@ -11,6 +11,7 @@ export default async function loadLibrary(libraryData) {
       .then(res => res.json())
       .then(data => {
         libraryData = data.data || [];
+        libraryData.sort((a, b) => a.Orden - b.Orden);
         localStorage.setItem('libraryData', JSON.stringify(libraryData));
       });
     }
