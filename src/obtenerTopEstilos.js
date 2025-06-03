@@ -1,6 +1,5 @@
 export default function obtenerTopEstilos() {
   const lista = document.getElementById("top-estilos-list");
-  console.log({ lista});
   if (!lista) return;
 
   const cards = document.querySelectorAll(".borde-overlay[data-genero]");
