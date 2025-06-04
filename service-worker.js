@@ -2,7 +2,7 @@ const CACHE_NAME = 'musica-inventario-v2';
 const urlsToCache = [
     '/',
     '/index.html',
-    '/style.css',
+    '/src/style.css',
     '/manifest.json',
     '/music_icon_192.png',
     '/music_icon_512.png',
