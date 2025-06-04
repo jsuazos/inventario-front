@@ -3,10 +3,12 @@ import loadLibrary from './loadLibrary.js';
 import filterLibrary from './filterLibrary.js';
 import displayLibrary from "./displayLibrary.js";
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
 
-  let recorder;  
-  let libraryData = navigator.onLine ? JSON.parse(localStorage.getItem('libraryData')) : [];
+  let recorder;
+  let libraryData = JSON.parse(localStorage.getItem('libraryData')) || [];
+
+  libraryData = await loadLibrary(libraryData);
 
   searchInput.addEventListener('input', () => filterLibrary(libraryData));
   filterType.addEventListener('change', () => filterLibrary(libraryData));
@@ -54,7 +56,7 @@ window.addEventListener('DOMContentLoaded', () => {
     displayLibrary(libraryData);
   });
 
-  loadLibrary(libraryData);
+
 
   
   const toggleSidebar = document.getElementById("toggleSidebar");
