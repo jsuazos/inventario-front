@@ -74,7 +74,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/service-worker.js').then(reg => {
+  navigator.serviceWorker.register('./service-worker.js').then(reg => {
     reg.onupdatefound = () => {
       const newWorker = reg.installing;
       newWorker.onstatechange = () => {
