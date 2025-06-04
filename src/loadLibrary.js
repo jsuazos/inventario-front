@@ -3,6 +3,7 @@ import populateFilters from "./populateFilters.js";
 import displayLibrary from "./displayLibrary.js";
 import aplicarColoresPorGenero from "./aplicarColoresPorGenero.js";
 import obtenerTopEstilos from './obtenerTopEstilos.js';
+import loadAlphabet from "./loadAlphabet.js";
 
 export default async function loadLibrary(libraryData) {
   toggleLoader(true);
@@ -25,6 +26,7 @@ export default async function loadLibrary(libraryData) {
   // de que los estilos están aplicados antes de calcular el top
   requestAnimationFrame(() => {
     obtenerTopEstilos();
+    loadAlphabet();
   });
   toggleLoader(false);
 

@@ -1,11 +1,11 @@
 // main.js
 import loadLibrary from './loadLibrary.js';
 import filterLibrary from './filterLibrary.js';
-import displayLibrary from "./displayLibrary.js";
+import toggleSidebar from './toggleSidebar.js';
+import clearFilters from './clearFilters.js';
 
 window.addEventListener('DOMContentLoaded', async () => {
 
-  let recorder;
   let libraryData = JSON.parse(localStorage.getItem('libraryData')) || [];
 
   libraryData = await loadLibrary(libraryData);
@@ -15,6 +15,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   filterGenre.addEventListener('change', () => filterLibrary(libraryData));
   filterArtist.addEventListener('change', () => filterLibrary(libraryData));
   filterYear.addEventListener('change', () => filterLibrary(libraryData));
+
+  clearFilters(libraryData);
+  toggleSidebar();
 
   document.addEventListener('click', function (e) {
     if (e.target.classList.contains('card-title')) {
@@ -39,53 +42,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  document.getElementById('resetButton').addEventListener('click', () => {
-    filterType.value = '';
-    filterGenre.value = '';
-    filterArtist.value = '';
-    filterYear.value = '';
-    searchInput.value = '';
-
-    // Limpiar banner si existe
-    const banner = document.getElementById('artistBanner');
-    if (banner) banner.innerHTML = '';
-
-    const grid = document.getElementById('libraryGrid');
-    if (grid) grid.innerHTML = '';
-
-    displayLibrary(libraryData);
-  });
 
 
 
-  
-  const toggleSidebar = document.getElementById("toggleSidebar");
-  const sidebar = document.getElementById("sidebar");
-
-  toggleSidebar.addEventListener("click", () => {
-    sidebar.classList.toggle("show");
-    document.body.classList.toggle("sidebar-open");
-  });
-
-  // Cerrar al hacer clic fuera
-  document.addEventListener("click", (e) => {
-    if (!sidebar.contains(e.target) && !toggleSidebar.contains(e.target)) {
-      sidebar.classList.remove("show");
-      document.body.classList.remove("sidebar-open");
-    }
-  });
-
-  // Recorre cada enlace del índice alfabético
-  document.querySelectorAll('#alphabet a').forEach(link => {
-    const targetId = link.getAttribute('href').replace('#', ''); // ej: letra-A
-    const target = document.getElementById(targetId);
-
-    if (!target) {
-      link.classList.add('text-muted'); // Añade clase para indicar que no hay destino
-      link.style.pointerEvents = 'none'; // Desactiva el enlace si no hay destino
-      // link.style.display = 'none'; // Oculta la letra si no hay destino
-    }
-  });
 
   document.getElementById('btn-clear-library').addEventListener('click', () => {
     Swal.fire({
@@ -127,17 +86,5 @@ if ('serviceWorker' in navigator) {
     };
   });
 }
-  // if (navigator.serviceWorker.controller) {
-  //   console.log("Service Worker activo y controlado por:", navigator.serviceWorker.controller);
-  // } else {
-  //   console.log("Service Worker no está activo.");
-  // }
-
-  // // Verificar si hay actualizaciones pendientes
-  // navigator.serviceWorker.ready.then(reg => {
-  //   if (reg.waiting) {
-  //     reg.waiting.postMessage({ action: 'skipWaiting' });
-  //   }
-  // });
 
 });
