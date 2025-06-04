@@ -1,6 +1,4 @@
 const CACHE_NAME = 'musica-inventario-v1.0';
-// Lista de URLs a almacenar en caché
-// Asegúrate de que estas URLs son correctas y están disponibles en tu servidor
 const urlsToCache = [
     '/',
     '/index.html',
