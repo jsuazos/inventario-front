@@ -5,24 +5,28 @@ import aplicarColoresPorGenero from "./aplicarColoresPorGenero.js";
 import obtenerTopEstilos from './obtenerTopEstilos.js';
 
 export default async function loadLibrary(libraryData) {
-    toggleLoader(true);
-    if (libraryData === null || libraryData.length === 0) {
-      
+  toggleLoader(true);
+
+  if ((libraryData === null || libraryData.length === 0) && navigator.onLine) {
     await fetch("https://inventario-server-pw1j.onrender.com/api/inventario")
       .then(res => res.json())
       .then(data => {
         libraryData = data.data || [];
         libraryData.sort((a, b) => a.Orden - b.Orden);
         localStorage.setItem('libraryData', JSON.stringify(libraryData));
-      });
-    }
-    populateFilters(libraryData);
-    displayLibrary(libraryData);
-    aplicarColoresPorGenero();
-    // Llamar a obtenerTopEstilos después de aplicar los colores
-    // para asegurarnos de que los estilos están aplicados antes de calcular el top
-    requestAnimationFrame(() => {
-      obtenerTopEstilos();
-    });
-    toggleLoader(false);
+      })
+      .catch(e => console.error('Error fetching library:', e));
   }
+
+  populateFilters(libraryData || []);
+  displayLibrary(libraryData || []);
+  aplicarColoresPorGenero();
+  // Llamar a obtenerTopEstilos después de aplicar los colores para asegurarnos
+  // de que los estilos están aplicados antes de calcular el top
+  requestAnimationFrame(() => {
+    obtenerTopEstilos();
+  });
+  toggleLoader(false);
+
+  return libraryData;
+}
