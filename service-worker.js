@@ -1,4 +1,4 @@
-const CACHE_NAME = 'musica-inventario-v3';
+const CACHE_NAME = 'musica-inventario-v4';
 const urlsToCache = [
     '/',
     '/index.html',
