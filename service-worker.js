@@ -1,8 +1,17 @@
-const CACHE_NAME = 'musica-inventario-v2';
+const CACHE_NAME = 'musica-inventario-v3';
 const urlsToCache = [
     '/',
     '/index.html',
-    '/src/style.css',
+    '/src/main.js?v=1.0',
+    '/src/loadLibrary.js',
+    '/src/filterLibrary.js',
+    '/src/displayLibrary.js',
+    '/src/aplicarColoresPorGenero.js',
+    '/src/obtenerTopEstilos.js',
+    '/src/populateFilters.js',
+    '/src/toggleLoader.js',
+    '/src/mostrarBannerArtista.js',
+    '/src/mostrarDiscoModal.js',
     '/manifest.json',
     '/music_icon_192.png',
     '/music_icon_512.png',
