@@ -2,7 +2,7 @@ const CACHE_NAME = 'musica-inventario-v1.0';
 const urlsToCache = [
     '/',
     '/index.html',
-    '/src/main.js?v=1.0',
+    '/src/main.js',
     '/src/loadLibrary.js',
     '/src/filterLibrary.js',
     '/src/displayLibrary.js',
