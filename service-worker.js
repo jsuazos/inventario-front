@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1.1'; // Aumenta esto cada vez que hagas cambios
+const CACHE_VERSION = 'v1.2'; // Aumenta esto cada vez que hagas cambios
 const CACHE_NAME = `musica-inventario-${CACHE_VERSION}`;
 const BASE_PATH = '/inventario-front/';
 const urlsToCache = [
@@ -71,4 +71,10 @@ self.addEventListener('fetch', event => {
       response || fetch(event.request)
     )
   );
+});
+
+self.addEventListener('message', event => {
+  if (event.data === 'GET_CACHE_VERSION') {
+    event.source.postMessage({ cacheVersion: CACHE_VERSION });
+  }
 });

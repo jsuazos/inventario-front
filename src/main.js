@@ -51,18 +51,28 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./service-worker.js').then(reg => {
-    reg.onupdatefound = () => {
-      const newWorker = reg.installing;
-      newWorker.onstatechange = () => {
-        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-          console.log("Nueva versión disponible. Recargando...");
-          window.location.reload(); // Forzar recarga si hay nueva versión
-        }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js').then(reg => {
+      reg.onupdatefound = () => {
+        const newWorker = reg.installing;
+        newWorker.onstatechange = () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            console.log("Nueva versión disponible. Recargando...");
+            window.location.reload(); // Forzar recarga si hay nueva versión
+          }
+        };
       };
-    };
-  });
-}
+    });
+  }
+
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage('GET_CACHE_VERSION');
+
+    navigator.serviceWorker.addEventListener('message', event => {
+      const version = event.data.cacheVersion;
+      console.info(`Versión del caché: ${version}`);
+      document.getElementById('cache-version').textContent = `Versión: ${version}`;
+    });
+  }
 
 });
