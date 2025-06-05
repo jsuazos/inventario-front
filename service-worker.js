@@ -5,6 +5,7 @@ const urlsToCache = [
   `${BASE_PATH}`,
   `${BASE_PATH}src/aplicarColoresPorGenero.js`,
   `${BASE_PATH}src/clearFilters.js`,
+  `${BASE_PATH}src/clearLibrary.js`,
   `${BASE_PATH}src/displayLibrary.js`,
   `${BASE_PATH}src/fetchArtistBanner.js`,
   `${BASE_PATH}src/fetchArtistDetails.js`,
@@ -29,19 +30,6 @@ const urlsToCache = [
   `${BASE_PATH}music_icon_512.png`,
   `${BASE_PATH}music_library_icon.ico`
 ];
-
-// self.addEventListener('install', event => {
-//   self.skipWaiting(); // Activa inmediatamente
-//   try {
-//     event.waitUntil(
-//       caches.open(CACHE_NAME).then(cache => {
-//         return cache.addAll(urlsToCache);
-//       })
-//     );
-//   } catch (e) {
-//     console.error('Error al cachear recursos:', e);
-//   }
-// });
 
 self.addEventListener('install', event => {
   self.skipWaiting();
