@@ -4,7 +4,7 @@
   "homepage": "./",
   "scripts": {
     "dev": "vite",
-    "dev:full": "concurrently \"vite\" \"node ../../back/proxy-server/index.js\""
+    "dev:full": "concurrently \"vite\" \"node ../../back/inventario-server/index.js\""
   },
   "type": "module",
   "dependencies": {

@@ -1,0 +1,19 @@
+{
+  "entornos": {
+    "local": {
+      "apiUrl": "http://localhost:3000/api"
+    },
+    "produccion": {
+      "apiUrl": "https://inventario-server-pw1j.onrender.com/api"
+    }
+  },
+  "ui": {
+    "tema": "oscuro",
+    "mostrarBanner": true,
+    "idioma": "es"
+  },
+  "auth": {
+    "habilitarLogin": true,
+    "proveedorOAuth": "Google"
+  }
+}

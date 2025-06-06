@@ -17,6 +17,7 @@ const urlsToCache = [
   `${BASE_PATH}src/loadLibrary.js`,
   `${BASE_PATH}src/main.js`,
   `${BASE_PATH}src/obtenerColorPorGenero.js`,
+  `${BASE_PATH}src/obtenerConfiguracionActiva.js`,
   `${BASE_PATH}src/obtenerGeneros.js`,
   `${BASE_PATH}src/obtenerTopEstilos.js`,
   `${BASE_PATH}src/populateFilters.js`,
