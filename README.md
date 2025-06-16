@@ -1,5 +1,5 @@
 
-# 🎵 Inventario Musical - [jsuazos.github.io/inventario-front](https://jsuazos.github.io/inventario-front)
+# 🎵 Inventario Musical - [inventario-front](https://jsuazos.github.io/inventario-front)
 
 Este proyecto es una aplicación web para gestionar un inventario musical, similar a plataformas como Spotify o Tidal. Está desarrollada con tecnologías modernas y ahora incluye características de Progressive Web App (PWA) para una mejor experiencia de usuario.
 Está desarrollado principalmente con **HTML**, **CSS (Bootstrap)** y **JavaScript**, y está desplegado en **GitHub Pages**.
