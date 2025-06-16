@@ -27,9 +27,9 @@ const urlsToCache = [
 
   `${BASE_PATH}index.html`,  
   `${BASE_PATH}manifest.json`,
-  `${BASE_PATH}music_icon_192.png`,
-  `${BASE_PATH}music_icon_512.png`,
-  `${BASE_PATH}music_library_icon.ico`
+  `${BASE_PATH}img/music_icon_192.png`,
+  `${BASE_PATH}img/music_icon_512.png`,
+  `${BASE_PATH}img/music_library_icon.ico`
 ];
 
 self.addEventListener('install', event => {

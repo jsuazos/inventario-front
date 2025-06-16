@@ -1,5 +1,5 @@
 
-# 🎵 Inventario Musical - jsuazos.github.io
+# 🎵 Inventario Musical - [jsuazos.github.io/inventario-front](https://jsuazos.github.io/inventario-front)
 
 Este proyecto es una aplicación web para gestionar un inventario musical, similar a plataformas como Spotify o Tidal. Está desarrollada con tecnologías modernas y ahora incluye características de Progressive Web App (PWA) para una mejor experiencia de usuario.
 Está desarrollado principalmente con **HTML**, **CSS (Bootstrap)** y **JavaScript**, y está desplegado en **GitHub Pages**.
@@ -70,13 +70,38 @@ Y también:
 
 ```
 inventario-front/
-├── index.html         # Página principal
-├── style.css          # Estilos personalizados
-├── js/
-│   └── scripts.js     # Funciones para búsqueda y scroll por letra
+├── index.html                            # Página principal
+├── style.css                             # Estilos globales
+├── manifest.json                         # Configuración PWA
+├── service-worker.js                     # Service Worker (caché offline)
+├── src/
+│   ├── main.js                           # Script principal de inicio
+│   ├── modalLogin.js                     # Componente: modal de login
+│   ├── obtenerConfiguracionActiva.js
+│   ├── fetchConStatusOk.js
+│   ├── loadLibrary.js                    # Carga de discos
+│   ├── displayLibrary.js                 # Renderizado de discos
+│   ├── filterLibrary.js                  # Lógica de filtrado
+│   ├── aplicarColoresPorGenero.js
+│   ├── obtenerTopEstilos.js
+│   ├── populateFilters.js                # Rellena el menú lateral de géneros
+│   ├── toggleLoader.js
+│   ├── mostrarBannerArtista.js
+│   ├── mostrarDiscoModal.js
+├── components/
+│   ├── Alphabet.js                       # Web Component: índice alfabético
+│   ├── Aside.js                          # Web Component: aside
+│   ├── Filters.js                        # Web Component: Filtros
+│   ├── Footer.js                         # Web Component: footer
+│   ├── Loader.js                         # Web Component: disc loader
+│   ├── Navbar.js                         # Web Component: navbar
+│   ├── LoginModal.js                     # Web Component: modal de login
 ├── assets/
-│   └── img/           # Carátulas y gráficos
-└── README.md          # Descripción del proyecto (este archivo)
+│   └── img/
+|       ├── music_icon_192.png            # Ícono PWA
+|       ├── music_icon_512.png            # Ícono PWA
+|       ├── music_library_icon.ico        # Favicon
+└── README.md                   # Descripción del proyecto
 ```
 
 ---
