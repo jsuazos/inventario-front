@@ -101,7 +101,7 @@ inventario-front/
 |       ├── music_icon_192.png            # Ícono PWA
 |       ├── music_icon_512.png            # Ícono PWA
 |       ├── music_library_icon.ico        # Favicon
-└── README.md                   # Descripción del proyecto
+└── README.md                             # Descripción del proyecto
 ```
 
 ---
