@@ -15,83 +15,10 @@
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark px-3 sticky-top">
-    <div class="d-flex w-100 align-items-center gap-2">
-      <!-- Botón hamburguesa -->
-      <button id="toggleSidebar" class="btn btn-outline-light p-2">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list"
-          viewBox="0 0 16 16">
-          <path fill-rule="evenodd"
-            d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
-        </svg>
-      </button>
+  <app-navbar></app-navbar>
 
-      <!-- Input de búsqueda -->
-      <div class="flex-grow-1">
-        <input id="searchInput" class="form-control" type="search" placeholder="Buscar..." autocomplete="off">
-      </div>
-    </div>
-
-    <!-- Sidebar oculto -->
-    <aside id="sidebar" class="bg-dark text-white px-3 pt-3 pb-5 sidebar-custom d-flex flex-column" style="height: 100vh;">
-    <div class="d-flex justify-content-between align-items-center">
-      <h5 class="mb-4">Explorar</h5>
-      <button id="btnLogin" class="btn btn-outline-light border-0">
-        <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M10.0909 11.9629L19.3636 8.63087V14.1707C18.8126 13.8538 18.1574 13.67 17.4545 13.67C15.4964 13.67 13.9091 15.096 13.9091 16.855C13.9091 18.614 15.4964 20.04 17.4545 20.04C19.4126 20.04 21 18.614 21 16.855C21 16.855 21 16.8551 21 16.855L21 7.49236C21 6.37238 21 5.4331 20.9123 4.68472C20.8999 4.57895 20.8852 4.4738 20.869 4.37569C20.7845 3.86441 20.6352 3.38745 20.347 2.98917C20.2028 2.79002 20.024 2.61055 19.8012 2.45628C19.7594 2.42736 19.716 2.39932 19.6711 2.3722L19.6621 2.36679C18.8906 1.90553 18.0233 1.93852 17.1298 2.14305C16.2657 2.34086 15.1944 2.74368 13.8808 3.23763L11.5963 4.09656C10.9806 4.32806 10.4589 4.52419 10.0494 4.72734C9.61376 4.94348 9.23849 5.1984 8.95707 5.57828C8.67564 5.95817 8.55876 6.36756 8.50501 6.81203C8.4545 7.22978 8.45452 7.7378 8.45455 8.33743V16.1307C7.90347 15.8138 7.24835 15.63 6.54545 15.63C4.58735 15.63 3 17.056 3 18.815C3 20.574 4.58735 22 6.54545 22C8.50355 22 10.0909 20.574 10.0909 18.815C10.0909 18.815 10.0909 18.8151 10.0909 18.815L10.0909 11.9629Z" fill="#1C274C"></path> </g></svg>
-      </button>
-    </div>
-      
-      <ul class="nav flex-column">
-        <li class="nav-item"><a class="nav-link text-white" href="#">🎵 Todos</a></li>
-        <!-- <li class="nav-item"><a class="nav-link text-white" href="#">🎧 Electrónica</a></li>
-        <li class="nav-item"><a class="nav-link text-white" href="#">🎸 Rock</a></li>
-        <li class="nav-item"><a class="nav-link text-white" href="#">❤️ Favoritos</a></li> -->
-        <li class="nav-item mx-3">
-          <div class="top-estilos">
-            <h6>🔥 Top 10</h6>
-            <div id="top-estilos-list" class="top-lista mx-4"></div>
-          </div>
-        </li>
-
-      </ul>
-
-
-
-      <!-- Esto se empuja al fondo -->
-      <div class="mt-auto">
-        <div class="d-flex justify-content-between align-items-center">
-          <p id="cache-version" class="my-0"></p>
-          <button id="btn-clear-library" class="btn btn-outline-light">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z" />
-                <path
-                  d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
-              </svg>
-          </button>
-        </div>
-      </div>
-    </aside>
-  </nav>
-
-  <div class="container my-4">
-    <div class="mb-3 text-end d-none d-lg-block">
-    </div>
-    <div class="row mb-3 d-none d-lg-flex">
-      <div class="col-md-3"><select id="filterType" class="form-select">
-          <option value="">Tipo</option>
-        </select></div>
-      <div class="col-md-3"><select id="filterGenre" class="form-select">
-          <option value="">Género</option>
-        </select></div>
-      <div class="col-md-3"><select id="filterArtist" class="form-select">
-          <option value="">Artista</option>
-        </select></div>
-      <div class="col-md-2"><select id="filterYear" class="form-select">
-          <option value="">Año</option>
-        </select></div>
-      <div class="col-md-1"><button id="resetButton" class="btn btn-secondary w-100">←</button></div>
-    </div>
+  <div class="container my-4 min-vh-100">
+    <app-filters></app-filters>
 
     <div id="resultado"></div>
 
@@ -99,57 +26,16 @@
     <div id="resultCount" class="text-white mb-3"></div>
     <div id="artistBanner"></div>
     <div id="libraryGrid" class="row g-4 align-items-start mx-1"></div>
-    <div id="loader" class="text-center my-5" style="display: none;">
-      <div class="vinyl-loader"></div>
-      <p class="text-white mt-2">Cargando música...</p>
-    </div>
+   <app-loader></app-loader> 
   </div>
 
-  <!-- Modal -->
-  <div class="modal fade" id="discoModal" tabindex="-1" aria-labelledby="discoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="discoModalLabel">Título</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-        </div>
-        <div class="modal-body" id="discoModalBody"></div>
-      </div>
-    </div>
-  </div>
+  <app-alphabet></app-alphabet>
 
-  <div id="alphabet" class="alphabet-index fixed-bottom-ios pb-4">
-    <a href="#letra-A" class="letra-tag">A</a>
-    <a href="#letra-B" class="letra-tag">B</a>
-    <a href="#letra-C" class="letra-tag">C</a>
-    <a href="#letra-D" class="letra-tag">D</a>
-    <a href="#letra-E" class="letra-tag">E</a>
-    <a href="#letra-F" class="letra-tag">F</a>
-    <a href="#letra-G" class="letra-tag">G</a>
-    <a href="#letra-H" class="letra-tag">H</a>
-    <a href="#letra-I" class="letra-tag">I</a>
-    <a href="#letra-J" class="letra-tag">J</a>
-    <a href="#letra-K" class="letra-tag">K</a>
-    <a href="#letra-L" class="letra-tag">L</a>
-    <a href="#letra-M" class="letra-tag">M</a>
-    <a href="#letra-N" class="letra-tag">N</a>
-    <a href="#letra-O" class="letra-tag">O</a>
-    <a href="#letra-P" class="letra-tag">P</a>
-    <a href="#letra-Q" class="letra-tag">Q</a>
-    <a href="#letra-R" class="letra-tag">R</a>
-    <a href="#letra-S" class="letra-tag">S</a>
-    <a href="#letra-T" class="letra-tag">T</a>
-    <a href="#letra-U" class="letra-tag">U</a>
-    <a href="#letra-V" class="letra-tag">V</a>
-    <a href="#letra-W" class="letra-tag">W</a>
-    <a href="#letra-X" class="letra-tag">X</a>
-    <a href="#letra-Y" class="letra-tag">Y</a>
-    <a href="#letra-Z" class="letra-tag">Z</a>
-  </div>
+  <!-- <div id="app"></div> -->
+  
 
+  <app-footer></app-footer>
 
-
-  <div id="app"></div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script type="module" src="./src/main.js"></script>
