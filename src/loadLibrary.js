@@ -13,7 +13,14 @@ export default async function loadLibrary(libraryData) {
       .then(res => res.json())
       .then(data => {
         libraryData = data.data || [];
-        libraryData.sort((a, b) => a.Orden - b.Orden);
+        libraryData.sort((a, b) => {
+
+          const claveA = a.Artista.toLowerCase() + ' ' + a.Año;
+          const claveB = b.Artista.toLowerCase() + ' ' + b.Año;
+
+          return claveA.localeCompare(claveB);
+        });
+
         localStorage.setItem('libraryData', JSON.stringify(libraryData));
       })
       .catch(e => console.error('Error fetching library:', e));
