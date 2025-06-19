@@ -91,12 +91,12 @@ inventario-front/
 ├── components/
 │   ├── Alphabet.js                       # Web Component: índice alfabético
 │   ├── Aside.js                          # Web Component: aside
-│   ├── Filters.js                        # Web Component: Filtros
+│   ├── Filters.js                        # Web Component: filtros
 │   ├── Footer.js                         # Web Component: footer
 │   ├── Loader.js                         # Web Component: disc loader
 │   ├── Navbar.js                         # Web Component: navbar
 │   ├── LoginModal.js                     # Web Component: modal de login
-├── assets/
+├── public/
 │   └── img/
 |       ├── music_icon_192.png            # Ícono PWA
 |       ├── music_icon_512.png            # Ícono PWA
