@@ -3,6 +3,8 @@
  * Maneja toda la persistencia de datos de la aplicación
  */
 
+import { errorHandler } from './errorHandler.js';
+
 const STORAGE_KEYS = {
   libraryData: 'libraryData',
   userPreferences: 'userPreferences',
@@ -10,17 +12,22 @@ const STORAGE_KEYS = {
 };
 
 export class StorageService {
-  
+
   /**
    * Guarda datos de biblioteca
    * @param {Array} data - Datos de la biblioteca
    */
   saveLibraryData(data) {
     try {
-      localStorage.setItem(STORAGE_KEYS.libraryData, JSON.stringify(data));
+      const serialized = JSON.stringify(data);
+      localStorage.setItem(STORAGE_KEYS.libraryData, serialized);
       return true;
     } catch (error) {
-      console.error('Error guardando biblioteca:', error);
+      errorHandler.handle(error, {
+        operation: 'saveLibraryData',
+        dataSize: data ? data.length : 0,
+        storageQuota: this.getStorageQuota()
+      });
       return false;
     }
   }
@@ -34,7 +41,10 @@ export class StorageService {
       const data = localStorage.getItem(STORAGE_KEYS.libraryData);
       return data ? JSON.parse(data) : [];
     } catch (error) {
-      console.error('Error obteniendo biblioteca:', error);
+      errorHandler.handle(error, {
+        operation: 'getLibraryData',
+        storedData: localStorage.getItem(STORAGE_KEYS.libraryData)?.substring(0, 100)
+      });
       return [];
     }
   }
@@ -47,7 +57,7 @@ export class StorageService {
       localStorage.removeItem(STORAGE_KEYS.libraryData);
       return true;
     } catch (error) {
-      console.error('Error limpiando biblioteca:', error);
+      errorHandler.handle(error, { operation: 'clearLibraryData' });
       return false;
     }
   }
@@ -61,7 +71,10 @@ export class StorageService {
       localStorage.setItem(STORAGE_KEYS.userPreferences, JSON.stringify(preferences));
       return true;
     } catch (error) {
-      console.error('Error guardando preferencias:', error);
+      errorHandler.handle(error, {
+        operation: 'saveUserPreferences',
+        preferencesKeys: Object.keys(preferences || {})
+      });
       return false;
     }
   }
@@ -75,7 +88,7 @@ export class StorageService {
       const data = localStorage.getItem(STORAGE_KEYS.userPreferences);
       return data ? JSON.parse(data) : {};
     } catch (error) {
-      console.error('Error obteniendo preferencias:', error);
+      errorHandler.handle(error, { operation: 'getUserPreferences' });
       return {};
     }
   }
@@ -90,7 +103,7 @@ export class StorageService {
       });
       return true;
     } catch (error) {
-      console.error('Error limpiando almacenamiento:', error);
+      errorHandler.handle(error, { operation: 'clearAll' });
       return false;
     }
   }
@@ -99,13 +112,59 @@ export class StorageService {
    * Obtiene tamaño aproximado del almacenamiento en KB
    */
   getStorageSize() {
-    let total = 0;
-    for (let key in localStorage) {
-      if (localStorage.hasOwnProperty(key)) {
-        total += localStorage[key].length + key.length;
+    try {
+      let total = 0;
+      for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+          total += localStorage[key].length + key.length;
+        }
       }
+      return (total / 1024).toFixed(2);
+    } catch (error) {
+      errorHandler.handle(error, { operation: 'getStorageSize' });
+      return '0.00';
     }
-    return (total / 1024).toFixed(2);
+  }
+
+  /**
+   * Obtiene información de cuota de almacenamiento
+   * @returns {Object} Información de cuota
+   */
+  getStorageQuota() {
+    try {
+      if ('storage' in navigator && 'estimate' in navigator.storage) {
+        return navigator.storage.estimate().then(estimate => ({
+          quota: estimate.quota,
+          usage: estimate.usage,
+          available: estimate.quota - estimate.usage
+        }));
+      }
+      return { quota: null, usage: null, available: null };
+    } catch (error) {
+      errorHandler.handle(error, { operation: 'getStorageQuota' });
+      return { quota: null, usage: null, available: null };
+    }
+  }
+
+  /**
+   * Verifica si hay suficiente espacio para guardar datos
+   * @param {string} data - Datos a guardar
+   * @returns {boolean} True si hay espacio suficiente
+   */
+  hasEnoughSpace(data) {
+    try {
+      const dataSize = new Blob([data]).size;
+      const currentSize = parseFloat(this.getStorageSize()) * 1024;
+      const estimatedTotal = currentSize + dataSize;
+
+      // Asumir límite de 5MB por defecto si no podemos obtener cuota real
+      const defaultLimit = 5 * 1024 * 1024; // 5MB
+
+      return estimatedTotal < defaultLimit;
+    } catch (error) {
+      errorHandler.handle(error, { operation: 'hasEnoughSpace' });
+      return true; // Asumir que hay espacio si no podemos verificar
+    }
   }
 }
 

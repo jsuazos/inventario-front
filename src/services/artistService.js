@@ -1,4 +1,5 @@
 import configService from './configService.js';
+import { errorHandler } from './errorHandler.js';
 
 async function fetchArtistMBID(artist) {
     try {
@@ -8,7 +9,7 @@ async function fetchArtistMBID(artist) {
         return data.artists[0].id;
       }
     } catch (e) {
-      console.warn('MusicBrainz error:', e);
+      errorHandler.handleNetworkError(e, 'fetchArtistMBID');
     }
     return null;
   }
@@ -27,7 +28,7 @@ async function fetchArtistBanner(mbid) {
         logo: data.hdmusiclogo?.[0]?.url || null
       };
     } catch (e) {
-      console.warn('Fanart.tv error:', e);
+      errorHandler.handleNetworkError(e, 'fetchArtistBanner');
     }
     return {};
   }
@@ -82,7 +83,7 @@ export default async function fetchArtistDetails(artist) {
 
       return artistDetails[artist];
     } catch (e) {
-      console.error('Error obteniendo datos del artista', e);
+      errorHandler.handleApiError(e, 'fetchArtistDetails');
     }
     return null;
   }

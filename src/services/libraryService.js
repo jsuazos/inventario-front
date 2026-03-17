@@ -7,6 +7,7 @@ import configService from './configService.js';
 import obtenerGeneros from '../utils/obtenerGeneros.js';
 import fillSelect from '../utils/filters.js';
 import { libraryStore } from '../state/libraryStore.js';
+import { errorHandler } from './errorHandler.js';
 
 export function populateFilters(libraryData) {
     const types = new Set(), genres = new Set(), artists = new Set(), years = new Set();
@@ -43,7 +44,7 @@ export async function loadLibrary(libraryData) {
 
       libraryStore.loadData(libraryData);
     } catch (e) {
-      console.error('Error fetching library:', e);
+      errorHandler.handleNetworkError(e, 'loadLibrary');
       libraryData = libraryData || [];
     }
   } else {
