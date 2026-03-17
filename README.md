@@ -50,71 +50,90 @@ Y también:
 <meta name="theme-color" content="#000000">
 ```
 
-## 📦 Instalación
+## 📦 Instalación y desarrollo local
 
 1. Clona este repositorio:
    ```bash
    git clone https://github.com/jsuazos/inventario-front.git
    ```
 
-2. Abre el proyecto en tu editor de código.
+2. Instala dependencias:
+   ```bash
+   npm install
+   ```
 
-3. Asegúrate de tener los archivos de íconos y `manifest.json` en la raíz del proyecto.
+3. Ejecuta el servidor de desarrollo (Vite):
+   ```bash
+   npm run dev
+   ```
 
-4. ¡Listo! Puedes desplegarlo directamente en GitHub Pages.
+4. Abre tu navegador en la URL que indique Vite (por defecto `http://localhost:5173`).
+
+> ⚠️ Si necesitas levantar el backend local para desarrollo completo, usa:
+> ```bash
+> npm run dev:full
+> ```
+> Este comando intenta iniciar el servidor de frontend y el backend juntos (requiere el backend en `../..` según la configuración actual).
 
 
 ---
 
-## 🗂️ Estructura de archivos
+## 🔧 Configuración de API
+
+La aplicación usa `config.json` para definir la URL de la API y otros ajustes de entorno.
+
+- **Archivo**: `config.json`
+- **Sección clave**: `entornos.local.apiUrl` / `entornos.produccion.apiUrl`.
+
+Ejemplo:
+```json
+{
+  "entornos": {
+    "local": {
+      "apiUrl": "https://inventario-server-pw1j.onrender.com/api"
+    },
+    "produccion": {
+      "apiUrl": "https://inventario-server-pw1j.onrender.com/api"
+    }
+  }
+}
+```
+
+La app detecta automáticamente si está corriendo en `localhost` para elegir el entorno.
+
+---
+
+## 🗂️ Estructura de archivos (actualizada)
 
 ```
 inventario-front/
-├── index.html                            # Página principal
-├── style.css                             # Estilos globales
-├── manifest.json                         # Configuración PWA
-├── service-worker.js                     # Service Worker (caché offline)
+├── index.html                      # Entrada principal
+├── manifest.json                   # Configuración PWA
+├── service-worker.js               # Service Worker (caché + offline)
+├── config.json                     # Configuración de entornos / API
+├── package.json                    # Dependencias y scripts
 ├── src/
-│   ├── main.js                           # Script principal de inicio
-│   ├── modalLogin.js                     # Componente: modal de login
-│   ├── obtenerConfiguracionActiva.js
-│   ├── fetchConStatusOk.js
-│   ├── loadLibrary.js                    # Carga de discos
-│   ├── displayLibrary.js                 # Renderizado de discos
-│   ├── filterLibrary.js                  # Lógica de filtrado
-│   ├── aplicarColoresPorGenero.js
-│   ├── obtenerTopEstilos.js
-│   ├── populateFilters.js                # Rellena el menú lateral de géneros
-│   ├── toggleLoader.js
-│   ├── mostrarBannerArtista.js
-│   ├── mostrarDiscoModal.js
-├── components/
-│   ├── Alphabet.js                       # Web Component: índice alfabético
-│   ├── Aside.js                          # Web Component: aside
-│   ├── Filters.js                        # Web Component: filtros
-│   ├── Footer.js                         # Web Component: footer
-│   ├── Loader.js                         # Web Component: disc loader
-│   ├── Navbar.js                         # Web Component: navbar
-│   ├── LoginModal.js                     # Web Component: modal de login
-├── public/
-│   └── img/
-|       ├── music_icon_192.png            # Ícono PWA
-|       ├── music_icon_512.png            # Ícono PWA
-|       ├── music_library_icon.ico        # Favicon
-└── README.md                             # Descripción del proyecto
+│   ├── main.js                     # Punto de entrada del frontend
+│   ├── components/                 # Web Components reutilizables
+│   ├── services/                   # Lógica de datos / API
+│   ├── state/                      # Estado global (store)
+│   ├── styles/                     # Estilos compartidos
+│   └── utils/                      # Helpers y utilidades
+└── public/
+    └── img/                       # Íconos y assets estáticos
 ```
 
 ---
 
-## 🚀 Cómo usar / contribuir
+## 🤖 Rate limiting y manejo de APIs externas
 
-1. Clona el repositorio:
-   ```bash
-   git clone https://github.com/jsuazos/inventario-front.git
-   ```
-2. Abre `index.html` en tu navegador.
-3. Edita el contenido directamente en HTML, o extiende la lógica en JS.
-4. Haz tus mejoras, y si deseas contribuir, crea un Pull Request.
+Para evitar errores `429 Too Many Requests` con APIs como Discogs, MusicBrainz y Fanart.tv, el proyecto incorpora:
+
+- **Rate limiter** en las llamadas a APIs externas (1 solicitud cada 2 segundos para evitar bloqueos).
+- **Timeouts** (5s) para evitar que la UI se quede pendiente indefinidamente.
+- **Fallbacks visuales** cuando no hay imagen disponible (evita usar imágenes de Discogs cuando generan 429).
+
+Estas mejoras se encuentran principalmente en `src/services/artistService.js` y en `service-worker.js`.
 
 ---
 
