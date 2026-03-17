@@ -43,26 +43,55 @@ export async function checkForUpdatesInBackground() {
     const res = await fetch(url);
     const data = await res.json();
     const apiData = data.data || [];
+    
+    // Filtrar solo registros con Visible == "SI"
+    const filteredApiData = apiData.filter(item => item.Visible === "SI");
 
-    // Comparar con datos locales (por cantidad y último elemento como checksum simple)
+    // Comparar con datos locales (comparación completa de todos los elementos)
     const localData = libraryStore.getAllData();
-    const hasChanges = apiData.length !== localData.length ||
-                      JSON.stringify(apiData[apiData.length - 1]) !== JSON.stringify(localData[localData.length - 1]);
 
-    if (hasChanges && apiData.length > 0) {
+    // Función para comparar arrays de objetos de manera profunda
+    const arraysEqual = (arr1, arr2) => {
+      if (arr1.length !== arr2.length) return false;
+
+      // Ordenar ambos arrays por la misma clave para comparación consistente
+      const sortedArr1 = [...arr1].sort((a, b) => {
+        const keyA = (a.Artista || '').toLowerCase() + ' ' + (a.Año || '');
+        const keyB = (b.Artista || '').toLowerCase() + ' ' + (b.Año || '');
+        return keyA.localeCompare(keyB);
+      });
+
+      const sortedArr2 = [...arr2].sort((a, b) => {
+        const keyA = (a.Artista || '').toLowerCase() + ' ' + (a.Año || '');
+        const keyB = (b.Artista || '').toLowerCase() + ' ' + (b.Año || '');
+        return keyA.localeCompare(keyB);
+      });
+
+      // Comparar elemento por elemento
+      for (let i = 0; i < sortedArr1.length; i++) {
+        if (JSON.stringify(sortedArr1[i]) !== JSON.stringify(sortedArr2[i])) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    const hasChanges = !arraysEqual(localData, filteredApiData);
+
+    if (hasChanges && filteredApiData.length > 0) {
       // Ordenar datos de API igual que los locales
-      apiData.sort((a, b) => {
+      filteredApiData.sort((a, b) => {
         const claveA = a.Artista.toLowerCase() + ' ' + a.Año;
         const claveB = b.Artista.toLowerCase() + ' ' + b.Año;
         return claveA.localeCompare(claveB);
       });
 
       // Actualizar store con nuevos datos
-      libraryStore.loadData(apiData);
+      libraryStore.loadData(filteredApiData);
 
       // Actualizar filtros y display
-      populateFilters(apiData);
-      displayLibrary(apiData);
+      populateFilters(filteredApiData);
+      displayLibrary(filteredApiData);
       aplicarColoresPorGenero();
 
       // Mostrar mensaje de actualización completada
@@ -169,6 +198,10 @@ export async function loadLibrary(libraryData) {
       const data = await res.json();
       
       libraryData = data.data || [];
+      
+      // Filtrar solo registros con Visible == "SI"
+      libraryData = libraryData.filter(item => item.Visible === "SI");
+      
       libraryData.sort((a, b) => {
         const claveA = a.Artista.toLowerCase() + ' ' + a.Año;
         const claveB = b.Artista.toLowerCase() + ' ' + b.Año;

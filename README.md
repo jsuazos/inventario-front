@@ -22,6 +22,7 @@ https://jsuazos.github.io/inventario-front/
 - 💡 Pensado para expandirse como catálogo, colección o vitrina musical personal.
 - **Soporte PWA**: La aplicación ahora puede instalarse en dispositivos móviles y de escritorio, funcionando incluso sin conexión a internet.
 - 🔄 **Actualización automática en segundo plano**: La app verifica automáticamente si hay cambios en la biblioteca cada vez que el usuario ingresa, actualizando la UI sin interrumpir la navegación actual.
+- 👁️ **Filtrado por visibilidad**: Solo muestra registros donde `Visible == "SI"` según la API.
 
 ---
 
@@ -102,6 +103,27 @@ Ejemplo:
 
 La app detecta automáticamente si está corriendo en `localhost` para elegir el entorno.
 
+### 📊 Formato de datos esperado
+
+La API debe devolver datos en el siguiente formato:
+
+```json
+{
+  "data": [
+    {
+      "Artista": "Nombre del Artista",
+      "Disco": "Nombre del Álbum", 
+      "Año": 2023,
+      "Tipo": "CD|VINYL|DIGITAL",
+      "Genero": "Rock|Pop|Jazz",
+      "Visible": "SI"
+    }
+  ]
+}
+```
+
+**Campo `Visible`**: Solo se muestran los registros donde `Visible == "SI"`. Los registros con cualquier otro valor (o sin este campo) serán filtrados automáticamente.
+
 ---
 
 ## 🗂️ Estructura de archivos (actualizada)
@@ -142,6 +164,7 @@ La aplicación incluye un sistema inteligente de actualización automática que:
 
 - **Verifica cambios automáticamente** cada vez que el usuario ingresa a la aplicación.
 - **No interrumpe la navegación** actual si ya tienes datos guardados localmente.
+- **Compara datos completos** para detectar cambios reales (no solo actualiza por checksum simple).
 - **Muestra notificaciones discretas** en la esquina inferior derecha:
   - 🔄 "Buscando actualizaciones en segundo plano..." (mientras verifica)
   - ✅ "Biblioteca actualizada con los últimos cambios" (si hay actualizaciones)
@@ -157,6 +180,7 @@ Esta funcionalidad asegura que siempre tengas la información más actualizada s
 - [x] Filtro dinámico por género desde el menú lateral.
 - [x] Integración con APIs externas (Discogs, MusicBrainz, Fanart.tv).
 - [x] Actualización automática en segundo plano de la biblioteca.
+- [x] Filtrado por visibilidad (Visible == "SI").
 - [ ] Visualización por álbum, artista o formato.
 - [ ] Reproducción de previews (si se integra Spotify API).
 - [ ] Guardar favoritos localmente o vía backend.
