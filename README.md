@@ -21,6 +21,7 @@ https://jsuazos.github.io/inventario-front/
 - 📱 Totalmente **responsive** (adaptado para escritorio y móviles).
 - 💡 Pensado para expandirse como catálogo, colección o vitrina musical personal.
 - **Soporte PWA**: La aplicación ahora puede instalarse en dispositivos móviles y de escritorio, funcionando incluso sin conexión a internet.
+- 🔄 **Actualización automática en segundo plano**: La app verifica automáticamente si hay cambios en la biblioteca cada vez que el usuario ingresa, actualizando la UI sin interrumpir la navegación actual.
 
 ---
 
@@ -135,12 +136,27 @@ Para evitar errores `429 Too Many Requests` con APIs como Discogs, MusicBrainz y
 
 Estas mejoras se encuentran principalmente en `src/services/artistService.js` y en `service-worker.js`.
 
+## 🔄 Actualización automática en segundo plano
+
+La aplicación incluye un sistema inteligente de actualización automática que:
+
+- **Verifica cambios automáticamente** cada vez que el usuario ingresa a la aplicación.
+- **No interrumpe la navegación** actual si ya tienes datos guardados localmente.
+- **Muestra notificaciones discretas** en la esquina inferior derecha:
+  - 🔄 "Buscando actualizaciones en segundo plano..." (mientras verifica)
+  - ✅ "Biblioteca actualizada con los últimos cambios" (si hay actualizaciones)
+  - 📋 "No hay cambios disponibles" (si no hay cambios)
+- **Actualiza la UI automáticamente** cuando detecta cambios en la API.
+
+Esta funcionalidad asegura que siempre tengas la información más actualizada sin necesidad de recargar la página manualmente.
+
 ---
 
 ## 📌 Pendientes / mejoras futuras
 
 - [x] Filtro dinámico por género desde el menú lateral.
 - [x] Integración con APIs externas (Discogs, MusicBrainz, Fanart.tv).
+- [x] Actualización automática en segundo plano de la biblioteca.
 - [ ] Visualización por álbum, artista o formato.
 - [ ] Reproducción de previews (si se integra Spotify API).
 - [ ] Guardar favoritos localmente o vía backend.
