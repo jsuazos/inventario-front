@@ -7,12 +7,12 @@ import './components/LoginModal.js';
 import './components/Alphabet.js';
 import './components/Footer.js';
 
-import loadLibrary from "./loadLibrary.js";
-import filterLibrary from "./filterLibrary.js";
-import toggleSidebar from "./toggleSidebar.js";
-import clearFilters from "./clearFilters.js";
-import clearLibrary from "./modalClearLibrary.js";
-import login from "./modalLogin.js";
+import { loadLibrary } from "./services/libraryService.js";
+import { filterLibrary } from "./utils/libraryFilters.js";
+import { toggleSidebar, loadAlphabet } from "./utils/ui.js";
+import { clearFilters } from "./utils/libraryFilters.js";
+import { clearLibrary } from "./utils/modals.js";
+import { modalLogin } from "./utils/modals.js";
 
 window.addEventListener("DOMContentLoaded", async () => {
   let libraryData = JSON.parse(localStorage.getItem("libraryData")) || [];
@@ -29,7 +29,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   toggleSidebar();
   clearLibrary();
 
-  login();
+  modalLogin();
 
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./service-worker.js").then((reg) => {

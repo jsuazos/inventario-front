@@ -1,5 +1,10 @@
+import obtenerConfiguracionActiva from "./obtenerConfiguracionActiva.js";
+
 export default async function fetchArtistBanner(mbid) {
-    const fanartUrl = `https://inventario-server-pw1j.onrender.com/api/fanart?mbid=${mbid}`;
+    const { apiUrl } = await obtenerConfiguracionActiva();
+    const base = apiUrl.replace(/\/$/, "");
+    const fanartUrl = `${base}/fanart?mbid=${mbid}`;
+
     try {
       const res = await fetch(fanartUrl);
       if (!res.ok) return {};

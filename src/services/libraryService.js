@@ -1,16 +1,31 @@
-import toggleLoader from "./toggleLoader.js";
-import populateFilters from "./populateFilters.js";
-import displayLibrary from "./displayLibrary.js";
-import aplicarColoresPorGenero from "./aplicarColoresPorGenero.js";
-import obtenerTopEstilos from './obtenerTopEstilos.js';
-import loadAlphabet from "./loadAlphabet.js";
-import obtenerConfiguracionActiva from "./obtenerConfiguracionActiva.js";
+import { toggleLoader } from '../utils/ui.js';
+import displayLibrary from '../utils/libraryDisplay.js';
+import aplicarColoresPorGenero from '../utils/aplicarColoresPorGenero.js';
+import obtenerTopEstilos from '../utils/obtenerTopEstilos.js';
+import { loadAlphabet } from '../utils/ui.js';
+import configService from './configService.js';
+import obtenerGeneros from '../utils/obtenerGeneros.js';
+import fillSelect from '../utils/filters.js';
 
-export default async function loadLibrary(libraryData) {
+export function populateFilters(libraryData) {
+    const types = new Set(), genres = new Set(), artists = new Set(), years = new Set();
+    libraryData.forEach(item => {
+      types.add(item.Tipo);
+      artists.add(item.Artista);
+      years.add(item.Año);
+    });
+    obtenerGeneros(libraryData).forEach(genero => genres.add(genero));
+    fillSelect('filterType', types);
+    fillSelect('filterGenre', genres);
+    fillSelect('filterArtist', artists);
+    fillSelect('filterYear', years);
+}
+
+export async function loadLibrary(libraryData) {
   toggleLoader(true);
 
   if ((libraryData === null || libraryData.length === 0) && navigator.onLine) {
-    const { apiUrl } = await obtenerConfiguracionActiva();
+    const { apiUrl } = await configService();
     const url = `${apiUrl.replace(/\/$/, "")}/inventario`;
 
     await fetch(url)
@@ -43,3 +58,4 @@ export default async function loadLibrary(libraryData) {
 
   return libraryData;
 }
+

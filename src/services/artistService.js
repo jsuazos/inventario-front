@@ -1,12 +1,42 @@
-import fetchArtistMBID from "./fetchArtistMBID.js";
-import fetchArtistBanner from "./fetchArtistBanner.js";
-import obtenerConfiguracionActiva from "./obtenerConfiguracionActiva.js";
+import configService from './configService.js';
+
+async function fetchArtistMBID(artist) {
+    try {
+      const res = await fetch(`https://musicbrainz.org/ws/2/artist/?query=artist:${encodeURIComponent(artist)}&fmt=json`);
+      const data = await res.json();
+      if (data.artists && data.artists.length > 0) {
+        return data.artists[0].id;
+      }
+    } catch (e) {
+      console.warn('MusicBrainz error:', e);
+    }
+    return null;
+  }
+
+async function fetchArtistBanner(mbid) {
+    const { apiUrl } = await configService();
+    const base = apiUrl.replace(/\/$/, "");
+    const fanartUrl = `${base}/fanart?mbid=${mbid}`;
+
+    try {
+      const res = await fetch(fanartUrl);
+      if (!res.ok) return {};
+      const data = await res.json();
+      return {
+        background: data.artistbackground?.[0]?.url || null,
+        logo: data.hdmusiclogo?.[0]?.url || null
+      };
+    } catch (e) {
+      console.warn('Fanart.tv error:', e);
+    }
+    return {};
+  }
 
 let artistDetails = {};
 
 export default async function fetchArtistDetails(artist) {
     try {
-      const { apiUrl } = await obtenerConfiguracionActiva();
+      const { apiUrl } = await configService();
       const base = apiUrl.replace(/\/$/, "");
       const discogsRes = await fetch(`${base}/discogs?q=${encodeURIComponent(artist)}`);
       const discogsData = await discogsRes.json();
