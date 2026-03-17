@@ -7,7 +7,7 @@ import './components/LoginModal.js';
 import './components/Alphabet.js';
 import './components/Footer.js';
 
-import { loadLibrary } from "./services/libraryService.js";
+import { loadLibrary, checkForUpdatesInBackground } from "./services/libraryService.js";
 import { filterLibrary } from "./utils/libraryFilters.js";
 import { toggleSidebar, loadAlphabet } from "./utils/ui.js";
 import { clearFilters } from "./utils/libraryFilters.js";
@@ -40,6 +40,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   clearLibrary();
 
   modalLogin();
+
+  // Verificar actualizaciones en segundo plano después de 3 segundos
+  // para no interferir con la carga inicial
+  if (navigator.onLine && libraryData && libraryData.length > 0) {
+    setTimeout(() => {
+      checkForUpdatesInBackground();
+    }, 3000);
+  }
 
   if ("serviceWorker" in navigator) {
     try {
