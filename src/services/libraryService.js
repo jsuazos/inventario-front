@@ -6,6 +6,7 @@ import { loadAlphabet } from '../utils/ui.js';
 import configService from './configService.js';
 import obtenerGeneros from '../utils/obtenerGeneros.js';
 import fillSelect from '../utils/filters.js';
+import { libraryStore } from '../state/libraryStore.js';
 
 export function populateFilters(libraryData) {
     const types = new Set(), genres = new Set(), artists = new Set(), years = new Set();
@@ -23,39 +24,46 @@ export function populateFilters(libraryData) {
 
 export async function loadLibrary(libraryData) {
   toggleLoader(true);
+  libraryStore.setLoading(true);
 
   if ((libraryData === null || libraryData.length === 0) && navigator.onLine) {
-    const { apiUrl } = await configService();
-    const url = `${apiUrl.replace(/\/$/, "")}/inventario`;
+    try {
+      const { apiUrl } = await configService();
+      const url = `${apiUrl.replace(/\/$/, "")}/inventario`;
 
-    await fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        libraryData = data.data || [];
-        libraryData.sort((a, b) => {
+      const res = await fetch(url);
+      const data = await res.json();
+      
+      libraryData = data.data || [];
+      libraryData.sort((a, b) => {
+        const claveA = a.Artista.toLowerCase() + ' ' + a.Año;
+        const claveB = b.Artista.toLowerCase() + ' ' + b.Año;
+        return claveA.localeCompare(claveB);
+      });
 
-          const claveA = a.Artista.toLowerCase() + ' ' + a.Año;
-          const claveB = b.Artista.toLowerCase() + ' ' + b.Año;
-
-          return claveA.localeCompare(claveB);
-        });
-
-        localStorage.setItem('libraryData', JSON.stringify(libraryData));
-      })
-      .catch(e => console.error('Error fetching library:', e));
+      libraryStore.loadData(libraryData);
+    } catch (e) {
+      console.error('Error fetching library:', e);
+      libraryData = libraryData || [];
+    }
+  } else {
+    // Usar datos del localStorage
+    libraryStore.init();
   }
 
   populateFilters(libraryData || []);
   displayLibrary(libraryData || []);
   aplicarColoresPorGenero();
-  // Llamar a obtenerTopEstilos después de aplicar los colores para asegurarnos
-  // de que los estilos están aplicados antes de calcular el top
+  
   requestAnimationFrame(() => {
     obtenerTopEstilos();
     loadAlphabet();
   });
+
+  libraryStore.setLoading(false);
   toggleLoader(false);
 
   return libraryData;
 }
+
 

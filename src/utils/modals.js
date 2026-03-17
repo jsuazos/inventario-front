@@ -1,5 +1,7 @@
 import { fetchConStatusOk } from '../services/api.js';
 import configService from '../services/configService.js';
+import { storageService } from '../services/storageService.js';
+import { libraryStore } from '../state/libraryStore.js';
 
 export function clearLibrary() {
     document.getElementById('btn-clear-library').addEventListener('click', () => {
@@ -22,7 +24,10 @@ export function clearLibrary() {
         buttonsStyling: false
         }).then((result) => {
         if (result.isConfirmed) {
-            localStorage.removeItem('libraryData');
+            // Limpiar en el store
+            libraryStore.clearLibrary();
+            // Confirmar limpieza en storage
+            storageService.clearLibraryData();
             location.reload();
         }
         });

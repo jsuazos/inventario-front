@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1.2.5'; // Aumenta esto cada vez que hagas cambios
+const CACHE_VERSION = 'v1.3.0'; // Aumenta esto cada vez que hagas cambios
 const CACHE_NAME = `musica-inventario-${CACHE_VERSION}`;
 const BASE_PATH = '/inventario-front/';
 const urlsToCache = [
@@ -7,6 +7,8 @@ const urlsToCache = [
   `${BASE_PATH}src/services/api.js`,
   `${BASE_PATH}src/services/libraryService.js`,
   `${BASE_PATH}src/services/artistService.js`,
+  `${BASE_PATH}src/services/storageService.js`,
+  `${BASE_PATH}src/state/libraryStore.js`,
   `${BASE_PATH}src/utils/filters.js`,
   `${BASE_PATH}src/utils/hexToRgba.js`,
   `${BASE_PATH}src/utils/obtenerGeneros.js`,

@@ -1,4 +1,5 @@
 import displayLibrary from './libraryDisplay.js';
+import { libraryStore } from '../state/libraryStore.js';
 
 export function filterLibrary(libraryData) {
     const searchText = searchInput.value.toLowerCase();
@@ -7,16 +8,18 @@ export function filterLibrary(libraryData) {
     const artist = filterArtist.value;
     const year = filterYear.value;
 
-    const filtered = libraryData.filter(item => {
-      return (!type || item.Tipo === type)
-        // && (!genre || item.Genero === genre)
-        && (!genre || item.Genero.includes(genre))
-        && (!artist || item.Artista === artist)
-        && (!year || item.Año.toString() === year)
-        && (item.Tipo.toLowerCase().includes(searchText) || item.Genero.toLowerCase().includes(searchText) || item.Disco.toLowerCase().includes(searchText) || item.Artista.toLowerCase().includes(searchText) || item.Año.toString().includes(searchText));
+    // Actualizar en el store
+    libraryStore.updateFilters({
+      search: searchText,
+      type: type,
+      genre: genre,
+      artist: artist,
+      year: year
     });
+
+    const filtered = libraryStore.getFilteredData();
     displayLibrary(filtered);
-  }
+}
 
 export function clearFilters(libraryData) {
     document.getElementById('resetButton').addEventListener('click', () => {
@@ -26,6 +29,9 @@ export function clearFilters(libraryData) {
     filterYear.value = '';
     searchInput.value = '';
 
+    // Limpiar en el store
+    libraryStore.clearFilters();
+
     // Limpiar banner si existe
     const banner = document.getElementById('artistBanner');
     if (banner) banner.innerHTML = '';
@@ -33,6 +39,6 @@ export function clearFilters(libraryData) {
     const grid = document.getElementById('libraryGrid');
     if (grid) grid.innerHTML = '';
 
-    displayLibrary(libraryData);
+    displayLibrary(libraryStore.getFilteredData());
   });
 }

@@ -13,8 +13,12 @@ import { toggleSidebar, loadAlphabet } from "./utils/ui.js";
 import { clearFilters } from "./utils/libraryFilters.js";
 import { clearLibrary } from "./utils/modals.js";
 import { modalLogin } from "./utils/modals.js";
+import { libraryStore } from "./state/libraryStore.js";
 
 window.addEventListener("DOMContentLoaded", async () => {
+  // Inicializar el store desde localStorage
+  libraryStore.init();
+  
   let libraryData = JSON.parse(localStorage.getItem("libraryData")) || [];
 
   libraryData = await loadLibrary(libraryData);
@@ -24,6 +28,11 @@ window.addEventListener("DOMContentLoaded", async () => {
   filterGenre.addEventListener("change", () => filterLibrary(libraryData));
   filterArtist.addEventListener("change", () => filterLibrary(libraryData));
   filterYear.addEventListener("change", () => filterLibrary(libraryData));
+
+  // Suscribirse a cambios del store para cualquier reactividad futura
+  libraryStore.subscribe((state) => {
+    console.debug('Store actualizado:', state);
+  });
 
   clearFilters(libraryData);
   toggleSidebar();
