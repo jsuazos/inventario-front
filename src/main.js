@@ -13,6 +13,7 @@ import { toggleSidebar, loadAlphabet } from "./utils/ui.js";
 import { clearFilters } from "./utils/libraryFilters.js";
 import { clearLibrary } from "./utils/modals.js";
 import { modalLogin } from "./utils/modals.js";
+import { libraryStore } from "./state/libraryStore.js";
 import { errorHandler } from "./services/errorHandler.js";
 
 window.addEventListener("DOMContentLoaded", async () => {
