@@ -22,7 +22,8 @@ https://jsuazos.github.io/inventario-front/
 - 💡 Pensado para expandirse como catálogo, colección o vitrina musical personal.
 - **Soporte PWA**: La aplicación ahora puede instalarse en dispositivos móviles y de escritorio, funcionando incluso sin conexión a internet.
 - 🔄 **Actualización automática en segundo plano**: La app verifica automáticamente si hay cambios en la biblioteca cada vez que el usuario ingresa, actualizando la UI sin interrumpir la navegación actual.
-- 👁️ **Filtrado por visibilidad**: Solo muestra registros donde `Visible == "SI"` según la API.
+- � **Notificaciones detalladas de cambios**: Muestra exactamente qué artistas y discos fueron agregados o eliminados en cada actualización, con un listado completo de los cambios realizados.
+- �👁️ **Filtrado por visibilidad**: Solo muestra registros donde `Visible == "SI"` según la API.
 
 ---
 

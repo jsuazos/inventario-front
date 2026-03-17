@@ -47,36 +47,11 @@ export async function checkForUpdatesInBackground() {
     // Filtrar solo registros con Visible == "SI"
     const filteredApiData = apiData.filter(item => item.Visible === "SI");
 
-    // Comparar con datos locales (comparación completa de todos los elementos)
+    // Comparar con datos locales usando comparación detallada
     const localData = libraryStore.getAllData();
+    const { added, removed } = getDetailedChanges(localData, filteredApiData);
 
-    // Función para comparar arrays de objetos de manera profunda
-    const arraysEqual = (arr1, arr2) => {
-      if (arr1.length !== arr2.length) return false;
-
-      // Ordenar ambos arrays por la misma clave para comparación consistente
-      const sortedArr1 = [...arr1].sort((a, b) => {
-        const keyA = (a.Artista || '').toLowerCase() + ' ' + (a.Año || '');
-        const keyB = (b.Artista || '').toLowerCase() + ' ' + (b.Año || '');
-        return keyA.localeCompare(keyB);
-      });
-
-      const sortedArr2 = [...arr2].sort((a, b) => {
-        const keyA = (a.Artista || '').toLowerCase() + ' ' + (a.Año || '');
-        const keyB = (b.Artista || '').toLowerCase() + ' ' + (b.Año || '');
-        return keyA.localeCompare(keyB);
-      });
-
-      // Comparar elemento por elemento
-      for (let i = 0; i < sortedArr1.length; i++) {
-        if (JSON.stringify(sortedArr1[i]) !== JSON.stringify(sortedArr2[i])) {
-          return false;
-        }
-      }
-      return true;
-    };
-
-    const hasChanges = !arraysEqual(localData, filteredApiData);
+    const hasChanges = added.length > 0 || removed.length > 0;
 
     if (hasChanges && filteredApiData.length > 0) {
       // Ordenar datos de API igual que los locales
@@ -94,8 +69,8 @@ export async function checkForUpdatesInBackground() {
       displayLibrary(filteredApiData);
       aplicarColoresPorGenero();
 
-      // Mostrar mensaje de actualización completada
-      showBackgroundUpdateNotification('✅ Biblioteca actualizada', 'success');
+      // Mostrar notificación detallada con listado de cambios
+      showDetailedChangesNotification(added, removed);
     } else {
       // Mostrar mensaje de que no hay cambios
       showBackgroundUpdateNotification('📋 No hay cambios disponibles', 'info');
@@ -105,6 +80,152 @@ export async function checkForUpdatesInBackground() {
     errorHandler.handleNetworkError(e, 'checkForUpdatesInBackground');
     showBackgroundUpdateNotification('❌ Error al verificar actualizaciones', 'error');
   }
+}
+
+/**
+ * Calcula los cambios detallados entre dos arrays de discos
+ * @param {Array} oldArray - Array anterior
+ * @param {Array} newArray - Array nuevo
+ * @returns {Object} - Objeto con arrays de elementos agregados y eliminados
+ */
+function getDetailedChanges(oldArray, newArray) {
+  // Crear mapas para búsqueda rápida usando una clave única
+  const createKey = (item) => `${item.Artista || ''}|${item.Disco || ''}|${item.Año || ''}`.toLowerCase();
+
+  const oldMap = new Map();
+  const newMap = new Map();
+
+  oldArray.forEach(item => oldMap.set(createKey(item), item));
+  newArray.forEach(item => newMap.set(createKey(item), item));
+
+  const added = [];
+  const removed = [];
+
+  // Encontrar elementos agregados (en newArray pero no en oldArray)
+  newArray.forEach(item => {
+    if (!oldMap.has(createKey(item))) {
+      added.push(item);
+    }
+  });
+
+  // Encontrar elementos eliminados (en oldArray pero no en newArray)
+  oldArray.forEach(item => {
+    if (!newMap.has(createKey(item))) {
+      removed.push(item);
+    }
+  });
+
+  return { added, removed };
+}
+
+/**
+ * Muestra notificación detallada con listado de cambios
+ */
+function showDetailedChangesNotification(added, removed) {
+  if (added.length === 0 && removed.length === 0) {
+    showBackgroundUpdateNotification('📋 No hay cambios disponibles', 'info');
+    return;
+  }
+
+  let message = '✅ Biblioteca actualizada\n\n';
+
+  if (added.length > 0) {
+    message += `➕ Agregados (${added.length}):\n`;
+    added.slice(0, 5).forEach(item => {
+      message += `  • ${item.Artista} - ${item.Disco}\n`;
+    });
+    if (added.length > 5) {
+      message += `  ... y ${added.length - 5} más\n`;
+    }
+    message += '\n';
+  }
+
+  if (removed.length > 0) {
+    message += `➖ Eliminados (${removed.length}):\n`;
+    removed.slice(0, 5).forEach(item => {
+      message += `  • ${item.Artista} - ${item.Disco}\n`;
+    });
+    if (removed.length > 5) {
+      message += `  ... y ${removed.length - 5} más\n`;
+    }
+  }
+
+  // Crear contenedor de notificaciones si no existe
+  let notificationContainer = document.getElementById('background-update-notifications');
+  if (!notificationContainer) {
+    notificationContainer = document.createElement('div');
+    notificationContainer.id = 'background-update-notifications';
+    notificationContainer.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+      max-width: 400px;
+    `;
+    document.body.appendChild(notificationContainer);
+  }
+
+  // Crear notificación detallada
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    border-radius: 4px;
+    padding: 16px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    font-size: 14px;
+    font-family: monospace;
+    white-space: pre-line;
+    max-height: 300px;
+    overflow-y: auto;
+    animation: slideIn 0.3s ease-out;
+  `;
+
+  notification.innerHTML = `
+    <div style="display: flex; align-items: flex-start; gap: 8px;">
+      <div style="flex: 1;">${message.replace(/\n/g, '<br>')}</div>
+      <button onclick="this.parentElement.parentElement.remove()" style="
+        background: none;
+        border: none;
+        color: inherit;
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 1;
+        padding: 0;
+        margin-left: auto;
+        flex-shrink: 0;
+      ">×</button>
+    </div>
+  `;
+
+  // Agregar animación CSS si no existe
+  if (!document.getElementById('background-update-styles')) {
+    const style = document.createElement('style');
+    style.id = 'background-update-styles';
+    style.textContent = `
+      @keyframes slideIn {
+        from { transform: translateY(100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      @keyframes slideOut {
+        from { transform: translateY(0); opacity: 1; }
+        to { transform: translateY(100%); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  notificationContainer.appendChild(notification);
+
+  // Auto-remover después de 10 segundos para notificaciones detalladas
+  setTimeout(() => {
+    if (notification.parentElement) {
+      notification.style.animation = 'slideOut 0.3s ease-in';
+      setTimeout(() => notification.remove(), 300);
+    }
+  }, 10000);
 }
 
 /**
