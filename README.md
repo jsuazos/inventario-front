@@ -53,7 +53,42 @@ Y también:
 <meta name="theme-color" content="#000000">
 ```
 
-## 📦 Instalación y desarrollo local
+## � Notificaciones Detalladas de Cambios
+
+La aplicación incluye un sistema avanzado de notificaciones que informa al usuario exactamente qué cambios ocurrieron en la biblioteca musical durante las actualizaciones automáticas.
+
+### Características de las notificaciones:
+
+- **Listado completo**: Muestra todos los discos agregados y eliminados
+- **Formato claro**: Artista - Disco para fácil identificación
+- **Límite inteligente**: Muestra hasta 5 elementos por categoría, con indicador de "y X más"
+- **Posicionamiento**: Notificaciones fijas en la esquina inferior derecha
+- **Tiempo de visualización**: 10 segundos para notificaciones detalladas
+- **Cierre manual**: Botón X para cerrar anticipadamente
+
+### Ejemplo de notificación:
+
+```
+✅ Biblioteca actualizada
+
+➕ Agregados (3):
+  • Artist A - New Album
+  • Artist B - Latest Release
+  • Artist C - Debut Album
+  ... y 2 más
+
+➖ Eliminados (1):
+  • Old Artist - Outdated Album
+```
+
+### Funcionamiento técnico:
+
+- **Comparación inteligente**: Usa claves únicas basadas en Artista + Disco + Año
+- **Detección precisa**: Identifica agregados y eliminados por separado
+- **Actualización selectiva**: Solo actualiza cuando hay cambios reales
+- **Interfaz no bloqueante**: Las notificaciones no interrumpen la navegación del usuario
+
+## �📦 Instalación y desarrollo local
 
 1. Clona este repositorio:
    ```bash
