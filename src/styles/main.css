@@ -57,7 +57,7 @@ body.sidebar-open {
   background-color: #17a2b8 !important;
   color: #fff !important;
   border: 1px solid #17a2b8;
-  margin-left: 1rem;
+  margin-left: auto; /* Empujar completamente a la derecha */
 }
 
 /* Responsive: ajustar badge en móviles */
@@ -65,7 +65,7 @@ body.sidebar-open {
   #cacheVersionBadge {
     font-size: 0.65rem;
     padding: 0.2rem 0.4rem;
-    margin-left: 0.5rem;
+    margin-left: 0; /* No margin-left en móviles, usa order para posicionamiento */
     margin-top: 0.25rem;
     order: 3; /* Poner el badge después de la búsqueda en móviles */
     align-self: flex-start;
