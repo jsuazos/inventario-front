@@ -2,23 +2,25 @@ class Navbar extends HTMLElement {
   connectedCallback() {
     this.innerHTML = `
         <nav class="navbar navbar-expand-lg navbar-dark px-3 sticky-top">
-            <div class="d-flex w-100 align-items-center gap-2">
-            <!-- Botón hamburguesa -->
-            <button id="toggleSidebar" class="btn btn-outline-light p-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list"
-                viewBox="0 0 16 16">
-                <path fill-rule="evenodd"
-                    d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
-                </svg>
-            </button>
+            <div class="d-flex w-100 align-items-center justify-content-between gap-2 flex-wrap">
+            <!-- Lado izquierdo: botón y búsqueda -->
+            <div class="d-flex align-items-center gap-2 flex-grow-1" style="min-width: 200px;">
+                <button id="toggleSidebar" class="btn btn-outline-light p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list"
+                    viewBox="0 0 16 16">
+                    <path fill-rule="evenodd"
+                        d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
+                    </svg>
+                </button>
 
-            <!-- Input de búsqueda -->
-            <div class="flex-grow-1">
-                <input id="searchInput" class="form-control" type="search" placeholder="Buscar..." autocomplete="off">
+                <!-- Input de búsqueda -->
+                <div class="flex-grow-1">
+                    <input id="searchInput" class="form-control" type="search" placeholder="Buscar..." autocomplete="off">
+                </div>
             </div>
 
-            <!-- Badge de versión del cache -->
-            <div id="cacheVersionBadge" class="badge bg-info text-dark ms-2 d-none">
+            <!-- Lado derecho: badge de versión -->
+            <div id="cacheVersionBadge" class="badge bg-info text-dark align-self-center">
                 <small>Cache: <span id="cacheVersion">Cargando...</span></small>
             </div>
             </div>
@@ -28,58 +30,39 @@ class Navbar extends HTMLElement {
         </nav>
     `;
 
+    console.log('🏗️ Navbar component loaded');
     // Obtener y mostrar la versión del cache después de que se cargue
     this.updateCacheVersion();
   }
 
   async updateCacheVersion() {
     try {
-      if ('serviceWorker' in navigator && 'caches' in window) {
-        const registration = await navigator.serviceWorker.ready;
-        
-        // Esperar un poco para que el service worker esté completamente listo
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Obtener todos los nombres de cache
+      console.log('🔍 Intentando obtener versión del cache...');
+
+      // Método 1: Obtener versión del nombre del cache
+      if ('caches' in window) {
         const cacheNames = await caches.keys();
+        console.log('📦 Caches encontrados:', cacheNames);
+
         const musicCache = cacheNames.find(name => name.includes('musica-inventario'));
-        
         if (musicCache) {
-          // Extraer la versión del nombre del cache (formato: musica-inventario-v1.4.2)
+          console.log('🎵 Cache encontrado:', musicCache);
           const versionMatch = musicCache.match(/musica-inventario-(v[\d\.]+)/);
           if (versionMatch && versionMatch[1]) {
-            const version = versionMatch[1];
-            this.showVersionBadge(version);
+            console.log('✅ Versión obtenida:', versionMatch[1]);
+            this.showVersionBadge(versionMatch[1]);
             return;
           }
         }
-        
-        // Si no se pudo obtener del cache, intentar obtener del service worker
-        if (registration.active) {
-          // Enviar mensaje al service worker para obtener la versión
-          const messageChannel = new MessageChannel();
-          messageChannel.port1.onmessage = (event) => {
-            if (event.data && event.data.cacheVersion) {
-              this.showVersionBadge(event.data.cacheVersion);
-            }
-          };
-          
-          registration.active.postMessage({ type: 'GET_CACHE_VERSION' }, [messageChannel.port2]);
-          
-          // Timeout por si no hay respuesta
-          setTimeout(() => {
-            if (!this.versionShown) {
-              this.showVersionBadge('v1.4.2'); // fallback
-            }
-          }, 2000);
-        } else {
-          // Fallback si no hay service worker activo
-          this.showVersionBadge('v1.4.2');
-        }
       }
+
+      // Método 2: Fallback con versión hardcodeada
+      console.log('⚠️ Usando versión por defecto');
+      this.showVersionBadge('v1.4.3');
+
     } catch (error) {
-      console.log('No se pudo obtener la versión del cache:', error);
-      this.showVersionBadge('N/A');
+      console.error('❌ Error obteniendo versión:', error);
+      this.showVersionBadge('Error');
     }
   }
 
@@ -88,8 +71,10 @@ class Navbar extends HTMLElement {
     const versionSpan = this.querySelector('#cacheVersion');
     if (badge && versionSpan) {
       versionSpan.textContent = version;
-      badge.classList.remove('d-none');
+      console.log('🏷️ Badge actualizado con versión:', version);
       this.versionShown = true;
+    } else {
+      console.error('❌ No se encontraron elementos del badge');
     }
   }
 }
