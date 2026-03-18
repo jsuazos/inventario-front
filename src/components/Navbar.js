@@ -230,92 +230,106 @@ class Navbar extends HTMLElement {
    */
   generateSuggestions(query) {
     const queryLower = query.toLowerCase();
-    const suggestions = new Map(); // Usar Map para evitar duplicados
-    const maxSuggestions = 8;
+    const artistSuggestions = new Map();
+    const otherSuggestions = new Map();
+    const maxArtists = 5;
+    const maxOthers = 3;
 
     // Buscar en diferentes campos
     this.libraryData.forEach(item => {
-      // Artistas
+      // Artistas - máxima prioridad
       if (item.Artista && item.Artista.toLowerCase().includes(queryLower)) {
-        if (!suggestions.has(`artist-${item.Artista}`)) {
-          suggestions.set(`artist-${item.Artista}`, {
+        if (!artistSuggestions.has(`artist-${item.Artista}`)) {
+          artistSuggestions.set(`artist-${item.Artista}`, {
             text: item.Artista,
             type: 'Artista',
             icon: '🎤',
-            count: this.libraryData.filter(i => i.Artista === item.Artista).length
+            count: this.libraryData.filter(i => i.Artista === item.Artista).length,
+            priority: 0 // Máxima prioridad
           });
         }
       }
 
-      // Discos
-      if (item.Disco && item.Disco.toLowerCase().includes(queryLower)) {
-        if (!suggestions.has(`album-${item.Disco}`)) {
-          suggestions.set(`album-${item.Disco}`, {
-            text: item.Disco,
-            type: 'Disco',
-            icon: '💿',
-            artist: item.Artista
-          });
+      // Otros tipos
+      if (otherSuggestions.size < maxOthers) {
+        // Discos
+        if (item.Disco && item.Disco.toLowerCase().includes(queryLower)) {
+          if (!otherSuggestions.has(`album-${item.Disco}`) && !artistSuggestions.has(`album-${item.Disco}`)) {
+            otherSuggestions.set(`album-${item.Disco}`, {
+              text: item.Disco,
+              type: 'Disco',
+              icon: '💿',
+              artist: item.Artista,
+              priority: 1
+            });
+          }
         }
-      }
 
-      // Géneros
-      if (item.Genero && item.Genero.toLowerCase().includes(queryLower)) {
-        if (!suggestions.has(`genre-${item.Genero}`)) {
-          suggestions.set(`genre-${item.Genero}`, {
-            text: item.Genero,
-            type: 'Género',
-            icon: '🎵',
-            count: this.libraryData.filter(i => i.Genero === item.Genero).length
-          });
+        // Géneros
+        if (item.Genero && item.Genero.toLowerCase().includes(queryLower)) {
+          if (!otherSuggestions.has(`genre-${item.Genero}`) && !artistSuggestions.has(`genre-${item.Genero}`)) {
+            otherSuggestions.set(`genre-${item.Genero}`, {
+              text: item.Genero,
+              type: 'Género',
+              icon: '🎵',
+              count: this.libraryData.filter(i => i.Genero === item.Genero).length,
+              priority: 2
+            });
+          }
         }
-      }
 
-      // Tipos
-      if (item.Tipo && item.Tipo.toLowerCase().includes(queryLower)) {
-        if (!suggestions.has(`type-${item.Tipo}`)) {
-          suggestions.set(`type-${item.Tipo}`, {
-            text: item.Tipo,
-            type: 'Tipo',
-            icon: '📀',
-            count: this.libraryData.filter(i => i.Tipo === item.Tipo).length
-          });
+        // Tipos
+        if (item.Tipo && item.Tipo.toLowerCase().includes(queryLower)) {
+          if (!otherSuggestions.has(`type-${item.Tipo}`) && !artistSuggestions.has(`type-${item.Tipo}`)) {
+            otherSuggestions.set(`type-${item.Tipo}`, {
+              text: item.Tipo,
+              type: 'Tipo',
+              icon: '📀',
+              count: this.libraryData.filter(i => i.Tipo === item.Tipo).length,
+              priority: 3
+            });
+          }
         }
-      }
 
-      // Años
-      if (item.Año && item.Año.toString().includes(query)) {
-        const yearKey = `year-${item.Año}`;
-        if (!suggestions.has(yearKey)) {
-          suggestions.set(yearKey, {
-            text: item.Año.toString(),
-            type: 'Año',
-            icon: '📅',
-            count: this.libraryData.filter(i => i.Año === item.Año).length
-          });
+        // Años
+        if (item.Año && item.Año.toString().includes(query)) {
+          const yearKey = `year-${item.Año}`;
+          if (!otherSuggestions.has(yearKey) && !artistSuggestions.has(yearKey)) {
+            otherSuggestions.set(yearKey, {
+              text: item.Año.toString(),
+              type: 'Año',
+              icon: '📅',
+              count: this.libraryData.filter(i => i.Año === item.Año).length,
+              priority: 4
+            });
+          }
         }
       }
     });
 
-    // Convertir a array y ordenar por relevancia
-    return Array.from(suggestions.values())
+    // Combinar y ordenar: artistas primero, luego otros por prioridad
+    const allSuggestions = [
+      ...Array.from(artistSuggestions.values()).slice(0, maxArtists),
+      ...Array.from(otherSuggestions.values()).slice(0, maxOthers)
+    ];
+
+    // Ordenar por prioridad y luego por relevancia
+    return allSuggestions
       .sort((a, b) => {
-        // Priorizar coincidencias exactas
+        // Primero por prioridad (artistas tienen prioridad 0)
+        if (a.priority !== b.priority) {
+          return a.priority - b.priority;
+        }
+
+        // Luego por coincidencia exacta
         const aExact = a.text.toLowerCase() === queryLower;
         const bExact = b.text.toLowerCase() === queryLower;
         if (aExact && !bExact) return -1;
         if (!aExact && bExact) return 1;
         
-        // Luego por tipo (artistas primero)
-        const typeOrder = { 'Artista': 0, 'Disco': 1, 'Género': 2, 'Tipo': 3, 'Año': 4 };
-        const aOrder = typeOrder[a.type] || 5;
-        const bOrder = typeOrder[b.type] || 5;
-        if (aOrder !== bOrder) return aOrder - bOrder;
-        
         // Finalmente por conteo (más frecuentes primero)
         return (b.count || 0) - (a.count || 0);
-      })
-      .slice(0, maxSuggestions);
+      });
   }
 
   /**
