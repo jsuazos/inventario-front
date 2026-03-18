@@ -4,6 +4,8 @@ class Navbar extends HTMLElement {
     this.libraryData = [];
     this.currentFocus = -1;
     this.searchTimeout = null;
+    this.isSelectingSuggestion = false; // Bandera para evitar ejecución duplicada
+    this.justSelectedSuggestion = false; // Bandera para evitar mostrar dropdown después de selección
   }
 
   connectedCallback() {
@@ -102,6 +104,12 @@ class Navbar extends HTMLElement {
    * Maneja el input del usuario
    */
   handleInput(e) {
+    // Si se está seleccionando una sugerencia, no ejecutar búsqueda adicional
+    if (this.isSelectingSuggestion) {
+      this.isSelectingSuggestion = false;
+      return;
+    }
+
     const query = e.target.value.trim();
     
     // Limpiar timeout anterior
@@ -155,6 +163,12 @@ class Navbar extends HTMLElement {
    * Maneja el foco en el input
    */
   handleFocus() {
+    // Si se acaba de seleccionar una sugerencia, no mostrar dropdown
+    if (this.justSelectedSuggestion) {
+      this.justSelectedSuggestion = false;
+      return;
+    }
+
     const query = this.querySelector('#searchInput').value.trim();
     if (query.length >= 2) {
       this.showSuggestions(query);
@@ -334,11 +348,16 @@ class Navbar extends HTMLElement {
     const selectedText = textElement ? textElement.textContent : suggestionElement.textContent;
     
     const searchInput = this.querySelector('#searchInput');
+    
+    // Marcar que se está seleccionando una sugerencia para evitar ejecución duplicada
+    this.isSelectingSuggestion = true;
+    this.justSelectedSuggestion = true; // Evitar que se muestre dropdown en focus
+    
     searchInput.value = selectedText;
     
     this.hideDropdown();
     
-    // Trigger search
+    // Trigger search - esto ejecutará handleInput pero será ignorado por la bandera
     searchInput.dispatchEvent(new Event('input'));
     searchInput.focus();
   }
