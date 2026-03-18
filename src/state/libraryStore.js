@@ -24,7 +24,7 @@ export class LibraryStore {
    * Inicializa el store desde storage
    */
   init() {
-    this.data = storageService.getLibraryData();
+    this.data = this.deduplicateData(storageService.getLibraryData());
     this.filteredData = this.data;
     this.notifyListeners();
   }
@@ -35,11 +35,34 @@ export class LibraryStore {
    */
   loadData(apiData) {
     if (apiData && apiData.length > 0) {
-      this.data = apiData;
+      this.data = this.deduplicateData(apiData);
       storageService.saveLibraryData(this.data);
       this.filteredData = [...this.data];
       this.notifyListeners();
     }
+  }
+
+  /**
+   * Deduplica los datos usando el campo ID como identificador único
+   * @param {Array} data - Datos a deduplicar
+   * @returns {Array} Datos deduplicados
+   */
+  deduplicateData(data) {
+    if (!Array.isArray(data)) return [];
+    
+    const seen = new Set();
+    return data.filter(item => {
+      // Usar ID como identificador único, o combinación de Artista+Disco+Año si no hay ID
+      const uniqueKey = item.ID || `${item.Artista || ''}-${item.Disco || ''}-${item.Año || ''}`;
+      
+      if (seen.has(uniqueKey)) {
+        console.warn('🔄 Duplicado encontrado y eliminado:', uniqueKey);
+        return false;
+      }
+      
+      seen.add(uniqueKey);
+      return true;
+    });
   }
 
   /**

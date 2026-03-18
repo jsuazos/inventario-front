@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1.4.3'; // Aumenta esto cada vez que hagas cambios
+const CACHE_VERSION = 'v1.4.4'; // Aumenta esto cada vez que hagas cambios
 const CACHE_NAME = `musica-inventario-${CACHE_VERSION}`;
 
 // Detectar entorno basado en la URL
