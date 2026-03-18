@@ -21,12 +21,23 @@ export default async function displayLibrary(items) {
     }
     
     items.forEach((item, index) => {
-        const imageUrl =  item.imgFULL && 
+        let imageUrl =  item.imgFULL && 
                         item.imgFULL.length > 0 && 
                         item.imgFULL !== 'No matching results' && 
                         item.imgFULL !== '#ERROR!' ? 
-                        item.imgFULL : item.img && item.img.length > 10 ? item.img : 'https://via.placeholder.com/300x300?text=Sin+Imagen';
-        
+                        item.imgFULL : item.img && item.img.length > 10 ? item.img : '';
+        // https://e7.pngegg.com/pngimages/615/599/png-clipart-phonograph-record-lp-record-compact-disc-compact-cassette-cd-r-vinyl-group-cdr-album-thumbnail.png
+
+        // Diferencia imagen segun tipo
+        if (item.Tipo.toLowerCase() === 'vinilo' && imageUrl === '') {
+          imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/12in-Vinyl-LP-Record-Angle.jpg/330px-12in-Vinyl-LP-Record-Angle.jpg';
+        } else if (item.Tipo.toLowerCase() === 'cd' && !imageUrl) {
+          imageUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMvn4Yy63ntOeR9vSFVLaa8yn0Nzv_kz1p1Q&s';
+        } else if (!imageUrl) {
+          imageUrl = 'https://i.pinimg.com/originals/62/e6/1a/62e61ad9aedd381bb24f768c09d416f6.jpg';
+        }
+
+
         const firstLetterPrev = grid.querySelector(`.letra-${item.Artista.toUpperCase().charAt(0)}`);
         const firstLetter = item.Artista.toUpperCase().charAt(0);
         let letterHeader = '';
@@ -45,7 +56,7 @@ export default async function displayLibrary(items) {
             <div class="borde-overlay" data-genero="${ generoPrincipal }"></div>
             <div class="card-img-overlay d-flex flex-column justify-content-end pb-1">
                 <div class="position-absolute top-0 start-0 d-flex gap-2 p-3">
-                ${item.ID !== '' ? `<a href="https://www.discogs.com/es/release/${ item.ID.slice(1)}" target="_blank" class="btn btn-dark btn-sm btn-discorgs">Discogs</a>` : '' }"
+                ${item.ID !== '' ? `<a href="https://www.discogs.com/es/release/${ item.ID.slice(1)}" target="_blank" class="btn btn-dark btn-sm btn-discorgs">Discogs</a>` : '' }
                 </div>
                 <ul class="list-unstyled text-white">
                 <li class="fw-bold text-hide">${ item.Artista }</li>
