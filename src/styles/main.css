@@ -48,6 +48,26 @@ body.sidebar-open {
   text-align: center;
 }
 
+/* Estilos para el badge de versión del cache */
+#cacheVersionBadge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  transition: opacity 0.3s ease;
+}
+
+#cacheVersionBadge.d-none {
+  opacity: 0;
+}
+
+/* Responsive: ocultar badge en móviles pequeños */
+@media (max-width: 576px) {
+  #cacheVersionBadge {
+    display: none !important;
+  }
+}
+
 @media (max-width: 576px) {
   .search-bar {
     width: 100% !important;

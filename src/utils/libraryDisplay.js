@@ -25,8 +25,7 @@ export default async function displayLibrary(items) {
                         item.imgFULL.length > 0 && 
                         item.imgFULL !== 'No matching results' && 
                         item.imgFULL !== '#ERROR!' ? 
-                        item.imgFULL : item.img && item.img.length > 10 ? item.img : 'https://via.placeholder.com/80x80?text=🎵';
-
+                        item.imgFULL : item.img && item.img.length > 10 ? item.img : 'https://via.placeholder.com/300x300?text=Sin+Imagen';
         
         const firstLetterPrev = grid.querySelector(`.letra-${item.Artista.toUpperCase().charAt(0)}`);
         const firstLetter = item.Artista.toUpperCase().charAt(0);

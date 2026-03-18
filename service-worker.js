@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1.4.0'; // Aumenta esto cada vez que hagas cambios
+const CACHE_VERSION = 'v1.4.2'; // Aumenta esto cada vez que hagas cambios
 const CACHE_NAME = `musica-inventario-${CACHE_VERSION}`;
 
 // Detectar entorno basado en la URL
@@ -91,6 +91,13 @@ self.addEventListener('install', event => {
       console.error('❌ Error crítico al abrir cache:', error);
     })
   );
+});
+
+
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'GET_CACHE_VERSION') {
+    event.ports[0].postMessage({ cacheVersion: CACHE_VERSION });
+  }
 });
 
 

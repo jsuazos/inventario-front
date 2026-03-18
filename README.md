@@ -23,8 +23,7 @@ https://jsuazos.github.io/inventario-front/
 - **Soporte PWA**: La aplicación ahora puede instalarse en dispositivos móviles y de escritorio, funcionando incluso sin conexión a internet.
 - 🔄 **Actualización automática en segundo plano**: La app verifica automáticamente si hay cambios en la biblioteca cada vez que el usuario ingresa, actualizando la UI sin interrumpir la navegación actual.
 - � **Notificaciones detalladas de cambios**: Muestra exactamente qué artistas y discos fueron agregados o eliminados en cada actualización, con un listado completo de los cambios realizados.
-- �👁️ **Filtrado por visibilidad**: Solo muestra registros donde `Visible == "SI"` según la API.
-
+- �👁️ **Filtrado por visibilidad**: Solo muestra registros donde `Visible == "SI"` según la API.- 🏷️ **Badge de versión del cache**: Muestra la versión actual del service worker/cache en la barra de navegación superior derecha.
 ---
 
 ## 📱 Progressive Web App (PWA)
