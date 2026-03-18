@@ -24,7 +24,7 @@ class Navbar extends HTMLElement {
 
                 <!-- Input de búsqueda con autocompletado -->
                 <div class="flex-grow-1 position-relative">
-                    <input id="searchInput" class="form-control" type="search" placeholder="Buscar artistas, discos, géneros..." autocomplete="off">
+                    <input id="searchInput" class="form-control" type="search" placeholder="Buscar artistas, discos, géneros..." autocomplete="off" style="text-transform: lowercase;">
                     
                     <!-- Dropdown de autocompletado -->
                     <div id="searchDropdown" class="search-dropdown position-absolute w-100 mt-1 bg-dark border rounded shadow-lg d-none" style="z-index: 1050; max-height: 300px; overflow-y: auto;">
@@ -104,6 +104,15 @@ class Navbar extends HTMLElement {
    * Maneja el input del usuario
    */
   handleInput(e) {
+    // Convertir el valor a minúsculas
+    const originalValue = e.target.value;
+    const lowerCaseValue = originalValue.toLowerCase();
+    
+    // Si el valor cambió, actualizarlo
+    if (originalValue !== lowerCaseValue) {
+      e.target.value = lowerCaseValue;
+    }
+
     // Si se está seleccionando una sugerencia, no ejecutar búsqueda adicional
     if (this.isSelectingSuggestion) {
       this.isSelectingSuggestion = false;
@@ -169,7 +178,15 @@ class Navbar extends HTMLElement {
       return;
     }
 
-    const query = this.querySelector('#searchInput').value.trim();
+    const searchInput = this.querySelector('#searchInput');
+    // Asegurar que el valor esté en minúsculas al hacer foco
+    const currentValue = searchInput.value;
+    const lowerCaseValue = currentValue.toLowerCase();
+    if (currentValue !== lowerCaseValue) {
+      searchInput.value = lowerCaseValue;
+    }
+
+    const query = searchInput.value.trim();
     if (query.length >= 2) {
       this.showSuggestions(query);
     }
@@ -353,7 +370,8 @@ class Navbar extends HTMLElement {
     this.isSelectingSuggestion = true;
     this.justSelectedSuggestion = true; // Evitar que se muestre dropdown en focus
     
-    searchInput.value = selectedText;
+    // Asegurar que el texto esté en minúsculas
+    searchInput.value = selectedText.toLowerCase();
     
     this.hideDropdown();
     
