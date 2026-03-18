@@ -65,20 +65,22 @@ body.sidebar-open {
   #cacheVersionBadge {
     font-size: 0.65rem;
     padding: 0.2rem 0.4rem;
-    margin-left: 0; /* No margin-left en móviles, usa order para posicionamiento */
-    margin-top: 0.25rem;
-    order: 3; /* Poner el badge después de la búsqueda en móviles */
-    align-self: flex-start;
+    margin-left: auto; /* Mantener alineación a la derecha */
+    margin-top: 0;
+    order: 2;
+    align-self: center;
   }
 
-  /* Ajustar el contenedor principal para móviles */
+  /* Ajustar el contenedor principal para móviles - quitar flex-wrap para mantener fila */
   .navbar .d-flex {
-    flex-wrap: wrap !important;
+    flex-wrap: nowrap !important; /* Mantener en una fila */
   }
 
   .navbar .d-flex > div:first-child {
-    width: 100% !important;
-    margin-bottom: 0.5rem;
+    width: auto !important; /* Permitir que se ajuste al contenido */
+    margin-bottom: 0;
+    flex-shrink: 1; /* Permitir que se encoja */
+    min-width: 150px; /* Mínimo para que quepa el botón */
   }
 }
 
