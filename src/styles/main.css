@@ -60,6 +60,28 @@ body.sidebar-open {
   margin-left: auto; /* Empujar completamente a la derecha */
 }
 
+/* Marca visual para items no recibidos */
+.not-received-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: rgba(220, 53, 69, 0.9);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  font-weight: bold;
+  font-size: 0.7rem;
+  z-index: 10;
+  transform: rotate(45deg) translate(35%, -50%);
+  transform-origin: top right;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  min-width: 150px;
+  text-align: center;
+}
+
+.not-received-badge span {
+  display: inline-block;
+}
+
 /* Estilos para el dropdown de autocompletado */
 .search-dropdown {
   border-color: #495057 !important;

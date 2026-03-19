@@ -14,7 +14,8 @@ export class LibraryStore {
       type: '',
       genre: '',
       artist: '',
-      year: ''
+      year: '',
+      recibido: ''
     };
     this.listeners = [];
     this.isLoading = false;
@@ -56,7 +57,7 @@ export class LibraryStore {
    * Aplica los filtros al dataset
    */
   applyFilters() {
-    const { search, type, genre, artist, year } = this.filters;
+    const { search, type, genre, artist, year, recibido } = this.filters;
 
     this.filteredData = this.data.filter(item => {
       const matchSearch = 
@@ -70,8 +71,9 @@ export class LibraryStore {
       const matchGenre = !genre || item.Genero.includes(genre);
       const matchArtist = !artist || item.Artista === artist;
       const matchYear = !year || item.Año.toString() === year;
+      const matchRecibido = !recibido || (item.Recibido && item.Recibido === recibido);
 
-      return matchSearch && matchType && matchGenre && matchArtist && matchYear;
+      return matchSearch && matchType && matchGenre && matchArtist && matchYear && matchRecibido;
     });
   }
 
@@ -84,7 +86,8 @@ export class LibraryStore {
       type: '',
       genre: '',
       artist: '',
-      year: ''
+      year: '',
+      recibido: ''
     };
     this.filteredData = [...this.data];
     this.notifyListeners();

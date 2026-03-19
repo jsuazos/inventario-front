@@ -54,6 +54,7 @@ export default async function displayLibrary(items) {
             <div class ="card position-relative overflow-hidden border-0 rounded-1">
             <img src="${imageUrl}" class="" alt="Carátula ${index}">
             <div class="borde-overlay" data-genero="${ generoPrincipal }"></div>
+            ${item.Recibido === 'NO' ? '<div class="not-received-badge"><span>NO RECIBIDO</span></div>' : ''}
             <div class="card-img-overlay d-flex flex-column justify-content-end pb-1">
                 <div class="position-absolute top-0 start-0 d-flex gap-2 p-3">
                 ${item.ID !== '' ? `<a href="https://www.discogs.com/es/release/${ item.ID.slice(1)}" target="_blank" class="btn btn-dark btn-sm btn-discorgs">Discogs</a>` : '' }

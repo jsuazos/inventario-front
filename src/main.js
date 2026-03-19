@@ -30,6 +30,11 @@ window.addEventListener("DOMContentLoaded", async () => {
   filterArtist.addEventListener("change", () => filterLibrary(libraryData));
   filterYear.addEventListener("change", () => filterLibrary(libraryData));
 
+  // Event listeners para el filtro de Recibido
+  document.querySelectorAll('input[name="filterRecibido"]').forEach(radio => {
+    radio.addEventListener("change", () => filterLibrary(libraryData));
+  });
+
   // Suscribirse a cambios del store para cualquier reactividad futura
   libraryStore.subscribe((state) => {
     console.debug('Store actualizado:', state);

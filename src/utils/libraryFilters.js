@@ -7,6 +7,7 @@ export function filterLibrary(libraryData) {
     const genre = filterGenre.value;
     const artist = filterArtist.value;
     const year = filterYear.value;
+    const recibido = document.querySelector('input[name="filterRecibido"]:checked')?.value || '';
 
     // Actualizar en el store
     libraryStore.updateFilters({
@@ -14,7 +15,8 @@ export function filterLibrary(libraryData) {
       type: type,
       genre: genre,
       artist: artist,
-      year: year
+      year: year,
+      recibido: recibido
     });
 
     const filtered = libraryStore.getFilteredData();
@@ -28,6 +30,9 @@ export function clearFilters(libraryData) {
     filterArtist.value = '';
     filterYear.value = '';
     searchInput.value = '';
+    
+    // Resetear el filtro de Recibido a "Todos"
+    document.getElementById('filterRecibidoTodos').checked = true;
 
     // Limpiar en el store
     libraryStore.clearFilters();
