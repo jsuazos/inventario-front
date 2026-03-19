@@ -492,13 +492,21 @@ html {
 
 
 .recibido-filter {
-  display: inline-flex;
+  --h: 42px;
+  --p: 5px;
+  --speed: 420ms;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: repeat(3, 1fr);
   align-items: center;
-  gap: 6px;
-  padding: 6px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
+  padding: var(--p);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.045);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  overflow: hidden;
 }
 
 .recibido-filter input[type="radio"] {
@@ -506,41 +514,79 @@ html {
 }
 
 .recibido-filter label {
+  position: relative;
+  z-index: 2;
+  min-width: 120px;
+  height: var(--h);
   margin: 0;
-  padding: 8px 14px;
-  border-radius: 10px;
-  font-size: 0.92rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border-radius: 12px;
+  font-size: 0.95rem;
   font-weight: 500;
-  line-height: 1;
-  color: rgba(255, 255, 255, 0.68);
+  color: rgba(255, 255, 255, 0.72);
   cursor: pointer;
   user-select: none;
-  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  transition:
+    color var(--speed) ease,
+    transform var(--speed) ease;
 }
 
 .recibido-filter label:hover {
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.95);
 }
 
-.recibido-filter input[type="radio"]:checked + label {
-  background: #2f6df6;
+.recibido-filter-slider {
+  position: absolute;
+  z-index: 1;
+  top: var(--p);
+  left: var(--p);
+  width: calc((100% - (var(--p) * 2)) / 3);
+  height: calc(100% - (var(--p) * 2));
+  border-radius: 12px;
+  background: linear-gradient(180deg, #3d7bfd 0%, #2f6df6 100%);
+  box-shadow:
+    0 8px 24px rgba(47, 109, 246, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition:
+    transform var(--speed) var(--ease),
+    background var(--speed) ease,
+    box-shadow var(--speed) ease;
+}
+
+/* texto activo */
+#filterRecibidoTodos:checked + label,
+#filterRecibidoSI:checked + label,
+#filterRecibidoNO:checked + label {
   color: #fff;
-  box-shadow: 0 6px 18px rgba(47, 109, 246, 0.28);
 }
 
-.recibido-filter input[type="radio"]:checked + label[for="filterRecibidoSI"] {
-  background: #1f9d63;
-  box-shadow: 0 6px 18px rgba(31, 157, 99, 0.24);
+/* mover slider */
+#filterRecibidoTodos:checked ~ .recibido-filter-slider {
+  transform: translateX(0%);
 }
 
-.recibido-filter input[type="radio"]:checked + label[for="filterRecibidoNO"] {
-  background: #c64545;
-  box-shadow: 0 6px 18px rgba(198, 69, 69, 0.22);
+#filterRecibidoSI:checked ~ .recibido-filter-slider {
+  transform: translateX(100%);
 }
 
-.recibido-filter input[type="radio"]:checked + label {
-  background: #2f6df6;
-  color: #fff;
-  box-shadow: 0 6px 18px rgba(47, 109, 246, 0.28);
+#filterRecibidoNO:checked ~ .recibido-filter-slider {
+  transform: translateX(200%);
+}
+
+/* opcional: color distinto por estado */
+#filterRecibidoSI:checked ~ .recibido-filter-slider {
+  background: linear-gradient(180deg, #249f67 0%, #1f8e5b 100%);
+  box-shadow:
+    0 8px 24px rgba(31, 142, 91, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+#filterRecibidoNO:checked ~ .recibido-filter-slider {
+  background: linear-gradient(180deg, #d55353 0%, #c64545 100%);
+  box-shadow:
+    0 8px 24px rgba(198, 69, 69, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
