@@ -5,7 +5,7 @@ import obtenerTopEstilos from '../utils/obtenerTopEstilos.js';
 import { loadAlphabet } from '../utils/ui.js';
 import configService from './configService.js';
 import obtenerGeneros from '../utils/obtenerGeneros.js';
-import fillSelect from '../utils/filters.js';
+// import fillSelect from '../utils/filters.js';
 import { libraryStore } from '../state/libraryStore.js';
 import { errorHandler } from './errorHandler.js';
 
@@ -17,10 +17,10 @@ export function populateFilters(libraryData) {
       years.add(item.Año);
     });
     obtenerGeneros(libraryData).forEach(genero => genres.add(genero));
-    fillSelect('filterType', types);
-    fillSelect('filterGenre', genres);
-    fillSelect('filterArtist', artists);
-    fillSelect('filterYear', years);
+    // fillSelect('filterType', types);
+    // fillSelect('filterGenre', genres);
+    // fillSelect('filterArtist', artists);
+    // fillSelect('filterYear', years);
 }
 
 /**

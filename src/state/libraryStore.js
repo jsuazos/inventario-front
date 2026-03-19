@@ -80,18 +80,18 @@ export class LibraryStore {
   /**
    * Limpia todos los filtros
    */
-  clearFilters() {
-    this.filters = {
-      search: '',
-      type: '',
-      genre: '',
-      artist: '',
-      year: '',
-      recibido: ''
-    };
-    this.filteredData = [...this.data];
-    this.notifyListeners();
-  }
+  // clearFilters() {
+  //   this.filters = {
+  //     search: '',
+  //     type: '',
+  //     genre: '',
+  //     artist: '',
+  //     year: '',
+  //     recibido: ''
+  //   };
+  //   this.filteredData = [...this.data];
+  //   this.notifyListeners();
+  // }
 
   /**
    * Limpia toda la biblioteca

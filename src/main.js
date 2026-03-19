@@ -10,7 +10,7 @@ import './components/Footer.js';
 import { loadLibrary, checkForUpdatesInBackground } from "./services/libraryService.js";
 import { filterLibrary } from "./utils/libraryFilters.js";
 import { toggleSidebar, loadAlphabet } from "./utils/ui.js";
-import { clearFilters } from "./utils/libraryFilters.js";
+// import { clearFilters } from "./utils/libraryFilters.js";
 import { clearLibrary } from "./utils/modals.js";
 import { modalLogin } from "./utils/modals.js";
 import { libraryStore } from "./state/libraryStore.js";
@@ -25,10 +25,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   libraryData = await loadLibrary(libraryData);
 
   searchInput.addEventListener("input", () => filterLibrary(libraryData));
-  filterType.addEventListener("change", () => filterLibrary(libraryData));
-  filterGenre.addEventListener("change", () => filterLibrary(libraryData));
-  filterArtist.addEventListener("change", () => filterLibrary(libraryData));
-  filterYear.addEventListener("change", () => filterLibrary(libraryData));
+  // filterType.addEventListener("change", () => filterLibrary(libraryData));
+  // filterGenre.addEventListener("change", () => filterLibrary(libraryData));
+  // filterArtist.addEventListener("change", () => filterLibrary(libraryData));
+  // filterYear.addEventListener("change", () => filterLibrary(libraryData));
 
   // Event listeners para el filtro de Recibido
   document.querySelectorAll('input[name="filterRecibido"]').forEach(radio => {
@@ -40,7 +40,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     console.debug('Store actualizado:', state);
   });
 
-  clearFilters(libraryData);
+  // clearFilters(libraryData);
   toggleSidebar();
   clearLibrary();
 
