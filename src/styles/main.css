@@ -63,8 +63,8 @@ body.sidebar-open {
 /* Marca visual para items no recibidos */
 .not-received-badge {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 55px;
+  right: 25px;
   background-color: rgba(220, 53, 69, 0.9);
   color: white;
   padding: 0.5rem 0.75rem;
@@ -589,4 +589,17 @@ html {
   box-shadow:
     0 8px 24px rgba(198, 69, 69, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+@media (max-width: 576px) {
+  .recibido-filter {
+    width: 100%;
+  }
+
+  .recibido-filter label {
+    min-width: auto;      /* quita el ancho fijo */
+    width: 100%;          /* cada uno ocupa su celda */
+    font-size: 0.85rem;   /* opcional: más compacto */
+    padding: 0 8px;
+  }
 }
