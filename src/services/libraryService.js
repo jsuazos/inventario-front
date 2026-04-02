@@ -54,10 +54,11 @@ export async function checkForUpdatesInBackground() {
     const hasChanges = added.length > 0 || removed.length > 0;
 
     if (hasChanges && filteredApiData.length > 0) {
+
       // Ordenar datos de API igual que los locales
       filteredApiData.sort((a, b) => {
-        const claveA = a.Artista.toLowerCase() + ' ' + a.Año;
-        const claveB = b.Artista.toLowerCase() + ' ' + b.Año;
+        const claveA = a.Artista.toLowerCase() + ' ' + a.Año + ' ' + a.Disco.toLowerCase() + ' ' + a.Recibido.toLowerCase();
+        const claveB = b.Artista.toLowerCase() + ' ' + b.Año + ' ' + b.Disco.toLowerCase() + ' ' + b.Recibido.toLowerCase();
         return claveA.localeCompare(claveB);
       });
 
@@ -90,13 +91,15 @@ export async function checkForUpdatesInBackground() {
  */
 function getDetailedChanges(oldArray, newArray) {
   // Crear mapas para búsqueda rápida usando una clave única
-  const createKey = (item) => `${item.Artista || ''}|${item.Disco || ''}|${item.Año || ''}`.toLowerCase();
+  const createKey = (item) => `${item.ID || ''}|${item.Artista || ''}|${item.Disco || ''}|${item.Año || ''}|${item.Recibido || ''}`.toLowerCase();
 
   const oldMap = new Map();
   const newMap = new Map();
 
   oldArray.forEach(item => oldMap.set(createKey(item), item));
   newArray.forEach(item => newMap.set(createKey(item), item));
+
+  console.info(`Comparando datos: ${oldArray.length} registros locales vs ${newArray.length} registros API` );
 
   const added = [];
   const removed = [];
