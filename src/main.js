@@ -13,6 +13,7 @@ import { toggleSidebar, loadAlphabet } from "./utils/ui.js";
 // import { clearFilters } from "./utils/libraryFilters.js";
 import { clearLibrary } from "./utils/modals.js";
 import { modalLogin } from "./utils/modals.js";
+import displayLibrary from "./utils/libraryDisplay.js";
 import { libraryStore } from "./state/libraryStore.js";
 import { errorHandler } from "./services/errorHandler.js";
 
@@ -23,6 +24,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   let libraryData = JSON.parse(localStorage.getItem("libraryData")) || [];
 
   libraryData = await loadLibrary(libraryData);
+  libraryStore.loadData(libraryData);
 
   searchInput.addEventListener("input", () => filterLibrary(libraryData));
   // filterType.addEventListener("change", () => filterLibrary(libraryData));
@@ -35,9 +37,9 @@ window.addEventListener("DOMContentLoaded", async () => {
     radio.addEventListener("change", () => filterLibrary(libraryData));
   });
 
-  // Suscribirse a cambios del store para cualquier reactividad futura
+  // Suscribirse a cambios del store para refrescar la vista al aplicar filtros u ordenamientos
   libraryStore.subscribe((state) => {
-    console.debug('Store actualizado:', state);
+    displayLibrary(state.data);
   });
 
   // clearFilters(libraryData);

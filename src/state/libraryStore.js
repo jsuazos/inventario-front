@@ -15,7 +15,8 @@ export class LibraryStore {
       genre: '',
       artist: '',
       year: '',
-      recibido: ''
+      recibido: '',
+      sortBy: ''
     };
     this.listeners = [];
     this.isLoading = false;
@@ -26,7 +27,7 @@ export class LibraryStore {
    */
   init() {
     this.data = storageService.getLibraryData();
-    this.filteredData = this.data;
+    this.applyFilters();
     this.notifyListeners();
   }
 
@@ -38,7 +39,7 @@ export class LibraryStore {
     if (apiData && apiData.length > 0) {
       this.data = apiData;
       storageService.saveLibraryData(this.data);
-      this.filteredData = [...this.data];
+      this.applyFilters();
       this.notifyListeners();
     }
   }
@@ -57,7 +58,7 @@ export class LibraryStore {
    * Aplica los filtros al dataset
    */
   applyFilters() {
-    const { search, type, genre, artist, year, recibido } = this.filters;
+    const { search, type, genre, artist, year, recibido, sortBy } = this.filters;
 
     this.filteredData = this.data.filter(item => {
       const matchSearch = 
@@ -75,6 +76,18 @@ export class LibraryStore {
 
       return matchSearch && matchType && matchGenre && matchArtist && matchYear && matchRecibido;
     });
+
+    if (sortBy === 'orden') {
+      this.filteredData.sort((a, b) => (parseFloat(b.Orden) || 0) - (parseFloat(a.Orden) || 0));
+    } else if (sortBy === 'anio') {
+      this.filteredData.sort((a, b) => (parseInt(a.Año) || 0) - (parseInt(b.Año) || 0));
+    } else if (sortBy === 'genero') {
+      this.filteredData.sort((a, b) => a.Genero.localeCompare(b.Genero));
+    } else if (sortBy === 'artistAsc') {
+      this.filteredData.sort((a, b) => a.Artista.localeCompare(b.Artista));
+    } else if (sortBy === 'artistDesc') {
+      this.filteredData.sort((a, b) => b.Artista.localeCompare(a.Artista));
+    }
   }
 
   /**
