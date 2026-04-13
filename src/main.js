@@ -16,10 +16,14 @@ import { modalLogin } from "./utils/modals.js";
 import displayLibrary from "./utils/libraryDisplay.js";
 import { libraryStore } from "./state/libraryStore.js";
 import { errorHandler } from "./services/errorHandler.js";
+import { setupOnlineOfflineHandlers } from './services/dbService.js';
 
 window.addEventListener("DOMContentLoaded", async () => {
-  // Inicializar el store desde localStorage
-  libraryStore.init();
+  // Inicializar el store desde localStorage/IndexedDB
+  await libraryStore.init();
+  
+  // Configurar manejo de conexión
+  setupOnlineOfflineHandlers();
   
   let libraryData = JSON.parse(localStorage.getItem("libraryData")) || [];
 
@@ -89,3 +93,16 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   }
 });
+
+// Manejar mensajes del service worker para sincronización
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data.type === 'SYNC_COMPLETE') {
+      console.log('🔄 Sincronización completada:', event.data.data);
+      // Recargar datos después de sincronización
+      loadLibrary([]).then(data => {
+        libraryStore.loadData(data);
+      });
+    }
+  });
+}

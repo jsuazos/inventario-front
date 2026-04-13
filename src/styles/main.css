@@ -473,6 +473,52 @@ html {
   100% { transform: scale3d(1, 1, 1); }
 }
 
+/* Estilos para modo offline */
+body.offline::before {
+  content: '🌐 Modo offline';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #ffc107;
+  color: #212529;
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1050;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+body.offline .offline-badge {
+  display: inline-block;
+  background: #6c757d;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  margin-left: 8px;
+}
+
+/* Estilos para notificaciones de sincronización */
+#background-update-notifications {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  max-width: 400px;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(100%); opacity: 0; }
+}
+
 /* .letra-tag {
   display: inline-block;
   padding: 6px 10px;
@@ -487,6 +533,27 @@ html {
 .letra-tag:hover {
   animation: rubberBand 0.8s ease;
   /* background-color: #444; */
+}
+
+
+
+
+.recibido-filter {
+  --h: 42px;
+  --p: 5px;
+  --speed: 420ms;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  padding: var(--p);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  overflow: hidden;
 }
 
 
