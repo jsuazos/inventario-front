@@ -25,10 +25,22 @@ export class LibraryStore {
   /**
    * Inicializa el store desde storage
    */
-  init() {
-    this.data = storageService.getLibraryData();
-    this.applyFilters();
-    this.notifyListeners();
+  async init() {
+    try {
+      const data = await storageService.getLibraryData();
+      // console.log('📥 Datos cargados desde storage:', data);
+      this.data = Array.isArray(data) ? data : [];
+      if (!Array.isArray(data)) {
+        console.warn('⚠️ Datos de storage no son un array, usando array vacío');
+      }
+      this.applyFilters();
+      this.notifyListeners();
+    } catch (error) {
+      console.error('❌ Error al inicializar store:', error);
+      this.data = [];
+      this.filteredData = [];
+      this.notifyListeners();
+    }
   }
 
   /**
@@ -36,11 +48,13 @@ export class LibraryStore {
    * @param {Array} apiData - Datos desde API
    */
   loadData(apiData) {
-    if (apiData && apiData.length > 0) {
+    if (apiData && Array.isArray(apiData) && apiData.length > 0) {
       this.data = apiData;
       storageService.saveLibraryData(this.data);
       this.applyFilters();
       this.notifyListeners();
+    } else {
+      console.warn('⚠️ Datos inválidos recibidos en loadData:', apiData);
     }
   }
 
@@ -59,6 +73,16 @@ export class LibraryStore {
    */
   applyFilters() {
     const { search, type, genre, artist, year, recibido, sortBy } = this.filters;
+
+    // Asegurar que this.data sea un array
+    if (!Array.isArray(this.data)) {
+      console.error('❌ this.data no es un array:', this.data, typeof this.data);
+      this.data = [];
+    }
+
+    if (this.data.length === 0) {
+      console.log('ℹ️ No hay datos para filtrar, array vacío');
+    }
 
     this.filteredData = this.data.filter(item => {
       const matchSearch = 

@@ -6,6 +6,8 @@ class Navbar extends HTMLElement {
     this.searchTimeout = null;
     this.isSelectingSuggestion = false; // Bandera para evitar ejecución duplicada
     this.justSelectedSuggestion = false; // Bandera para evitar mostrar dropdown después de selección
+    this.versionShown = false;
+    this.clickOutsideHandler = null; // Referencia al handler de clicks fuera
   }
 
   connectedCallback() {
@@ -39,6 +41,9 @@ class Navbar extends HTMLElement {
             <div id="cacheVersionBadge" class="badge bg-info text-dark align-self-center">
                 <small>Cache: <span id="cacheVersion">Cargando...</span></small>
             </div>
+            <div id="connection-status" class="badge bg-success ms-2">
+                <small>Online</small>
+            </div>
             </div>
 
             <!-- Sidebar oculto -->
@@ -48,6 +53,7 @@ class Navbar extends HTMLElement {
 
     console.log('🏗️ Navbar component loaded');
     this.initSearchAutocomplete();
+    this.setupConnectionStatus();
     // Obtener y mostrar la versión del cache después de que se cargue
     this.updateCacheVersion();
   }
@@ -58,7 +64,7 @@ class Navbar extends HTMLElement {
   initSearchAutocomplete() {
     const searchInput = this.querySelector('#searchInput');
     const searchDropdown = this.querySelector('#searchDropdown');
-
+    
     if (!searchInput || !searchDropdown) return;
 
     // Cargar datos de la biblioteca cuando estén disponibles
@@ -70,12 +76,16 @@ class Navbar extends HTMLElement {
     searchInput.addEventListener('focus', () => this.handleFocus());
     searchInput.addEventListener('blur', () => setTimeout(() => this.hideDropdown(), 150));
 
-    // Event listener para clicks fuera del dropdown
-    document.addEventListener('click', (e) => {
+    // Event listener para clicks fuera del dropdown - usar arrow function para preservar contexto
+    const handleClickOutside = (e) => {
       if (!this.contains(e.target)) {
         this.hideDropdown();
       }
-    });
+    };
+    document.addEventListener('click', handleClickOutside);
+
+    // Guardar referencia para poder remover el listener más tarde
+    this.clickOutsideHandler = handleClickOutside;
   }
 
   /**
@@ -395,14 +405,71 @@ class Navbar extends HTMLElement {
   }
 
   /**
-   * Oculta el dropdown
+   * Configura el indicador de estado de conexión
    */
-  hideDropdown() {
-    const dropdown = this.querySelector('#searchDropdown');
-    if (dropdown) {
-      dropdown.classList.add('d-none');
+  setupConnectionStatus() {
+    const statusElement = this.querySelector('#connection-status');
+    
+    if (!statusElement) return;
+
+    // Función para actualizar el estado
+    const updateStatus = () => {
+      if (navigator.onLine) {
+        statusElement.className = 'badge bg-success ms-2';
+        statusElement.innerHTML = '<small>Online</small>';
+      } else {
+        statusElement.className = 'badge bg-warning ms-2';
+        statusElement.innerHTML = '<small>Offline</small>';
+      }
+    };
+
+    // Actualizar estado inicial
+    updateStatus();
+
+    // Escuchar cambios de conexión
+    window.addEventListener('online', updateStatus);
+    window.addEventListener('offline', updateStatus);
+  }
+
+  /**
+   * Actualiza el badge con la versión del caché
+   */
+  updateCacheVersion() {
+    if (this.versionShown) return;
+    this.versionShown = true;
+
+    try {
+      // Método 1: Obtener versión del Service Worker
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        const messageChannel = new MessageChannel();
+        messageChannel.port1.onmessage = (event) => {
+          if (event.data && event.data.cacheVersion) {
+            this.showVersionBadge(event.data.cacheVersion);
+          } else {
+            console.log('⚠️ Usando versión por defecto');
+            this.showVersionBadge('v1.4.3');
+          }
+        };
+
+        navigator.serviceWorker.controller.postMessage('GET_CACHE_VERSION', [messageChannel.port2]);
+
+        // Timeout para evitar esperar indefinidamente
+        setTimeout(() => {
+          if (!this.versionShown) {
+            console.log('⚠️ Usando versión por defecto');
+            this.showVersionBadge('v1.4.3');
+          }
+        }, 2000);
+
+      } else {
+        // Método 2: Fallback con versión hardcodeada
+        console.log('⚠️ Usando versión por defecto');
+        this.showVersionBadge('v1.4.3');
+      }
+    } catch (error) {
+      console.error('❌ Error obteniendo versión:', error);
+      this.showVersionBadge('Error');
     }
-    this.currentFocus = -1;
   }
 
   async updateCacheVersion() {
@@ -445,6 +512,26 @@ class Navbar extends HTMLElement {
       this.versionShown = true;
     } else {
       console.error('❌ No se encontraron elementos del badge');
+    }
+  }
+
+  /**
+   * Oculta el dropdown de búsqueda
+   */
+  hideDropdown() {
+    const dropdown = this.querySelector('#searchDropdown');
+    if (dropdown) {
+      dropdown.classList.add('d-none');
+    }
+  }
+
+  /**
+   * Limpia event listeners cuando el componente se desconecta
+   */
+  disconnectedCallback() {
+    if (this.clickOutsideHandler) {
+      document.removeEventListener('click', this.clickOutsideHandler);
+      this.clickOutsideHandler = null;
     }
   }
 }

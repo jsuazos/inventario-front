@@ -1,9 +1,11 @@
 /**
- * Servicio centralizado de localStorage
+ * Servicio centralizado de almacenamiento
  * Maneja toda la persistencia de datos de la aplicación
+ * Usa localStorage como primera opción, IndexedDB como fallback
  */
 
 import { errorHandler } from './errorHandler.js';
+import { saveLibraryData as saveToIndexedDB, getLibraryData as getFromIndexedDB } from './dbService.js';
 
 const STORAGE_KEYS = {
   libraryData: 'libraryData',
@@ -17,16 +19,24 @@ export class StorageService {
    * Guarda datos de biblioteca
    * @param {Array} data - Datos de la biblioteca
    */
-  saveLibraryData(data) {
+  async saveLibraryData(data) {
     try {
       const serialized = JSON.stringify(data);
-      localStorage.setItem(STORAGE_KEYS.libraryData, serialized);
-      return true;
+      
+      // Verificar si hay espacio suficiente en localStorage
+      if (this.hasEnoughSpace(serialized)) {
+        localStorage.setItem(STORAGE_KEYS.libraryData, serialized);
+        return true;
+      } else {
+        // Usar IndexedDB como fallback
+        await saveToIndexedDB(data);
+        return true;
+      }
     } catch (error) {
       errorHandler.handle(error, {
         operation: 'saveLibraryData',
         dataSize: data ? data.length : 0,
-        storageQuota: this.getStorageQuota()
+        storageQuota: await this.getStorageQuota()
       });
       return false;
     }
@@ -36,10 +46,17 @@ export class StorageService {
    * Obtiene datos de biblioteca
    * @returns {Array} Datos guardados o array vacío
    */
-  getLibraryData() {
+  async getLibraryData() {
     try {
-      const data = localStorage.getItem(STORAGE_KEYS.libraryData);
-      return data ? JSON.parse(data) : [];
+      // Intentar obtener de localStorage primero
+      const localData = localStorage.getItem(STORAGE_KEYS.libraryData);
+      if (localData) {
+        return JSON.parse(localData);
+      }
+
+      // Si no hay datos en localStorage, intentar con IndexedDB
+      const indexedData = await getFromIndexedDB();
+      return indexedData && indexedData.length > 0 ? indexedData : [];
     } catch (error) {
       errorHandler.handle(error, {
         operation: 'getLibraryData',
@@ -52,9 +69,20 @@ export class StorageService {
   /**
    * Limpia datos de biblioteca
    */
-  clearLibraryData() {
+  async clearLibraryData() {
     try {
       localStorage.removeItem(STORAGE_KEYS.libraryData);
+      
+      // También limpiar de IndexedDB si existe
+      if ('indexedDB' in window) {
+        const dbName = 'MusicLibraryDB';
+        const request = indexedDB.deleteDatabase(dbName);
+        request.onsuccess = () => console.log('IndexedDB limpiado');
+        request.onerror = (event) => {
+          console.error('Error al limpiar IndexedDB:', event.target.error);
+        };
+      }
+      
       return true;
     } catch (error) {
       errorHandler.handle(error, { operation: 'clearLibraryData' });
@@ -101,6 +129,12 @@ export class StorageService {
       Object.values(STORAGE_KEYS).forEach(key => {
         localStorage.removeItem(key);
       });
+      
+      // Limpiar IndexedDB
+      if ('indexedDB' in window) {
+        indexedDB.deleteDatabase('MusicLibraryDB');
+      }
+      
       return true;
     } catch (error) {
       errorHandler.handle(error, { operation: 'clearAll' });
@@ -130,14 +164,10 @@ export class StorageService {
    * Obtiene información de cuota de almacenamiento
    * @returns {Object} Información de cuota
    */
-  getStorageQuota() {
+  async getStorageQuota() {
     try {
       if ('storage' in navigator && 'estimate' in navigator.storage) {
-        return navigator.storage.estimate().then(estimate => ({
-          quota: estimate.quota,
-          usage: estimate.usage,
-          available: estimate.quota - estimate.usage
-        }));
+        return await navigator.storage.estimate();
       }
       return { quota: null, usage: null, available: null };
     } catch (error) {

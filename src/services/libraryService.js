@@ -41,17 +41,17 @@ export async function checkForUpdatesInBackground() {
     const url = `${apiUrl.replace(/\/$/, "")}/inventario`;
 
     
-    const url2 = `${apiUrl.replace(/\/$/, "")}/artistas`;
+    // const url2 = `${apiUrl.replace(/\/$/, "")}/artistas`;
 
     const res = await fetch(url);
     const data = await res.json();
     const apiData = data.data || [];
 
-    const res2 = await fetch(url2);
-    const data2 = await res2.text();
+    // const res2 = await fetch(url2);
+    // const data2 = await res2.text();
     // const artistasData = data2.data || [];
 
-    console.log({ apiData, data2 });
+    // console.log({ apiData, data2 });
     
     // Filtrar solo registros con Visible == "SI"
     const filteredApiData = apiData.filter(item => item.Visible === "SI");
