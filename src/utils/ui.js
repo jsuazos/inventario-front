@@ -37,15 +37,85 @@ export function toggleSidebar() {
 }
 
 export function loadAlphabet(){
-    // Recorre cada enlace del índice alfabético
-    document.querySelectorAll('#alphabet a').forEach(link => {
-        const targetId = link.getAttribute('href').replace('#', ''); // ej: letra-A
+    const links = Array.from(document.querySelectorAll('#alphabet a'));
+    const sections = [];
+
+    links.forEach(link => {
+        const targetId = link.getAttribute('href').replace('#', '');
         const target = document.getElementById(targetId);
 
+        link.addEventListener('click', () => {
+            requestAnimationFrame(() => link.blur());
+        });
+
+        link.classList.remove('text-muted', 'is-active');
+        link.style.pointerEvents = '';
+
         if (!target) {
-        link.classList.add('text-muted'); // Añade clase para indicar que no hay destino
-        link.style.pointerEvents = 'none'; // Desactiva el enlace si no hay destino
-        // link.style.display = 'none'; // Oculta la letra si no hay destino
+            link.classList.add('text-muted');
+            link.style.pointerEvents = 'none';
+            return;
         }
+
+        sections.push({ link, target });
     });
+
+    if (window.alphabetObserver) {
+        window.alphabetObserver.disconnect();
+    }
+
+    const setActiveLink = (activeId) => {
+        links.forEach(link => {
+            const targetId = link.getAttribute('href').replace('#', '');
+            link.classList.toggle('is-active', targetId === activeId);
+        });
+    };
+
+    if (!sections.length) {
+        return;
+    }
+
+    const updateActiveFromScroll = () => {
+        const triggerOffset = 140;
+        let currentSection = sections[0].target.id;
+
+        const scrollBottom = window.innerHeight + window.scrollY;
+        const documentHeight = document.documentElement.scrollHeight;
+
+        if (documentHeight - scrollBottom < 24) {
+            setActiveLink(sections[sections.length - 1].target.id);
+            return;
+        }
+
+        sections.forEach(({ target }) => {
+            if (target.getBoundingClientRect().top <= triggerOffset) {
+                currentSection = target.id;
+            }
+        });
+
+        setActiveLink(currentSection);
+    };
+
+    window.alphabetObserver = new IntersectionObserver((entries) => {
+        const visibleEntries = entries
+            .filter(entry => entry.isIntersecting)
+            .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+
+        if (visibleEntries.length > 0) {
+            setActiveLink(visibleEntries[0].target.id);
+            return;
+        }
+
+        updateActiveFromScroll();
+    }, {
+        root: null,
+        rootMargin: '-120px 0px -70% 0px',
+        threshold: 0
+    });
+
+    sections.forEach(({ target }) => {
+        window.alphabetObserver.observe(target);
+    });
+
+    updateActiveFromScroll();
 }

@@ -347,8 +347,16 @@ body.sidebar-open {
   transition: color 0.2s ease;
 }
 
-.alphabet-index a:hover {
+@media (hover: hover) {
+  .alphabet-index a:hover {
+    color: #0dcaf0;
+  }
+}
+
+.alphabet-index a.is-active {
   color: #0dcaf0;
+  font-weight: 700;
+  text-shadow: 0 0 12px rgba(13, 202, 240, 0.55);
 }
 
 html {
@@ -386,8 +394,10 @@ html {
     transition: color 0.2s ease;
   }
 
-  .alphabet-index a:hover {
-    color: #0dcaf0;
+  @media (hover: hover) {
+    .alphabet-index a:hover {
+      color: #0dcaf0;
+    }
   }
 }
 
@@ -413,9 +423,16 @@ html {
     text-decoration: none;
   }
 
-  .alphabet-index a:hover {
-    color: #0dcaf0;
-    transform: scale(1.5);
+  .alphabet-index a.is-active {
+    color: #36d9ff;
+    transform: scale(1.18);
+  }
+
+  @media (hover: hover) {
+    .alphabet-index a:hover {
+      color: #0dcaf0;
+      transform: scale(1.5);
+    }
   }
 }
 
