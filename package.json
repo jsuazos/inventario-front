@@ -9,7 +9,6 @@
   "type": "module",
   "devDependencies": {
     "concurrently": "^8.2.0",
-    "idb": "^7.1.1",
     "vite": "^5.0.0"
   }
 }

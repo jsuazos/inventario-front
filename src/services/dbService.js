@@ -2,77 +2,89 @@
  * dbService.js - Manejo de IndexedDB para soporte offline
  */
 
-// Polyfill para IndexedDB
-import { openDB } from 'idb';
-
 const DB_NAME = 'MusicLibraryDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'library';
 
-let db;
+let dbPromise = null;
+
+function buildItemId(item) {
+  return item?.Orden || `${item?.Artista || ''}-${item?.Disco || ''}-${item?.Año || ''}` || crypto.randomUUID();
+}
 
 /**
  * Inicializar la base de datos
  */
-export async function initDB() {
-  try {
-    db = await openDB(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-        }
-      }
-    });
-    console.log('✅ IndexedDB inicializada');
-    return db;
-  } catch (error) {
-    console.error('Error al abrir IndexedDB:', error);
-    throw error;
+export function initDB() {
+  if (dbPromise) {
+    return dbPromise;
   }
+
+  dbPromise = new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onerror = () => {
+      reject(request.error);
+    };
+
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      }
+    };
+  }).catch(error => {
+    dbPromise = null;
+    throw error;
+  });
+
+  return dbPromise;
 }
 
 /**
  * Guardar datos en IndexedDB
  */
 export async function saveLibraryData(data) {
-  if (!db) await initDB();
+  const db = await initDB();
 
-  try {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    
-    // Limpiar datos existentes
-    await store.clear();
-    
-    // Guardar nuevos datos
-    data.forEach(item => {
-      const itemWithId = { ...item, id: item.Orden || Math.random().toString(36).substr(2, 9) };
-      store.add(itemWithId);
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+
+    transaction.onerror = () => reject(transaction.error);
+    transaction.oncomplete = () => resolve(true);
+
+    store.clear();
+    (Array.isArray(data) ? data : []).forEach(item => {
+      store.put({ ...item, id: buildItemId(item) });
     });
-    
-    await tx.done;
-    console.log('✅ Datos guardados en IndexedDB:', data.length, 'items');
-    return true;
-  } catch (error) {
-    console.error('Error al guardar en IndexedDB:', error);
-    throw error;
-  }
+  });
 }
 
 /**
  * Obtener datos de IndexedDB
  */
 export async function getLibraryData() {
-  if (!db) await initDB();
-
   try {
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const store = tx.objectStore(STORE_NAME);
-    const data = await store.getAll();
-    console.log('📥 Datos obtenidos de IndexedDB:', data.length, 'items');
-    return data;
+    const db = await initDB();
+
+    return await new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.getAll();
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const result = Array.isArray(request.result) ? request.result : [];
+        resolve(result.map(({ id, ...item }) => item));
+      };
+    });
   } catch (error) {
-    console.error('Error al obtener datos de IndexedDB:', error);
+    console.warn('IndexedDB no disponible, usando fallback vacio:', error);
     return [];
   }
 }
@@ -81,94 +93,64 @@ export async function getLibraryData() {
  * Verificar si hay datos en IndexedDB
  */
 export async function hasCachedData() {
-  if (!db) await initDB();
-
   try {
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const store = tx.objectStore(STORE_NAME);
-    const count = await store.count();
-    return count > 0;
+    const db = await initDB();
+
+    return await new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.count();
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result > 0);
+    });
   } catch (error) {
-    console.error('Error al verificar datos en IndexedDB:', error);
+    console.warn('No se pudo verificar cache IndexedDB:', error);
     return false;
   }
 }
 
 /**
- * Registrar sincronización en segundo plano
+ * Registrar sincronizacion en segundo plano
  */
 export function registerBackgroundSync(tag, data) {
   if ('serviceWorker' in navigator && 'SyncManager' in window) {
-    navigator.serviceWorker.ready.then(sw => {
-      return sw.sync.register(tag);
+    navigator.serviceWorker.ready.then(registration => {
+      return registration.sync.register(tag);
     }).then(() => {
-      // Guardar datos temporalmente para la sincronización
       localStorage.setItem(`sync-${tag}`, JSON.stringify(data));
-      console.log(`🔄 Sincronización registrada: ${tag}`);
     }).catch(error => {
-      console.error('Error al registrar sincronización:', error);
+      console.warn('No se pudo registrar Background Sync:', error);
     });
-  } else {
-    console.warn('Background Sync no soportado');
   }
 }
 
-/**
- * Obtener datos pendientes de sincronización
- */
 export function getPendingSyncData(tag) {
   const data = localStorage.getItem(`sync-${tag}`);
   return data ? JSON.parse(data) : null;
 }
 
-/**
- * Limpiar datos de sincronización
- */
 export function clearSyncData(tag) {
   localStorage.removeItem(`sync-${tag}`);
 }
 
 /**
- * Manejar estado de conexión
+ * Manejar estado de conexion
  */
 export function setupOnlineOfflineHandlers() {
-  // Añadir clase al body según estado de conexión
-  if (!navigator.onLine) {
-    document.body.classList.add('offline');
-  } else {
-    document.body.classList.add('online');
-  }
+  const updateState = () => {
+    document.body.classList.toggle('offline', !navigator.onLine);
+    document.body.classList.toggle('online', navigator.onLine);
+  };
 
-  window.addEventListener('online', () => {
-    document.body.classList.remove('offline');
-    document.body.classList.add('online');
-    console.log('🌐 Conexión restaurada');
-    
-    // Intentar sincronizar automáticamente
-    if ('serviceWorker' in navigator && 'SyncManager' in window) {
-      navigator.serviceWorker.ready.then(sw => {
-        return sw.sync.getTags();
-      }).then(tags => {
-        if (tags.length > 0) {
-          console.log('🔄 Sincronizando datos en segundo plano...');
-        }
-      });
-    }
-  });
-
-  window.addEventListener('offline', () => {
-    document.body.classList.remove('online');
-    document.body.classList.add('offline');
-    console.log('⚠️ Conexión perdida - modo offline activado');
-  });
+  updateState();
+  window.addEventListener('online', updateState);
+  window.addEventListener('offline', updateState);
 }
 
-// Inicializar automáticamente
 if ('indexedDB' in window) {
   initDB().catch(error => {
     console.warn('IndexedDB no disponible:', error);
   });
   setupOnlineOfflineHandlers();
-} else {
-  console.warn('IndexedDB no soportado en este navegador');
 }
