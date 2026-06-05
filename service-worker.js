@@ -1,8 +1,7 @@
-const CACHE_VERSION = 'v1.6.0'; // Aumenta esto cada vez que hagas cambios
+const CACHE_VERSION = 'v1.7.0';
 const CACHE_NAME = `musica-inventario-${CACHE_VERSION}`;
 const DATA_CACHE_NAME = 'library-data-v1';
 
-// Detectar entorno basado en la URL
 const isDevelopment = self.location.hostname === 'localhost' ||
                       self.location.hostname === '127.0.0.1' ||
                       self.location.hostname.includes('localhost') ||
@@ -36,7 +35,6 @@ const urlsToCache = [
   `${BASE_PATH}src/components/LoginModal.js`,
   `${BASE_PATH}src/components/Alphabet.js`,
   `${BASE_PATH}src/components/Footer.js`,
-
   `${BASE_PATH}index.html`,
   `${BASE_PATH}manifest.json`,
   `${BASE_PATH}src/styles/main.css`,
@@ -46,100 +44,37 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
-  console.log(`🚀 Instalando Service Worker ${CACHE_VERSION} (Entorno: ${isDevelopment ? 'desarrollo' : 'producción'})`);
+  console.log(`Service Worker ${CACHE_VERSION} instalando...`);
   self.skipWaiting();
 
   event.waitUntil(
     caches.open(CACHE_NAME).then(async cache => {
-      console.log(`📦 Cacheando ${urlsToCache.length} archivos...`);
-
-      // En desarrollo, reducir la cantidad de archivos a cachear inicialmente
       const filesToCache = isDevelopment ? urlsToCache.slice(0, 10) : urlsToCache;
-
-      // Procesar archivos en lotes con delay para evitar rate limiting
       const batchSize = 3;
+
       for (let i = 0; i < filesToCache.length; i += batchSize) {
         const batch = filesToCache.slice(i, i + batchSize);
 
         await Promise.all(batch.map(async url => {
           try {
-            console.log(`📄 Intentando cachear: ${url}`);
-            const response = await fetch(url, {
-              cache: 'no-cache' // Evitar cache del navegador
-});
+            const response = await fetch(url, { cache: 'no-cache' });
+            if (response.ok) {
+              await cache.put(url, response);
+            }
+          } catch (err) {
+            console.warn(`Error cacheando ${url}:`, err.message);
+          }
+        }));
 
-// Manejar mensajes para sincronización
-self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'GET_CACHE_VERSION') {
-    event.ports[0].postMessage({ cacheVersion: CACHE_VERSION });
-  }
-});
-
-// Sincronización en segundo plano
-self.addEventListener('sync', event => {
-  if (event.tag === 'sync-library') {
-    console.log('🔄 Sincronizando biblioteca en segundo plano...');
-    event.waitUntil(syncLibraryData());
-  }
-});
-
-async function syncLibraryData() {
-  try {
-    // Obtener datos pendientes de sincronización
-    const pendingData = await getPendingSyncData('library');
-    
-    if (!pendingData) {
-      console.log('✅ No hay datos pendientes de sincronización');
-      return;
-    }
-
-    console.log('📤 Sincronizando', pendingData.length, 'items...');
-
-    // Aquí iría la lógica para enviar datos al servidor
-    // Por ahora simulamos una sincronización exitosa
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    console.log('✅ Sincronización completada');
-    clearSyncData('library');
-    
-    // Notificar a los clientes que los datos están actualizados
-    self.clients.matchAll().then(clients => {
-      clients.forEach(client => {
-        client.postMessage({ type: 'SYNC_COMPLETE', data: pendingData });
-      });
-    });
-
-  } catch (error) {
-    console.error('❌ Error en sincronización:', error);
-    // Reintentar más tarde
-    throw error;
-  }
-}
-
-async function getPendingSyncData(tag) {
-  // En un entorno real, esto obtendría datos de IndexedDB
-  // Por ahora usamos localStorage como ejemplo
-  const data = await caches.open(DATA_CACHE_NAME)
-    .then(cache => cache.match(`/pending-sync-${tag}`))
-    .then(response => response ? response.json() : null);
-  
-  return data;
-}
-
-function clearSyncData(tag) {
-  caches.open(DATA_CACHE_NAME)
-    .then(cache => cache.delete(`/pending-sync-${tag}`))
-    .catch(error => console.error('Error al limpiar datos de sincronización:', error));
-}
-
-self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'GET_CACHE_VERSION') {
-    event.ports[0].postMessage({ cacheVersion: CACHE_VERSION });
-  }
+        if (i + batchSize < filesToCache.length) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+    })
+  );
 });
 
 self.addEventListener('activate', event => {
-  // Limpia versiones antiguas de caché
   event.waitUntil(
     caches.keys().then(cacheNames =>
       Promise.all(
@@ -149,285 +84,100 @@ self.addEventListener('activate', event => {
       )
     )
   );
-  self.clients.claim(); // Toma control inmediato
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', event => {
-  // Solo interceptar requests del mismo origen para evitar problemas con CORS
   if (!event.request.url.startsWith(self.location.origin)) {
-    // Para imágenes externas (Discogs, MusicBrainz, etc.), aplicar rate limiting
     if (event.request.url.includes('i.discogs.com') ||
         event.request.url.includes('img.discogs.com') ||
         event.request.url.includes('musicbrainz.org') ||
         event.request.url.includes('fanart.tv')) {
 
       event.respondWith(
-        caches.match(event.request)
-          .then(response => {
-            if (response) {
-              return response;
-            }
+        caches.match(event.request).then(response => {
+          if (response) return response;
 
-            // Intentar fetch con timeout y reintento limitado
-            return fetch(event.request, {
-              signal: AbortSignal.timeout(5000) // 5 segundos timeout
+          return fetch(event.request, { signal: AbortSignal.timeout(5000) })
+            .then(networkResponse => {
+              if (networkResponse.ok && networkResponse.status !== 429) {
+                const clone = networkResponse.clone();
+                caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+              }
+              return networkResponse;
             })
-              .then(networkResponse => {
-                // Solo cachear si la respuesta es exitosa y no es 429
-                if (networkResponse.ok && networkResponse.status !== 429) {
-                  const responseClone = networkResponse.clone();
-                  caches.open(CACHE_NAME)
-                    .then(cache => cache.put(event.request, responseClone))
-                    .catch(err => console.warn('Error cacheando imagen externa:', err));
-                }
-                return networkResponse;
-              })
-              .catch(error => {
-                console.warn(`Error fetching imagen externa ${event.request.url}:`, error.message);
-                // Devolver una respuesta de fallback en lugar de error
-                return new Response('', {
-                  status: 503,
-                  statusText: 'Image temporarily unavailable'
-                });
-              });
-          })
-          .catch(error => {
-            console.error('Error en cache.match para imagen externa:', error);
-            return fetch(event.request, {
-              signal: AbortSignal.timeout(3000)
-            }).catch(fetchError => {
-              console.error('Error en fallback fetch para imagen externa:', fetchError);
-              return new Response('', {
-                status: 503,
-                statusText: 'Image service unavailable'
-              });
-            });
-          })
-      );
-      return;
-    }
-
-    // Para otras URLs externas, dejar que el navegador las maneje normalmente
-    return;
-  }
-
-  // Para requests del mismo origen, usar cache-first strategy
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-
-        return fetch(event.request)
-          .then(networkResponse => {
-            // Cachear respuestas exitosas del mismo origen
-            if (networkResponse.ok) {
-              const responseClone = networkResponse.clone();
-              caches.open(CACHE_NAME)
-                .then(cache => cache.put(event.request, responseClone))
-                .catch(err => console.warn('Error cacheando respuesta:', err));
-            }
-            return networkResponse;
-          })
-          .catch(error => {
-            console.warn(`Error fetching ${event.request.url}:`, error.message);
-            // Para requests de navegación, devolver la página principal
-            if (event.request.mode === 'navigate') {
-              return caches.match(`${BASE_PATH}index.html`);
-            }
-            return new Response('Network Error', {
-              status: 503,
-              statusText: 'Service Unavailable'
-            });
-          });
-      })
-      .catch(error => {
-        console.error('Error en cache.match:', error);
-        return fetch(event.request).catch(fetchError => {
-          console.error('Error en fallback fetch:', fetchError);
-          return new Response('Network Error', {
-            status: 503,
-            statusText: 'Network Error'
-          });
-        });
-      })
-  );
-});
-
-// Manejar mensajes para sincronización
-self.addEventListener('message', event => {
-  if (event.data === 'GET_CACHE_VERSION') {
-    event.source.postMessage({ cacheVersion: CACHE_VERSION });
-  } else if (event.data.type === 'REGISTER_SYNC') {
-    // Registrar sincronización en segundo plano
-    if (self.registration.sync) {
-      self.registration.sync.register(event.data.tag)
-        .then(() => {
-          console.log(`🔄 Sincronización registrada: ${event.data.tag}`);
+            .catch(() => new Response('', { status: 503 }));
         })
-        .catch(error => {
-          console.error('Error al registrar sincronización:', error);
-        });
-    }
-  }
-});
-
-
-            if (!response.ok) {
-              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            await cache.put(url, response.clone());
-            console.log(`✅ Cacheado exitosamente: ${url}`);
-            return { url, success: true };
-          } catch (err) {
-            console.warn(`⚠️ Error al cachear ${url}:`, err.message);
-            return { url, success: false, error: err.message };
-          }
-        }));
-
-        // Pequeño delay entre lotes para evitar rate limiting
-        if (i + batchSize < filesToCache.length) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-      }
-
-      console.log(`📊 Caching completado para ${isDevelopment ? 'desarrollo' : 'producción'}`);
-    })
-    .catch(error => {
-      console.error('❌ Error crítico al abrir cache:', error);
-    })
-  );
-});
-
-
-self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'GET_CACHE_VERSION') {
-    event.ports[0].postMessage({ cacheVersion: CACHE_VERSION });
-  }
-});
-
-
-self.addEventListener('activate', event => {
-  // Limpia versiones antiguas de caché
-  event.waitUntil(
-    caches.keys().then(cacheNames =>
-      Promise.all(
-        cacheNames
-          .filter(name => name !== CACHE_NAME)
-          .map(name => caches.delete(name))
-      )
-    )
-  );
-  self.clients.claim(); // Toma control inmediato
-});
-
-self.addEventListener('fetch', event => {
-  // Solo interceptar requests del mismo origen para evitar problemas con CORS
-  if (!event.request.url.startsWith(self.location.origin)) {
-    // Para imágenes externas (Discogs, MusicBrainz, etc.), aplicar rate limiting
-    if (event.request.url.includes('i.discogs.com') ||
-        event.request.url.includes('img.discogs.com') ||
-        event.request.url.includes('musicbrainz.org') ||
-        event.request.url.includes('fanart.tv')) {
-
-      event.respondWith(
-        caches.match(event.request)
-          .then(response => {
-            if (response) {
-              return response;
-            }
-
-            // Intentar fetch con timeout y reintento limitado
-            return fetch(event.request, {
-              signal: AbortSignal.timeout(5000) // 5 segundos timeout
-            })
-              .then(networkResponse => {
-                // Solo cachear si la respuesta es exitosa y no es 429
-                if (networkResponse.ok && networkResponse.status !== 429) {
-                  const responseClone = networkResponse.clone();
-                  caches.open(CACHE_NAME)
-                    .then(cache => cache.put(event.request, responseClone))
-                    .catch(err => console.warn('Error cacheando imagen externa:', err));
-                }
-                return networkResponse;
-              })
-              .catch(error => {
-                console.warn(`Error fetching imagen externa ${event.request.url}:`, error.message);
-                // Devolver una respuesta de fallback en lugar de error
-                return new Response('', {
-                  status: 503,
-                  statusText: 'Image temporarily unavailable'
-                });
-              });
-          })
-          .catch(error => {
-            console.error('Error en cache.match para imagen externa:', error);
-            return fetch(event.request, {
-              signal: AbortSignal.timeout(3000)
-            }).catch(fetchError => {
-              console.error('Error en fallback fetch para imagen externa:', fetchError);
-              return new Response('', {
-                status: 503,
-                statusText: 'Image service unavailable'
-              });
-            });
-          })
       );
       return;
     }
-
-    // Para otras URLs externas, dejar que el navegador las maneje normalmente
     return;
   }
 
-  // Para requests del mismo origen, usar cache-first strategy
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
+    caches.match(event.request).then(response => {
+      if (response) return response;
 
-        return fetch(event.request)
-          .then(networkResponse => {
-            // Cachear respuestas exitosas del mismo origen
-            if (networkResponse.ok) {
-              const responseClone = networkResponse.clone();
-              caches.open(CACHE_NAME)
-                .then(cache => cache.put(event.request, responseClone))
-                .catch(err => console.warn('Error cacheando respuesta:', err));
-            }
-            return networkResponse;
-          })
-          .catch(error => {
-            console.warn(`Error fetching ${event.request.url}:`, error.message);
-            // Para requests de navegación, devolver la página principal
-            if (event.request.mode === 'navigate') {
-              return caches.match(`${BASE_PATH}index.html`);
-            }
-            return new Response('Network Error', {
-              status: 503,
-              statusText: 'Service Unavailable'
-            });
-          });
-      })
-      .catch(error => {
-        console.error('Error en cache.match:', error);
-        return fetch(event.request).catch(fetchError => {
-          console.error('Error en fallback fetch:', fetchError);
-          return new Response('Network Error', {
-            status: 503,
-            statusText: 'Network Error'
-          });
-        });
-      })
+      return fetch(event.request).then(networkResponse => {
+        if (networkResponse.ok) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return networkResponse;
+      }).catch(error => {
+        if (event.request.mode === 'navigate') {
+          return caches.match(`${BASE_PATH}index.html`);
+        }
+        return new Response('Network Error', { status: 503 });
+      });
+    })
   );
 });
 
 self.addEventListener('message', event => {
   if (event.data === 'GET_CACHE_VERSION') {
     event.source.postMessage({ cacheVersion: CACHE_VERSION });
+  } else if (event.data && event.data.type === 'GET_CACHE_VERSION') {
+    if (event.ports && event.ports[0]) {
+      event.ports[0].postMessage({ cacheVersion: CACHE_VERSION });
+    }
+  } else if (event.data && event.data.type === 'REGISTER_SYNC') {
+    if (self.registration.sync) {
+      self.registration.sync.register(event.data.tag);
+    }
   }
 });
+
+self.addEventListener('sync', event => {
+  if (event.tag === 'sync-library') {
+    event.waitUntil(syncLibraryData());
+  }
+});
+
+async function syncLibraryData() {
+  try {
+    const pendingData = await getPendingSyncData('library');
+    if (!pendingData) return;
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    clearSyncData('library');
+
+    const clients = await self.clients.matchAll();
+    clients.forEach(client => {
+      client.postMessage({ type: 'SYNC_COMPLETE', data: pendingData });
+    });
+  } catch (error) {
+    console.error('Error en sync:', error);
+    throw error;
+  }
+}
+
+async function getPendingSyncData(tag) {
+  const cache = await caches.open(DATA_CACHE_NAME);
+  const response = await cache.match(`/pending-sync-${tag}`);
+  return response ? response.json() : null;
+}
+
+function clearSyncData(tag) {
+  caches.open(DATA_CACHE_NAME).then(cache => cache.delete(`/pending-sync-${tag}`));
+}
