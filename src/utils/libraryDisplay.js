@@ -1,4 +1,4 @@
-import { toggleLoader } from './ui.js';
+import { toggleLoader, loadAlphabet } from './ui.js';
 import aplicarColoresPorGenero from './aplicarColoresPorGenero.js';
 import fetchArtistDetails from '../services/artistService.js';
 
@@ -7,6 +7,11 @@ export default async function displayLibrary(items) {
     const artistBanner = document.getElementById('artistBanner');
     const grid = document.getElementById('libraryGrid');
     const counter = document.getElementById('resultCount');
+
+    if (window.alphabetObserver) {
+        window.alphabetObserver.disconnect();
+        window.alphabetObserver = null;
+    }
     grid.innerHTML = '';
     artistBanner.innerHTML = '';
     counter.textContent = `Mostrando ${items.length} resultados ${!navigator.onLine ? '(la información puede que no este actualizada ya que no tienes conexión a internet)' : ''}`;
@@ -78,5 +83,6 @@ export default async function displayLibrary(items) {
         }
     });
     aplicarColoresPorGenero();
+    loadAlphabet();
     toggleLoader(false);
 }

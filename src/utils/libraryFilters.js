@@ -1,26 +1,11 @@
-import displayLibrary from './libraryDisplay.js';
 import { libraryStore } from '../state/libraryStore.js';
 
-export function filterLibrary(libraryData) {
-    const searchText = searchInput.value.toLowerCase();
-    // const type = filterType.value;
-    // const genre = filterGenre.value;
-    // const artist = filterArtist.value;
-    // const year = filterYear.value;
+export function filterLibrary() {
     const recibido = document.querySelector('input[name="filterRecibido"]:checked')?.value || '';
 
-    // Actualizar en el store
     libraryStore.updateFilters({
-      search: searchText,
-      // type: type,
-      // genre: genre,
-      // artist: artist,
-      // year: year,
       recibido: recibido
     });
-
-    const filtered = libraryStore.getFilteredData();
-    displayLibrary(filtered);
 }
 
 // export function clearFilters(libraryData) {

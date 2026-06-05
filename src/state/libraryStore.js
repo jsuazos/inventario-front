@@ -10,7 +10,8 @@ export class LibraryStore {
     this.data = [];
     this.filteredData = [];
     this.filters = {
-      search: '',
+      searchBadges: [],
+      searchInput: '',
       type: '',
       genre: '',
       artist: '',
@@ -69,10 +70,43 @@ export class LibraryStore {
   }
 
   /**
+   * Agrega un término de búsqueda como badge
+   * @param {string} term - Término a agregar
+   */
+  addSearchBadge(term) {
+    const trimmed = term.trim().toLowerCase();
+    if (!trimmed || this.filters.searchBadges.includes(trimmed)) return;
+    this.filters.searchBadges = [...this.filters.searchBadges, trimmed];
+    this.filters.searchInput = '';
+    this.applyFilters();
+    this.notifyListeners();
+  }
+
+  /**
+   * Elimina un badge por índice
+   * @param {number} index - Índice del badge a eliminar
+   */
+  removeSearchBadge(index) {
+    this.filters.searchBadges = this.filters.searchBadges.filter((_, i) => i !== index);
+    this.applyFilters();
+    this.notifyListeners();
+  }
+
+  /**
+   * Actualiza el texto vivo del input de búsqueda
+   * @param {string} text - Texto actual del input
+   */
+  setSearchInput(text) {
+    this.filters.searchInput = text.trim().toLowerCase();
+    this.applyFilters();
+    this.notifyListeners();
+  }
+
+  /**
    * Aplica los filtros al dataset
    */
   applyFilters() {
-    const { search, type, genre, artist, year, recibido, sortBy } = this.filters;
+    const { searchBadges, searchInput, type, genre, artist, year, recibido, sortBy } = this.filters;
 
     // Asegurar que this.data sea un array
     if (!Array.isArray(this.data)) {
@@ -84,13 +118,17 @@ export class LibraryStore {
       console.log('ℹ️ No hay datos para filtrar, array vacío');
     }
 
+    const searchTerms = [...searchBadges];
+    if (searchInput) searchTerms.push(searchInput);
+
     this.filteredData = this.data.filter(item => {
-      const matchSearch = 
-        item.Tipo.toLowerCase().includes(search) ||
-        item.Genero.toLowerCase().includes(search) ||
-        item.Disco.toLowerCase().includes(search) ||
-        item.Artista.toLowerCase().includes(search) ||
-        item.Año.toString().includes(search);
+      const matchSearch = searchTerms.length === 0 || searchTerms.every(term =>
+        item.Tipo.toLowerCase().includes(term) ||
+        item.Genero.toLowerCase().includes(term) ||
+        item.Disco.toLowerCase().includes(term) ||
+        item.Artista.toLowerCase().includes(term) ||
+        item.Año.toString().includes(term)
+      );
 
       const matchType = !type || item.Tipo === type;
       const matchGenre = !genre || item.Genero.includes(genre);

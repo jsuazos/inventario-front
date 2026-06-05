@@ -110,7 +110,8 @@ export class ApiClient {
    * @param {Object} options - Opciones de reintento
    */
   async withRetry(operation, options = {}) {
-    const { maxRetries = this.maxRetries, delay = 1000 } = options;
+    const { maxRetries = this.maxRetries } = options;
+    let delay = options.delay ?? 1000;
     let lastError;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {

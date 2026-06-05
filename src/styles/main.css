@@ -112,6 +112,37 @@ body.sidebar-open {
   border-bottom: none;
 }
 
+/* Estilos para badges de filtros de búsqueda */
+.search-badges {
+  min-height: 26px;
+}
+.search-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: #0d6efd;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  animation: fadeIn 0.2s ease;
+}
+.search-badge .btn-close {
+  font-size: 0.45rem;
+  width: 0.6rem;
+  height: 0.6rem;
+  opacity: 0.8;
+  cursor: pointer;
+}
+.search-badge .btn-close:hover {
+  opacity: 1;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 .search-suggestion-icon {
   font-size: 0.8rem;
   opacity: 0.7;
