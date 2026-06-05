@@ -410,7 +410,6 @@ class Navbar extends HTMLElement {
     
     const searchInput = this.querySelector('#searchInput');
     
-    this.isSelectingSuggestion = true;
     this.justSelectedSuggestion = true;
     
     const term = selectedText.toLowerCase().trim();
