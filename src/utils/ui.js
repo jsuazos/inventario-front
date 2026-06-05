@@ -44,9 +44,12 @@ export function loadAlphabet(){
         const targetId = link.getAttribute('href').replace('#', '');
         const target = document.getElementById(targetId);
 
-        link.addEventListener('click', () => {
-            requestAnimationFrame(() => link.blur());
-        });
+        if (!link.dataset.alphabetReady) {
+            link.addEventListener('click', () => {
+                requestAnimationFrame(() => link.blur());
+            });
+            link.dataset.alphabetReady = 'true';
+        }
 
         link.classList.remove('text-muted', 'is-active');
         link.style.pointerEvents = '';
@@ -78,17 +81,12 @@ export function loadAlphabet(){
     const updateActiveFromScroll = () => {
         const triggerOffset = 140;
         let currentSection = sections[0].target.id;
-
-        const scrollBottom = window.innerHeight + window.scrollY;
-        const documentHeight = document.documentElement.scrollHeight;
-
-        if (documentHeight - scrollBottom < 24) {
-            setActiveLink(sections[sections.length - 1].target.id);
-            return;
-        }
+        let maxTop = -Infinity;
 
         sections.forEach(({ target }) => {
-            if (target.getBoundingClientRect().top <= triggerOffset) {
+            const top = target.getBoundingClientRect().top;
+            if (top <= triggerOffset && top > maxTop) {
+                maxTop = top;
                 currentSection = target.id;
             }
         });

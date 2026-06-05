@@ -1,13 +1,16 @@
+import { libraryStore } from '../state/libraryStore.js';
+
 class Navbar extends HTMLElement {
   constructor() {
     super();
     this.libraryData = [];
     this.currentFocus = -1;
     this.searchTimeout = null;
-    this.isSelectingSuggestion = false; // Bandera para evitar ejecución duplicada
-    this.justSelectedSuggestion = false; // Bandera para evitar mostrar dropdown después de selección
+    this.isSelectingSuggestion = false;
+    this.justSelectedSuggestion = false;
     this.versionShown = false;
-    this.clickOutsideHandler = null; // Referencia al handler de clicks fuera
+    this.clickOutsideHandler = null;
+    this.searchBadges = [];
   }
 
   connectedCallback() {
@@ -34,6 +37,7 @@ class Navbar extends HTMLElement {
                             <!-- Las sugerencias se agregarán aquí dinámicamente -->
                         </div>
                     </div>
+
                 </div>
             </div>
 
@@ -54,8 +58,16 @@ class Navbar extends HTMLElement {
     console.log('🏗️ Navbar component loaded');
     this.initSearchAutocomplete();
     this.setupConnectionStatus();
-    // Obtener y mostrar la versión del cache después de que se cargue
     this.updateCacheVersion();
+
+    // Sincronizar badges cuando el store cambie
+    libraryStore.subscribe(() => {
+      const currentBadges = libraryStore.getFilters().searchBadges;
+      if (JSON.stringify(this.searchBadges) !== JSON.stringify(currentBadges)) {
+        this.searchBadges = currentBadges;
+        this.renderBadges();
+      }
+    });
   }
 
   /**
@@ -114,24 +126,23 @@ class Navbar extends HTMLElement {
    * Maneja el input del usuario
    */
   handleInput(e) {
-    // Convertir el valor a minúsculas
     const originalValue = e.target.value;
     const lowerCaseValue = originalValue.toLowerCase();
     
-    // Si el valor cambió, actualizarlo
     if (originalValue !== lowerCaseValue) {
       e.target.value = lowerCaseValue;
     }
 
-    // Si se está seleccionando una sugerencia, no ejecutar búsqueda adicional
     if (this.isSelectingSuggestion) {
       this.isSelectingSuggestion = false;
       return;
     }
 
     const query = e.target.value.trim();
-    
-    // Limpiar timeout anterior
+
+    // Actualizar filtro en vivo en el store
+    libraryStore.setSearchInput(e.target.value);
+
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
@@ -141,7 +152,6 @@ class Navbar extends HTMLElement {
       return;
     }
 
-    // Debounce para evitar búsquedas excesivas
     this.searchTimeout = setTimeout(() => {
       this.showSuggestions(query);
     }, 200);
@@ -152,7 +162,23 @@ class Navbar extends HTMLElement {
    */
   handleKeydown(e) {
     const suggestions = this.querySelectorAll('.search-suggestion-item');
-    
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (this.currentFocus >= 0 && suggestions[this.currentFocus]) {
+        this.selectSuggestion(suggestions[this.currentFocus]);
+      } else {
+        const searchInput = this.querySelector('#searchInput');
+        const term = searchInput.value.trim();
+        if (term) {
+          this.addBadge(term);
+          searchInput.value = '';
+          libraryStore.setSearchInput('');
+        }
+      }
+      return;
+    }
+
     if (!suggestions.length) return;
 
     switch (e.key) {
@@ -165,12 +191,6 @@ class Navbar extends HTMLElement {
         e.preventDefault();
         this.currentFocus = Math.max(this.currentFocus - 1, 0);
         this.updateFocus();
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (this.currentFocus >= 0 && suggestions[this.currentFocus]) {
-          this.selectSuggestion(suggestions[this.currentFocus]);
-        }
         break;
       case 'Escape':
         this.hideDropdown();
@@ -390,18 +410,71 @@ class Navbar extends HTMLElement {
     
     const searchInput = this.querySelector('#searchInput');
     
-    // Marcar que se está seleccionando una sugerencia para evitar ejecución duplicada
     this.isSelectingSuggestion = true;
-    this.justSelectedSuggestion = true; // Evitar que se muestre dropdown en focus
+    this.justSelectedSuggestion = true;
     
-    // Asegurar que el texto esté en minúsculas
-    searchInput.value = selectedText.toLowerCase();
-    
+    const term = selectedText.toLowerCase().trim();
     this.hideDropdown();
     
-    // Trigger search - esto ejecutará handleInput pero será ignorado por la bandera
-    searchInput.dispatchEvent(new Event('input'));
+    if (term) {
+      this.addBadge(term);
+    }
+    
+    searchInput.value = '';
+    libraryStore.setSearchInput('');
     searchInput.focus();
+  }
+
+  /**
+   * Agrega un badge de búsqueda
+   * @param {string} term - Término a agregar como badge
+   */
+  addBadge(term) {
+    const trimmed = term.trim().toLowerCase();
+    if (!trimmed) return;
+
+    libraryStore.addSearchBadge(trimmed);
+    this.searchBadges = libraryStore.getFilters().searchBadges;
+    this.renderBadges();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /**
+   * Elimina un badge por índice
+   * @param {number} index - Índice del badge a eliminar
+   */
+  removeBadge(index) {
+    libraryStore.removeSearchBadge(index);
+    this.searchBadges = libraryStore.getFilters().searchBadges;
+    this.renderBadges();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /**
+   * Renderiza los badges de filtros activos
+   */
+  renderBadges() {
+    const container = document.querySelector('.search-badges');
+    if (!container) return;
+
+    if (this.searchBadges.length === 0) {
+      container.innerHTML = '';
+      return;
+    }
+
+    container.innerHTML = this.searchBadges.map((term, index) => `
+      <span class="search-badge">
+        <span>${term}</span>
+        <button class="btn-close btn-close-white" aria-label="Eliminar filtro" data-index="${index}"></button>
+      </span>
+    `).join('');
+
+    container.querySelectorAll('.btn-close').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.index, 10);
+        this.removeBadge(idx);
+      });
+    });
   }
 
   /**

@@ -30,15 +30,11 @@ window.addEventListener("DOMContentLoaded", async () => {
   libraryData = await loadLibrary(libraryData);
   libraryStore.loadData(libraryData);
 
-  searchInput.addEventListener("input", () => filterLibrary(libraryData));
-  // filterType.addEventListener("change", () => filterLibrary(libraryData));
-  // filterGenre.addEventListener("change", () => filterLibrary(libraryData));
-  // filterArtist.addEventListener("change", () => filterLibrary(libraryData));
-  // filterYear.addEventListener("change", () => filterLibrary(libraryData));
+  // El filtro en vivo del input se maneja desde Navbar.js vía libraryStore.setSearchInput()
 
   // Event listeners para el filtro de Recibido
   document.querySelectorAll('input[name="filterRecibido"]').forEach(radio => {
-    radio.addEventListener("change", () => filterLibrary(libraryData));
+    radio.addEventListener("change", filterLibrary);
   });
 
   // Suscribirse a cambios del store para refrescar la vista al aplicar filtros u ordenamientos

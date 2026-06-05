@@ -2,6 +2,7 @@ class Filters extends HTMLElement {
   connectedCallback() {
     this.innerHTML = `
         <div class="mb-3 text-end d-lg-block"></div>
+            <div class="search-badges d-flex flex-wrap gap-1 mb-2"></div>
             <div class="row mb-3 d-lg-flex align-items-center" style="gap: 0.5rem;">
               <div class="col-auto">
                 <div class="recibido-filter mt-2">
@@ -28,7 +29,7 @@ class Filters extends HTMLElement {
                     <button class="sort-option" data-sort="artistAsc">Ordenar A-Z (Artista)</button>
                     <button class="sort-option" data-sort="artistDesc">Ordenar Z-A (Artista)</button>
                     <button class="sort-option" data-sort="orden" disabled>Ordenar por compra (Orden)</button>
-                    <button class="sort-option" data-sort="anio" disabled>Ordenar por año</button>
+                    <button class="sort-option" data-sort="anio">Ordenar por año</button>
                     <button class="sort-option" data-sort="genero" disabled>Ordenar por género</button>
                   </div>
                 </div>
@@ -66,7 +67,12 @@ class Filters extends HTMLElement {
         options.forEach(opt => opt.classList.remove('active'));
         e.currentTarget.classList.add('active');
 
-        button.innerHTML = `${label} <span class="ms-1">⇅</span>`;
+        const labelSpan = button.querySelector('.sort-label');
+        if (labelSpan) {
+          labelSpan.textContent = label;
+        } else {
+          button.innerHTML = `${label} <span class="ms-1">⇅</span>`;
+        }
         menu.classList.add('d-none');
 
         import('../state/libraryStore.js').then(({ libraryStore }) => {
