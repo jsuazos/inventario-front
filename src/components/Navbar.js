@@ -421,7 +421,7 @@ class Navbar extends HTMLElement {
     
     searchInput.value = '';
     libraryStore.setSearchInput('');
-    searchInput.focus();
+    searchInput.blur();
   }
 
   /**
