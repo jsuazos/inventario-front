@@ -1,4 +1,11 @@
+import { authStore } from '../state/authStore.js';
+
 class Aside extends HTMLElement {
+  constructor() {
+    super();
+    this._unsubscribe = null;
+  }
+
   connectedCallback() {
     this.innerHTML = `
         <aside id="sidebar" class="bg-dark text-white px-3 pt-3 pb-5 sidebar-custom d-flex flex-column min-vh-100">
@@ -6,12 +13,18 @@ class Aside extends HTMLElement {
             <h5 class="mb-4">Explorar</h5>
             <login-modal></login-modal>
         </div>
-        
+
+        <div id="admin-section" class="d-none">
+          <hr class="border-secondary">
+          <h6 class="text-info mb-2">Administración</h6>
+          <div id="admin-controls">
+            <p class="small text-secondary mb-0">Sesión: <span id="admin-username" class="text-info"></span></p>
+          </div>
+          <hr class="border-secondary">
+        </div>
+
         <ul class="nav flex-column">
             <li class="nav-item"><a class="nav-link text-white" href="#">🎵 Todos</a></li>
-            <!-- <li class="nav-item"><a class="nav-link text-white" href="#">🎧 Electrónica</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="#">🎸 Rock</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="#">❤️ Favoritos</a></li> -->
             <li class="nav-item mx-3">
             <div class="top-estilos">
                 <h6>🔥 Top 10</h6>
@@ -39,6 +52,23 @@ class Aside extends HTMLElement {
         </div>
         </aside>
     `;
+
+    this._unsubscribe = authStore.subscribe(({ isLoggedIn, user }) => {
+      const adminSection = this.querySelector('#admin-section');
+      const usernameSpan = this.querySelector('#admin-username');
+      if (adminSection) {
+        adminSection.classList.toggle('d-none', !isLoggedIn);
+      }
+      if (usernameSpan && user) {
+        usernameSpan.textContent = user;
+      }
+    });
+  }
+
+  disconnectedCallback() {
+    if (this._unsubscribe) {
+      this._unsubscribe();
+    }
   }
 }
 customElements.define('app-aside', Aside);

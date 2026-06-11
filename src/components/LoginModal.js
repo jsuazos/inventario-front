@@ -6,9 +6,5 @@ class LoginModal extends HTMLElement {
       </button>
     `;
   }
-
-  abrir() {
-    this.querySelector('dialog').showModal();
-  }
 }
 customElements.define('login-modal', LoginModal);

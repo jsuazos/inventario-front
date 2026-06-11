@@ -1,7 +1,7 @@
 {
   "entornos": {
     "local": {
-      "apiUrl": "https://inventario-server-pw1j.onrender.com/api"
+      "apiUrl": "http://localhost:3000/api"
     },
     "produccion": {
       "apiUrl": "https://inventario-server-pw1j.onrender.com/api"

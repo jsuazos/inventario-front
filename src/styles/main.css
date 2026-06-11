@@ -254,6 +254,18 @@ body.sidebar-open {
   background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
 }
 
+.btn-edit-card {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.card-with-border:hover .btn-edit-card {
+  opacity: 1;
+}
+
+body:not(.auth-editor) .btn-edit-card {
+  display: none;
+}
+
 .play-button {
   position: absolute;
   top: 50%;
@@ -488,6 +500,14 @@ html {
 
 #alphabet {
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (max-width: 767.98px) {
+  .badge-desktop { display: none !important; }
+  .badge-mobile { display: flex !important; }
+}
+@media (min-width: 768px) {
+  .badge-mobile { display: none !important; }
 }
 
 @supports (padding-bottom: env(safe-area-inset-bottom)) {

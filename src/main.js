@@ -11,8 +11,8 @@ import { loadLibrary, checkForUpdatesInBackground } from "./services/libraryServ
 import { filterLibrary } from "./utils/libraryFilters.js";
 import { toggleSidebar, loadAlphabet } from "./utils/ui.js";
 // import { clearFilters } from "./utils/libraryFilters.js";
-import { clearLibrary } from "./utils/modals.js";
-import { modalLogin } from "./utils/modals.js";
+import { clearLibrary, modalLogin, updateLoginUI } from "./utils/modals.js";
+import { authStore } from "./state/authStore.js";
 import displayLibrary from "./utils/libraryDisplay.js";
 import { libraryStore } from "./state/libraryStore.js";
 import { errorHandler } from "./services/errorHandler.js";
@@ -21,6 +21,17 @@ import { setupOnlineOfflineHandlers } from './services/dbService.js';
 window.addEventListener("DOMContentLoaded", async () => {
   // Inicializar el store desde localStorage/IndexedDB
   await libraryStore.init();
+
+  // Restaurar sesión si existe token válido
+  authStore.init();
+  updateLoginUI();
+
+  // Sincronizar clase auth-editor en body con el estado de login
+  const toggleAuthEditor = ({ isLoggedIn }) => {
+    document.body.classList.toggle('auth-editor', isLoggedIn);
+  };
+  toggleAuthEditor({ isLoggedIn: authStore.isLoggedIn });
+  authStore.subscribe(toggleAuthEditor);
   
   // Configurar manejo de conexión
   setupOnlineOfflineHandlers();

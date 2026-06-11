@@ -1,23 +1,46 @@
 import configService from './configService.js';
 import { errorHandler } from './errorHandler.js';
+import { authStore } from '../state/authStore.js';
+
+function getAuthHeaders() {
+  const token = authStore.getToken();
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
+
+function handleUnauthorized() {
+  if (authStore.isLoggedIn) {
+    authStore.logout();
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        icon: 'info',
+        title: 'Sesión expirada',
+        text: 'Tu sesión ha expirado. Inicia sesión nuevamente.',
+        background: '#1a1a1a',
+        color: '#fff',
+        backdrop: 'rgba(0,0,0,0.85)'
+      });
+    }
+  }
+}
 
 export async function fetchConStatusOk(url, opciones = {}) {
   try {
     const respuesta = await fetch(url, opciones);
 
-    const data = await respuesta.json(); // tu API siempre responde JSON, incluso con error
+    const data = await respuesta.json();
 
     if (!respuesta.ok) {
-      // Tu backend devuelve { error: '...' }
+      if (respuesta.status === 401) {
+        handleUnauthorized();
+      }
       const error = new Error(data.error || `Error ${respuesta.status}`);
       errorHandler.handleApiError(error, url, opciones);
       throw error;
     }
 
-    return data; // Solo llega aquí si status 2xx
+    return data;
 
   } catch (error) {
-    // Puede ser error de red o error lanzado por el backend
     if (error.name === 'TypeError' || error.message.includes('fetch')) {
       errorHandler.handleNetworkError(error, `fetch ${url}`);
     } else {
@@ -29,7 +52,7 @@ export async function fetchConStatusOk(url, opciones = {}) {
 
 export class ApiClient {
   constructor() {
-    this.defaultTimeout = 10000; // 10 segundos
+    this.defaultTimeout = 10000;
     this.maxRetries = 3;
   }
 
@@ -65,6 +88,7 @@ export class ApiClient {
         signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
           ...options.headers
         }
       };
@@ -79,6 +103,9 @@ export class ApiClient {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 401) {
+          handleUnauthorized();
+        }
         const error = new Error(data.error || `HTTP ${response.status}`);
         errorHandler.handleApiError(error, url, { method, body, options });
         throw error;
@@ -87,7 +114,6 @@ export class ApiClient {
       return data;
 
     } catch (error) {
-      // Manejar diferentes tipos de error
       if (error.name === 'AbortError') {
         const timeoutError = new Error(`Request timeout after ${timeout}ms`);
         errorHandler.handleNetworkError(timeoutError, `${method} ${endpoint}`);
@@ -104,11 +130,6 @@ export class ApiClient {
     }
   }
 
-  /**
-   * Ejecuta una operación con reintento automático
-   * @param {Function} operation - Función asíncrona a ejecutar
-   * @param {Object} options - Opciones de reintento
-   */
   async withRetry(operation, options = {}) {
     const { maxRetries = this.maxRetries } = options;
     let delay = options.delay ?? 1000;
@@ -126,10 +147,13 @@ export class ApiClient {
 
         console.warn(`Intento ${attempt}/${maxRetries} falló, reintentando en ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
-        delay *= 2; // Exponential backoff
+        delay *= 2;
       }
     }
 
     throw lastError;
   }
 }
+
+export const apiClient = new ApiClient();
+

@@ -42,10 +42,10 @@ class Navbar extends HTMLElement {
             </div>
 
             <!-- Lado derecho: badge de versión -->
-            <div id="cacheVersionBadge" class="badge bg-info text-dark align-self-center">
+            <div id="cacheVersionBadge" class="badge bg-info text-dark align-self-center badge-desktop">
                 <small>Cache: <span id="cacheVersion">Cargando...</span></small>
             </div>
-            <div id="connection-status" class="badge bg-success ms-2">
+            <div id="connection-status" class="badge bg-success ms-2 badge-desktop">
                 <small>Online</small>
             </div>
             </div>
@@ -481,24 +481,23 @@ class Navbar extends HTMLElement {
    */
   setupConnectionStatus() {
     const statusElement = this.querySelector('#connection-status');
+    const mobileStatus = document.getElementById('connection-status-mobile');
     
-    if (!statusElement) return;
-
-    // Función para actualizar el estado
     const updateStatus = () => {
-      if (navigator.onLine) {
-        statusElement.className = 'badge bg-success ms-2';
-        statusElement.innerHTML = '<small>Online</small>';
-      } else {
-        statusElement.className = 'badge bg-warning ms-2';
-        statusElement.innerHTML = '<small>Offline</small>';
+      const online = navigator.onLine;
+      const cls = online ? 'bg-success' : 'bg-warning';
+      const txt = online ? 'Online' : 'Offline';
+      if (statusElement) {
+        statusElement.className = `badge ${cls} ms-2 badge-desktop`;
+        statusElement.innerHTML = `<small>${txt}</small>`;
+      }
+      if (mobileStatus) {
+        mobileStatus.className = `badge ${cls}`;
+        mobileStatus.innerHTML = `<small>${txt}</small>`;
       }
     };
 
-    // Actualizar estado inicial
     updateStatus();
-
-    // Escuchar cambios de conexión
     window.addEventListener('online', updateStatus);
     window.addEventListener('offline', updateStatus);
   }
@@ -582,9 +581,9 @@ class Navbar extends HTMLElement {
       versionSpan.textContent = version;
       console.log('🏷️ Badge actualizado con versión:', version);
       this.versionShown = true;
-    } else {
-      console.error('❌ No se encontraron elementos del badge');
     }
+    const mobileVersion = document.getElementById('cacheVersion-mobile');
+    if (mobileVersion) mobileVersion.textContent = version;
   }
 
   /**
