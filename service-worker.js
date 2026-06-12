@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1.7.2';
+const CACHE_VERSION = 'v1.7.3';
 const CACHE_NAME = `musica-inventario-${CACHE_VERSION}`;
 const DATA_CACHE_NAME = 'library-data-v1';
 
