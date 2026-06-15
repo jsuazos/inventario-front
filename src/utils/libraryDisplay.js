@@ -3,10 +3,16 @@ import aplicarColoresPorGenero from './aplicarColoresPorGenero.js';
 import fetchArtistDetails from '../services/artistService.js';
 
 export default async function displayLibrary(items) {
-    toggleLoader(true);
     const artistBanner = document.getElementById('artistBanner');
     const grid = document.getElementById('libraryGrid');
     const counter = document.getElementById('resultCount');
+
+    if (!grid || !artistBanner || !counter) {
+        console.warn('displayLibrary: elementos del DOM no encontrados');
+        return;
+    }
+
+    toggleLoader(true);
 
     if (window.alphabetObserver) {
         window.alphabetObserver.disconnect();

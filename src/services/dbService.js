@@ -7,6 +7,7 @@ const DB_VERSION = 1;
 const STORE_NAME = 'library';
 
 let dbPromise = null;
+let dbInstance = null;
 
 function buildItemId(item) {
   return item?.Orden || `${item?.Artista || ''}-${item?.Disco || ''}-${item?.Año || ''}` || crypto.randomUUID();
@@ -28,7 +29,8 @@ export function initDB() {
     };
 
     request.onsuccess = () => {
-      resolve(request.result);
+      dbInstance = request.result;
+      resolve(dbInstance);
     };
 
     request.onupgradeneeded = () => {
@@ -43,6 +45,38 @@ export function initDB() {
   });
 
   return dbPromise;
+}
+
+/**
+ * Vacía todos los datos de IndexedDB (sin borrar la BD)
+ */
+export async function clearAllData() {
+  const db = await initDB();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+
+    transaction.onerror = () => reject(transaction.error);
+    transaction.oncomplete = () => resolve(true);
+
+    store.clear();
+  });
+}
+
+/**
+ * Cerrar la conexión a IndexedDB
+ */
+export function closeDB() {
+  if (dbInstance) {
+    try {
+      dbInstance.close();
+    } catch (e) {
+      // ignorar
+    }
+    dbInstance = null;
+    dbPromise = null;
+  }
 }
 
 /**

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1.7.8';
+const CACHE_VERSION = 'v1.7.9';
 const CACHE_NAME = `musica-inventario-${CACHE_VERSION}`;
 
 self.addEventListener('install', () => {
@@ -14,6 +14,7 @@ self.addEventListener('activate', event => {
           .map(name => caches.delete(name))
       )
     ).then(() => self.clients.claim())
+    .catch(() => {})
   );
 });
 

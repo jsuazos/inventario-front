@@ -5,7 +5,7 @@
  */
 
 import { errorHandler } from './errorHandler.js';
-import { saveLibraryData as saveToIndexedDB, getLibraryData as getFromIndexedDB } from './dbService.js';
+import { saveLibraryData as saveToIndexedDB, getLibraryData as getFromIndexedDB, clearAllData, closeDB } from './dbService.js';
 
 const STORAGE_KEYS = {
   libraryData: 'libraryData',
@@ -75,22 +75,8 @@ export class StorageService {
       
       // También limpiar de IndexedDB si existe
       if ('indexedDB' in window) {
-        const dbName = 'MusicLibraryDB';
-        await new Promise((resolve) => {
-          const request = indexedDB.deleteDatabase(dbName);
-          request.onsuccess = () => {
-            console.log('IndexedDB limpiado');
-            resolve();
-          };
-          request.onerror = (event) => {
-            console.error('Error al limpiar IndexedDB:', event.target.error);
-            resolve();
-          };
-          request.onblocked = () => {
-            console.warn('IndexedDB delete bloqueado, continuando...');
-            resolve();
-          };
-        });
+        await clearAllData();
+        closeDB();
       }
       
       return true;

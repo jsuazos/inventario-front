@@ -27,7 +27,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Suscribirse a cambios del store para refrescar la vista
   // Registrado temprano para capturar todas las notificaciones
   libraryStore.subscribe((state) => {
-    displayLibrary(state.data);
+    if (!state.isLoading) {
+      displayLibrary(state.data).catch(() => {});
+    }
   });
 
   // Restaurar sesión si existe token válido

@@ -84,8 +84,7 @@ export async function checkForUpdatesInBackground() {
     }
 
   } catch (e) {
-    errorHandler.handleNetworkError(e, 'checkForUpdatesInBackground');
-    showBackgroundUpdateNotification('❌ Error al verificar actualizaciones', 'error');
+    console.warn('checkForUpdatesInBackground falló (esto es normal si el servidor está iniciando):', e.message);
   }
 }
 
@@ -374,35 +373,55 @@ function completeLoad(data) {
   });
 }
 
+function finishLoad(data) {
+  completeLoad(data || []);
+  libraryStore.setLoading(false);
+  toggleLoader(false);
+}
+
+function showLoader() {
+  const el = document.getElementById('loader');
+  if (el) {
+    el.style.display = 'block';
+  }
+}
+
+function hideLoader() {
+  const el = document.getElementById('loader');
+  if (el) {
+    el.style.display = 'none';
+  }
+}
+
 export async function loadLibrary(libraryData) {
-  toggleLoader(true);
+  showLoader();
   libraryStore.setLoading(true);
 
   const isCacheEmpty = libraryData === null || libraryData.length === 0;
 
   if (isCacheEmpty && navigator.onLine) {
-    await libraryStore.init();
-
     fetchLibraryFromApi()
       .then(apiData => {
         if (apiData.length > 0) {
           libraryStore.loadData(apiData);
-          completeLoad(apiData);
         }
+        populateFilters(apiData || []);
+        aplicarColoresPorGenero();
+        requestAnimationFrame(() => { obtenerTopEstilos(); loadAlphabet(); });
+        libraryStore.setLoading(false);
+        hideLoader();
       })
       .catch(e => {
         errorHandler.handleNetworkError(e, 'loadLibrary');
+        libraryStore.setLoading(false);
+        hideLoader();
       });
 
-    libraryData = libraryData || [];
-    completeLoad(libraryData);
-  } else {
-    await libraryStore.init();
-    completeLoad(libraryData);
+    return [];
   }
 
-  libraryStore.setLoading(false);
-  toggleLoader(false);
+  await libraryStore.init();
+  finishLoad(libraryData);
 
   return libraryData;
 }
