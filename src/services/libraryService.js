@@ -7,7 +7,6 @@ import configService from './configService.js';
 import obtenerGeneros from '../utils/obtenerGeneros.js';
 // import fillSelect from '../utils/filters.js';
 import { libraryStore } from '../state/libraryStore.js';
-import { authStore } from '../state/authStore.js';
 import { errorHandler } from './errorHandler.js';
 
 export function populateFilters(libraryData) {
@@ -130,8 +129,6 @@ function getDetailedChanges(oldArray, newArray) {
  * Envía notificación push a todos los dispositivos via el backend
  */
 async function triggerPushNotification(added, removed) {
-  if (!authStore.isLoggedIn) return;
-
   let body = '';
   if (added.length > 0) {
     body += `➕ ${added.length} agregado${added.length !== 1 ? 's' : ''}`;
@@ -146,10 +143,7 @@ async function triggerPushNotification(added, removed) {
     const url = `${apiUrl.replace(/\/$/, '')}/push/notify`;
     await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authStore.getToken()}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title: '📀 Biblioteca actualizada',
         body,
