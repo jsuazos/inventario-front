@@ -458,9 +458,11 @@ class Navbar extends HTMLElement {
 
     if (this.searchBadges.length === 0) {
       container.innerHTML = '';
+      container.style.display = 'none';
       return;
     }
 
+    container.style.display = 'flex';
     container.innerHTML = this.searchBadges.map((term, index) => `
       <span class="search-badge">
         <span>${term}</span>

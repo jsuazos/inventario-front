@@ -113,9 +113,6 @@ body.sidebar-open {
 }
 
 /* Estilos para badges de filtros de búsqueda */
-.search-badges:empty {
-  display: none !important;
-}
 .search-badge {
   display: inline-flex;
   align-items: center;
