@@ -75,20 +75,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   if ("serviceWorker" in navigator) {
     try {
-      navigator.serviceWorker.register("./service-worker.js").then((reg) => {
-        reg.onupdatefound = () => {
-          const newWorker = reg.installing;
-          newWorker.onstatechange = () => {
-            if (
-              newWorker.state === "installed" &&
-              navigator.serviceWorker.controller
-            ) {
-              console.log("Nueva versión disponible. Recargando...");
-              window.location.reload(); // Forzar recarga si hay nueva versión
-            }
-          };
-        };
-      });
+      navigator.serviceWorker.register("./service-worker.js");
     } catch (error) {
       errorHandler.handleNetworkError(error, 'serviceWorkerRegistration');
     }
