@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1.7.3';
+const CACHE_VERSION = 'v1.7.4';
 const CACHE_NAME = `musica-inventario-${CACHE_VERSION}`;
 const DATA_CACHE_NAME = 'library-data-v1';
 
@@ -146,6 +146,54 @@ self.addEventListener('message', event => {
       self.registration.sync.register(event.data.tag);
     }
   }
+});
+
+self.addEventListener('push', event => {
+  const ICON = `${BASE_PATH}img/music_icon_192.png`;
+  let data = { title: 'Inventario Musical', body: '', icon: ICON };
+  try {
+    if (event.data) {
+      const parsed = event.data.json();
+      data = { ...data, ...parsed };
+    }
+  } catch (err) {
+    data.body = event.data.text() || data.body;
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon,
+    badge: ICON,
+    vibrate: [200, 100, 200],
+    data: data.data || {},
+    actions: [
+      { action: 'open', title: 'Abrir' },
+      { action: 'close', title: 'Cerrar' },
+    ],
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+
+  if (event.action === 'close') return;
+
+  const urlToOpen = event.notification.data?.url || BASE_PATH;
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      const matchingClient = windowClients.find(client =>
+        client.url.includes(urlToOpen) && 'focus' in client
+      );
+      if (matchingClient) {
+        return matchingClient.focus();
+      }
+      return clients.openWindow(urlToOpen);
+    })
+  );
 });
 
 self.addEventListener('sync', event => {

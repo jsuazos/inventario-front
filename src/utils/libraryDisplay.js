@@ -17,13 +17,10 @@ export default async function displayLibrary(items) {
     counter.textContent = `Mostrando ${items.length} resultados ${!navigator.onLine ? '(la información puede que no este actualizada ya que no tienes conexión a internet)' : ''}`;
 
     // si sólo hay un artista, mostrar cabecera con datos del artista
-    // const artistFilter = filterArtist.value;
-    // if (artistFilter) {
-    //   if (navigator.onLine) {
-    //     await fetchArtistDetails(artistFilter);
-    //   }
-      
-    // }
+    const uniqueArtists = [...new Set(items.map(i => i.Artista))];
+    if (uniqueArtists.length === 1 && navigator.onLine) {
+      fetchArtistDetails(uniqueArtists[0]);
+    }
     
     items.forEach((item, index) => {
         let imageUrl =  item.imgFULL && 

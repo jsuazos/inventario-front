@@ -17,6 +17,8 @@ import displayLibrary from "./utils/libraryDisplay.js";
 import { libraryStore } from "./state/libraryStore.js";
 import { errorHandler } from "./services/errorHandler.js";
 import { setupOnlineOfflineHandlers } from './services/dbService.js';
+import { loadArtistCatalog } from './services/artistCatalogService.js';
+import { subscribe, isSubscribed, isSupported } from './services/pushService.js';
 
 window.addEventListener("DOMContentLoaded", async () => {
   // Inicializar el store desde localStorage/IndexedDB
@@ -40,6 +42,11 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   libraryData = await loadLibrary(libraryData);
   libraryStore.loadData(libraryData);
+
+  // Cargar catálogo de artistas desde la API
+  if (navigator.onLine) {
+    loadArtistCatalog();
+  }
 
   // El filtro en vivo del input se maneja desde Navbar.js vía libraryStore.setSearchInput()
 
@@ -97,6 +104,19 @@ window.addEventListener("DOMContentLoaded", async () => {
       document.getElementById(
         "cache-version"
       ).textContent = `Versión: ${version}`;
+    });
+  }
+
+  // Inicializar push notifications si está soportado
+  if (isSupported()) {
+    if (authStore.isLoggedIn && !isSubscribed()) {
+      subscribe();
+    }
+
+    authStore.subscribe(({ isLoggedIn }) => {
+      if (isLoggedIn && !isSubscribed()) {
+        subscribe();
+      }
     });
   }
 });

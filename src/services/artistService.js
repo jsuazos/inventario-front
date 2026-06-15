@@ -1,5 +1,6 @@
 import configService from './configService.js';
 import { errorHandler } from './errorHandler.js';
+import { getArtistFromCatalog } from './artistCatalogService.js';
 
 // Sistema de rate limiting para evitar 429 errors
 export class RateLimiter {
@@ -108,8 +109,12 @@ export default async function fetchArtistDetails(artist) {
         profileData = await profileRes.json();
       }
 
-      // Obtener MBID y datos de Fanart.tv
-      const mbid = await fetchArtistMBID(artist);
+      // Usar MBID del catálogo local si existe, sino consultar MusicBrainz
+      const catalogEntry = getArtistFromCatalog(artist);
+      let mbid = catalogEntry?.mbid || null;
+      if (!mbid) {
+        mbid = await fetchArtistMBID(artist);
+      }
       const fanartData = mbid ? await fetchArtistBanner(mbid) : {};
 
       artistDetails[artist] = {
@@ -118,7 +123,8 @@ export default async function fetchArtistDetails(artist) {
         image: fanartData.background || (profileData.images ? profileData.images[0]?.uri : null),
         logo: fanartData.logo || null,
         bio: profileData.profile || 'Sin descripción disponible.',
-        mbid: mbid
+        mbid: mbid,
+        count: catalogEntry?.count || null
       };
 
       displayArtistBanner(artistDetails[artist]);
@@ -158,11 +164,11 @@ function displayArtistBanner(artistData) {
         ${artistData.logo ? `<img src="${artistData.logo}" alt="logo" style="max-height: 150px;">` : `<h2 class="m-0 my-5">${artistData.name}</h2>`}
 
         <div class="position-absolute top-0 end-0 d-flex gap-2 p-2">
+          ${artistData.count ? `<span class="badge bg-info text-dark align-self-center">${artistData.count} discos</span>` : ''}
           ${artistData.id ? `<a href="https://www.discogs.com/es/artist/${encodeURIComponent(artistData.id)}" target="_blank" class="btn btn-outline-light btn-sm">Discogs</a>` : ''}
           ${artistData.mbid ? `<a href="https://musicbrainz.org/artist/${artistData.mbid}" target="_blank" class="btn btn-outline-light btn-sm">MusicBrainz</a>` : ''}
         </div>
       </div>
-      <!--<p class="mt-2">${artistData.bio}</p>-->
     `;
 
     bannerContainer.appendChild(wrapper);

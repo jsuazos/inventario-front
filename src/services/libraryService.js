@@ -7,6 +7,7 @@ import configService from './configService.js';
 import obtenerGeneros from '../utils/obtenerGeneros.js';
 // import fillSelect from '../utils/filters.js';
 import { libraryStore } from '../state/libraryStore.js';
+import { authStore } from '../state/authStore.js';
 import { errorHandler } from './errorHandler.js';
 
 export function populateFilters(libraryData) {
@@ -41,17 +42,9 @@ export async function checkForUpdatesInBackground() {
     const url = `${apiUrl.replace(/\/$/, "")}/inventario`;
 
     
-    // const url2 = `${apiUrl.replace(/\/$/, "")}/artistas`;
-
     const res = await fetch(url);
     const data = await res.json();
     const apiData = data.data || [];
-
-    // const res2 = await fetch(url2);
-    // const data2 = await res2.text();
-    // const artistasData = data2.data || [];
-
-    // console.log({ apiData, data2 });
     
     // Filtrar solo registros con Visible == "SI"
     const filteredApiData = apiData.filter(item => item.Visible === "SI");
@@ -61,6 +54,10 @@ export async function checkForUpdatesInBackground() {
     const { added, removed } = getDetailedChanges(localData, filteredApiData);
 
     const hasChanges = added.length > 0 || removed.length > 0;
+
+    if (hasChanges) {
+      triggerPushNotification(added, removed);
+    }
 
     if (hasChanges && filteredApiData.length > 0) {
 
@@ -128,6 +125,40 @@ function getDetailedChanges(oldArray, newArray) {
   });
 
   return { added, removed };
+}
+
+/**
+ * Envía notificación push a todos los dispositivos via el backend
+ */
+async function triggerPushNotification(added, removed) {
+  if (!authStore.isLoggedIn) return;
+
+  let body = '';
+  if (added.length > 0) {
+    body += `➕ ${added.length} agregado${added.length !== 1 ? 's' : ''}`;
+  }
+  if (removed.length > 0) {
+    if (body) body += '\n';
+    body += `➖ ${removed.length} eliminado${removed.length !== 1 ? 's' : ''}`;
+  }
+
+  try {
+    const { apiUrl } = await configService();
+    const url = `${apiUrl.replace(/\/$/, '')}/push/notify`;
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authStore.getToken()}`,
+      },
+      body: JSON.stringify({
+        title: '📀 Biblioteca actualizada',
+        body,
+      }),
+    });
+  } catch (err) {
+    console.error('Error sending push notification:', err);
+  }
 }
 
 /**
