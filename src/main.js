@@ -108,16 +108,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Inicializar push notifications si está soportado
-  if (isSupported()) {
-    if (authStore.isLoggedIn && !isSubscribed()) {
-      subscribe();
-    }
-
-    authStore.subscribe(({ isLoggedIn }) => {
-      if (isLoggedIn && !isSubscribed()) {
-        subscribe();
-      }
-    });
+  // Se suscribe a todos los usuarios que acepten permisos, sin requerir login
+  if (isSupported() && !isSubscribed() && Notification.permission !== 'denied') {
+    subscribe();
   }
 });
 
