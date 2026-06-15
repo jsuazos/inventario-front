@@ -24,6 +24,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Inicializar el store desde localStorage/IndexedDB
   await libraryStore.init();
 
+  // Suscribirse a cambios del store para refrescar la vista
+  // Registrado temprano para capturar todas las notificaciones
+  libraryStore.subscribe((state) => {
+    displayLibrary(state.data);
+  });
+
   // Restaurar sesión si existe token válido
   authStore.init();
   updateLoginUI();
@@ -41,7 +47,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   let libraryData = JSON.parse(localStorage.getItem("libraryData")) || [];
 
   libraryData = await loadLibrary(libraryData);
-  libraryStore.loadData(libraryData);
 
   // Cargar catálogo de artistas desde la API
   if (navigator.onLine) {
@@ -55,12 +60,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     radio.addEventListener("change", filterLibrary);
   });
 
-  // Suscribirse a cambios del store para refrescar la vista al aplicar filtros u ordenamientos
-  libraryStore.subscribe((state) => {
-    displayLibrary(state.data);
-  });
-
-  // clearFilters(libraryData);
   toggleSidebar();
   clearLibrary();
 

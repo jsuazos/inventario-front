@@ -5,7 +5,12 @@ import { libraryStore } from '../state/libraryStore.js';
 import { authStore } from '../state/authStore.js';
 
 export function clearLibrary() {
-    document.getElementById('btn-clear-library').addEventListener('click', () => {
+    const btn = document.getElementById('btn-clear-library');
+    if (!btn) {
+        console.warn('clearLibrary: botón btn-clear-library no encontrado');
+        return;
+    }
+    btn.addEventListener('click', () => {
         Swal.fire({
         title: '¿Limpiar biblioteca?',
         text: 'Esta acción eliminará los datos guardados localmente.',
@@ -23,10 +28,9 @@ export function clearLibrary() {
             cancelButton: 'btn btn-secondary me-2'
         },
         buttonsStyling: false
-        }).then((result) => {
+        }).then(async (result) => {
         if (result.isConfirmed) {
-            libraryStore.clearLibrary();
-            storageService.clearLibraryData();
+            await libraryStore.clearLibrary();
             location.reload();
         }
         });
@@ -155,7 +159,12 @@ export function updateLoginUI() {
 }
 
 export function modalLogin() {
-  document.getElementById('btnLogin').addEventListener('click', () => {
+  const btn = document.getElementById('btnLogin');
+  if (!btn) {
+    console.warn('modalLogin: botón btnLogin no encontrado');
+    return;
+  }
+  btn.addEventListener('click', () => {
     if (authStore.isLoggedIn) {
       showLogoutConfirm();
     } else {

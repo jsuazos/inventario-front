@@ -76,11 +76,21 @@ export class StorageService {
       // También limpiar de IndexedDB si existe
       if ('indexedDB' in window) {
         const dbName = 'MusicLibraryDB';
-        const request = indexedDB.deleteDatabase(dbName);
-        request.onsuccess = () => console.log('IndexedDB limpiado');
-        request.onerror = (event) => {
-          console.error('Error al limpiar IndexedDB:', event.target.error);
-        };
+        await new Promise((resolve) => {
+          const request = indexedDB.deleteDatabase(dbName);
+          request.onsuccess = () => {
+            console.log('IndexedDB limpiado');
+            resolve();
+          };
+          request.onerror = (event) => {
+            console.error('Error al limpiar IndexedDB:', event.target.error);
+            resolve();
+          };
+          request.onblocked = () => {
+            console.warn('IndexedDB delete bloqueado, continuando...');
+            resolve();
+          };
+        });
       }
       
       return true;

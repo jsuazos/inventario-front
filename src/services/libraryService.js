@@ -349,47 +349,57 @@ function showBackgroundUpdateNotification(message, type = 'info') {
   }, timeout);
 }
 
-export async function loadLibrary(libraryData) {
-  toggleLoader(true);
-  libraryStore.setLoading(true);
+async function fetchLibraryFromApi() {
+  const { apiUrl } = await configService();
+  const url = `${apiUrl.replace(/\/$/, "")}/inventario`;
+  const res = await fetch(url);
+  const data = await res.json();
+  let result = data.data || [];
+  result = result.filter(item => item.Visible === "SI");
+  result.sort((a, b) => {
+    const claveA = a.Artista.toLowerCase() + ' ' + a.Año;
+    const claveB = b.Artista.toLowerCase() + ' ' + b.Año;
+    return claveA.localeCompare(claveB);
+  });
+  return result;
+}
 
-  if ((libraryData === null || libraryData.length === 0) && navigator.onLine) {
-    try {
-      const { apiUrl } = await configService();
-      const url = `${apiUrl.replace(/\/$/, "")}/inventario`;
-
-      const res = await fetch(url);
-      const data = await res.json();
-      
-      libraryData = data.data || [];
-      
-      // Filtrar solo registros con Visible == "SI"
-      libraryData = libraryData.filter(item => item.Visible === "SI");
-      
-      libraryData.sort((a, b) => {
-        const claveA = a.Artista.toLowerCase() + ' ' + a.Año;
-        const claveB = b.Artista.toLowerCase() + ' ' + b.Año;
-        return claveA.localeCompare(claveB);
-      });
-
-      libraryStore.loadData(libraryData);
-    } catch (e) {
-      errorHandler.handleNetworkError(e, 'loadLibrary');
-      libraryData = libraryData || [];
-    }
-  } else {
-    // Usar datos del localStorage
-    libraryStore.init();
-  }
-
-  populateFilters(libraryData || []);
-  displayLibrary(libraryData || []);
+function completeLoad(data) {
+  populateFilters(data || []);
+  displayLibrary(data || []);
   aplicarColoresPorGenero();
-  
   requestAnimationFrame(() => {
     obtenerTopEstilos();
     loadAlphabet();
   });
+}
+
+export async function loadLibrary(libraryData) {
+  toggleLoader(true);
+  libraryStore.setLoading(true);
+
+  const isCacheEmpty = libraryData === null || libraryData.length === 0;
+
+  if (isCacheEmpty && navigator.onLine) {
+    await libraryStore.init();
+
+    fetchLibraryFromApi()
+      .then(apiData => {
+        if (apiData.length > 0) {
+          libraryStore.loadData(apiData);
+          completeLoad(apiData);
+        }
+      })
+      .catch(e => {
+        errorHandler.handleNetworkError(e, 'loadLibrary');
+      });
+
+    libraryData = libraryData || [];
+    completeLoad(libraryData);
+  } else {
+    await libraryStore.init();
+    completeLoad(libraryData);
+  }
 
   libraryStore.setLoading(false);
   toggleLoader(false);

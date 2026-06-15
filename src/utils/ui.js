@@ -22,6 +22,11 @@ export function toggleSidebar() {
     const tSidebar = document.getElementById("toggleSidebar");
     const sidebar = document.getElementById("sidebar");
 
+    if (!tSidebar || !sidebar) {
+        console.warn('toggleSidebar: elementos del DOM no encontrados');
+        return;
+    }
+
     tSidebar.addEventListener("click", () => {
         sidebar.classList.toggle("show");
         document.body.classList.toggle("sidebar-open");

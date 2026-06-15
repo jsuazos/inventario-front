@@ -171,10 +171,10 @@ export class LibraryStore {
   /**
    * Limpia toda la biblioteca
    */
-  clearLibrary() {
+  async clearLibrary() {
     this.data = [];
     this.filteredData = [];
-    storageService.clearLibraryData();
+    await storageService.clearLibraryData();
     this.notifyListeners();
   }
 
