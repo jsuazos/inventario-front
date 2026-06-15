@@ -107,12 +107,87 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Inicializar push notifications si está soportado
-  // Se suscribe a todos los usuarios que acepten permisos, sin requerir login
-  if (isSupported() && !isSubscribed() && Notification.permission !== 'denied') {
-    subscribe();
-  }
+  // Push notifications: adaptado para iOS (requiere Home Screen + user gesture)
+  setupPushNotifications();
 });
+
+function isIOS() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+
+function setupPushNotifications() {
+  if (!isSupported() || isSubscribed()) return;
+  if (Notification.permission === 'denied') return;
+
+  if (isIOS() && !window.navigator.standalone) {
+    showInstallBanner();
+    return;
+  }
+
+  showSubscribeBell();
+}
+
+function showInstallBanner() {
+  const banner = document.createElement('div');
+  banner.id = 'ios-install-banner';
+  banner.style.cssText = `
+    position: fixed; bottom: 20px; left: 20px; right: 20px;
+    z-index: 10000; background: #1a1a2e; color: #fff;
+    border: 1px solid #0dcaf0; border-radius: 12px;
+    padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    font-size: 14px; max-width: 400px; margin: 0 auto;
+  `;
+  banner.innerHTML = `
+    <div style="display:flex;align-items:flex-start;gap:12px">
+      <span style="font-size:28px">📱</span>
+      <div style="flex:1">
+        <strong style="color:#0dcaf0">Agrega esta app a tu pantalla de inicio</strong>
+        <p style="margin:6px 0 0;color:#ccc;font-size:13px">
+          Para recibir notificaciones cuando haya cambios en la biblioteca:
+        </p>
+        <ol style="margin:8px 0 0;padding-left:18px;color:#aaa;font-size:12px;line-height:1.6">
+          <li>Toca <strong style="color:#fff">Compartir</strong> (cuadro con flecha ↑)</li>
+          <li>Desplázate y toca <strong style="color:#fff">Agregar a Inicio</strong></li>
+          <li>Toca <strong style="color:#fff">Agregar</strong> (arriba a la derecha)</li>
+        </ol>
+      </div>
+      <button id="close-install-banner" style="
+        background:none;border:none;color:#888;font-size:20px;
+        cursor:pointer;padding:0;line-height:1;flex-shrink:0
+      ">×</button>
+    </div>
+  `;
+  document.body.appendChild(banner);
+
+  document.getElementById('close-install-banner').onclick = () => {
+    banner.remove();
+  };
+}
+
+function showSubscribeBell() {
+  const btn = document.createElement('button');
+  btn.id = 'push-subscribe-btn';
+  btn.title = 'Activar notificaciones de cambios';
+  btn.style.cssText = `
+    position: fixed; bottom: 80px; right: 20px; z-index: 9999;
+    width: 50px; height: 50px; border-radius: 50%; border: none;
+    background: #0dcaf0; color: #000; font-size: 22px;
+    cursor: pointer; box-shadow: 0 3px 12px rgba(13,202,240,0.4);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s;
+  `;
+  btn.textContent = '🔔';
+  btn.onmouseenter = () => btn.style.transform = 'scale(1.1)';
+  btn.onmouseleave = () => btn.style.transform = 'scale(1)';
+  btn.onclick = async () => {
+    btn.style.display = 'none';
+    const ok = await subscribe();
+    if (!ok && Notification.permission !== 'denied') {
+      btn.style.display = 'flex';
+    }
+  };
+  document.body.appendChild(btn);
+}
 
 // Manejar mensajes del service worker para sincronización
 if ('serviceWorker' in navigator) {
