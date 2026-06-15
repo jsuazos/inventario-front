@@ -5,7 +5,7 @@ html {
 }
 
 body { background: linear-gradient(to top, #000000, #000000, #222222); color: white; min-height: 100vh; font-family: 'Roboto', sans-serif; }
-.navbar { background: #343a40; z-index: 1055; }
+.navbar { background: #343a40; z-index: 1055; padding-top: calc(0.5rem + env(safe-area-inset-top, 0)); }
 .search-bar input { background: #495057; color: white; border: none; }
 .search-bar input::placeholder { color: #ced4da; }
 .badge-type { background: #6c757d; font-size: 0.7rem; }
@@ -113,8 +113,8 @@ body.sidebar-open {
 }
 
 /* Estilos para badges de filtros de búsqueda */
-.search-badges {
-  min-height: 26px;
+.search-badges:empty {
+  display: none !important;
 }
 .search-badge {
   display: inline-flex;
