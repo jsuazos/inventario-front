@@ -15,7 +15,7 @@ class Navbar extends HTMLElement {
 
   connectedCallback() {
     this.innerHTML = `
-        <nav class="navbar navbar-expand-lg navbar-dark px-3 sticky-top">
+        <nav class="navbar navbar-expand-lg navbar-dark px-3 sticky-top" style="padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));">
             <div class="d-flex w-100 align-items-center justify-content-between gap-2 flex-wrap">
             <!-- Lado izquierdo: botón y búsqueda -->
             <div class="d-flex align-items-center gap-2 flex-grow-1" style="min-width: 200px;">
@@ -520,7 +520,7 @@ class Navbar extends HTMLElement {
             this.showVersionBadge(event.data.cacheVersion);
           } else {
             console.log('⚠️ Usando versión por defecto');
-            this.showVersionBadge('v1.7.6');
+            this.showVersionBadge('v1.7.7');
           }
         };
 
@@ -530,14 +530,14 @@ class Navbar extends HTMLElement {
         setTimeout(() => {
           if (!this.versionShown) {
             console.log('⚠️ Usando versión por defecto');
-            this.showVersionBadge('v1.7.6');
+            this.showVersionBadge('v1.7.7');
           }
         }, 2000);
 
       } else {
         // Método 2: Fallback con versión hardcodeada
         console.log('⚠️ Usando versión por defecto');
-        this.showVersionBadge('v1.7.6');
+        this.showVersionBadge('v1.7.7');
       }
     } catch (error) {
       console.error('❌ Error obteniendo versión:', error);
@@ -568,7 +568,7 @@ class Navbar extends HTMLElement {
 
       // Método 2: Fallback con versión hardcodeada
       console.log('⚠️ Usando versión por defecto');
-      this.showVersionBadge('v1.7.6');
+      this.showVersionBadge('v1.7.7');
 
     } catch (error) {
       console.error('❌ Error obteniendo versión:', error);
