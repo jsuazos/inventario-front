@@ -131,11 +131,11 @@ function getDetailedChanges(oldArray, newArray) {
 async function triggerPushNotification(added, removed) {
   let body = '';
   if (added.length > 0) {
-    body += `➕ ${added.length} agregado${added.length !== 1 ? 's' : ''}`;
+    body += `${added.length} agregado${added.length !== 1 ? 's' : ''}`;
   }
   if (removed.length > 0) {
-    if (body) body += '\n';
-    body += `➖ ${removed.length} eliminado${removed.length !== 1 ? 's' : ''}`;
+    if (body) body += ' · ';
+    body += `${removed.length} eliminado${removed.length !== 1 ? 's' : ''}`;
   }
 
   try {
@@ -147,6 +147,7 @@ async function triggerPushNotification(added, removed) {
       body: JSON.stringify({
         title: '📀 Biblioteca actualizada',
         body,
+        data: { url: './' },
       }),
     });
   } catch (err) {

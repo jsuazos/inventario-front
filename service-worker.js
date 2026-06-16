@@ -117,10 +117,16 @@ self.addEventListener('notificationclick', event => {
       });
 
       if (matchingClient) {
-        return matchingClient.focus();
+        return matchingClient.focus().then(client => {
+          client?.postMessage({ type: 'NOTIFICATION_OPENED' });
+          return client;
+        });
       }
 
-      return clients.openWindow(urlToOpen);
+      return clients.openWindow(urlToOpen).then(client => {
+        client?.postMessage({ type: 'NOTIFICATION_OPENED' });
+        return client;
+      });
     })
   );
 });

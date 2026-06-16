@@ -20,6 +20,9 @@ import { setupOnlineOfflineHandlers } from './services/dbService.js';
 import { loadArtistCatalog } from './services/artistCatalogService.js';
 import { subscribe, isSubscribed, isSupported, syncExistingSubscription } from './services/pushService.js';
 
+let backgroundCheckTimeout = null;
+let lastBackgroundCheckAt = 0;
+
 window.addEventListener("DOMContentLoaded", async () => {
   // Inicializar el store desde localStorage/IndexedDB
   await libraryStore.init();
@@ -67,13 +70,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   modalLogin();
 
-  // Verificar actualizaciones en segundo plano después de 3 segundos
-  // para no interferir con la carga inicial
-  if (navigator.onLine && libraryData && libraryData.length > 0) {
-    setTimeout(() => {
-      checkForUpdatesInBackground();
-    }, 3000);
-  }
+  setupBackgroundRefresh();
 
   if ("serviceWorker" in navigator) {
     try {
@@ -87,6 +84,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     navigator.serviceWorker.controller.postMessage("GET_CACHE_VERSION");
 
     navigator.serviceWorker.addEventListener("message", (event) => {
+      if (!event.data?.cacheVersion) {
+        return;
+      }
+
       const version = event.data.cacheVersion;
       console.info(`Versión del caché: ${version}`);
       document.getElementById(
@@ -101,6 +102,45 @@ window.addEventListener("DOMContentLoaded", async () => {
 
 function isIOS() {
   return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+
+function triggerBackgroundRefresh(delay = 0) {
+  const currentData = libraryStore.getAllData();
+  const now = Date.now();
+
+  if (!navigator.onLine || !currentData || currentData.length === 0) {
+    return;
+  }
+
+  if (now - lastBackgroundCheckAt < 30000) {
+    return;
+  }
+
+  clearTimeout(backgroundCheckTimeout);
+  backgroundCheckTimeout = setTimeout(() => {
+    lastBackgroundCheckAt = Date.now();
+    checkForUpdatesInBackground();
+  }, delay);
+}
+
+function setupBackgroundRefresh() {
+  // Carga inicial
+  triggerBackgroundRefresh(3000);
+
+  // Cuando la app vuelve al frente (incluye abrir desde notificación)
+  window.addEventListener('focus', () => {
+    triggerBackgroundRefresh(1000);
+  });
+
+  window.addEventListener('pageshow', () => {
+    triggerBackgroundRefresh(1000);
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      triggerBackgroundRefresh(1000);
+    }
+  });
 }
 
 async function setupPushNotifications() {
@@ -192,12 +232,17 @@ function showSubscribeBell() {
 // Manejar mensajes del service worker para sincronización
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', (event) => {
-    if (event.data.type === 'SYNC_COMPLETE') {
+    if (event.data?.type === 'SYNC_COMPLETE') {
       console.log('🔄 Sincronización completada:', event.data.data);
       // Recargar datos después de sincronización
       loadLibrary([]).then(data => {
         libraryStore.loadData(data);
       });
+      return;
+    }
+
+    if (event.data?.type === 'NOTIFICATION_OPENED') {
+      triggerBackgroundRefresh(500);
     }
   });
 }
