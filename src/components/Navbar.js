@@ -520,7 +520,7 @@ class Navbar extends HTMLElement {
             this.showVersionBadge(event.data.cacheVersion);
           } else {
             console.log('⚠️ Usando versión por defecto');
-            this.showVersionBadge('v1.7.9');
+            this.showVersionBadge('v1.8.0');
           }
         };
 
@@ -530,14 +530,14 @@ class Navbar extends HTMLElement {
         setTimeout(() => {
           if (!this.versionShown) {
             console.log('⚠️ Usando versión por defecto');
-            this.showVersionBadge('v1.7.9');
+            this.showVersionBadge('v1.8.0');
           }
         }, 2000);
 
       } else {
         // Método 2: Fallback con versión hardcodeada
         console.log('⚠️ Usando versión por defecto');
-        this.showVersionBadge('v1.7.9');
+        this.showVersionBadge('v1.8.0');
       }
     } catch (error) {
       console.error('❌ Error obteniendo versión:', error);
@@ -568,7 +568,7 @@ class Navbar extends HTMLElement {
 
       // Método 2: Fallback con versión hardcodeada
       console.log('⚠️ Usando versión por defecto');
-      this.showVersionBadge('v1.7.9');
+      this.showVersionBadge('v1.8.0');
 
     } catch (error) {
       console.error('❌ Error obteniendo versión:', error);

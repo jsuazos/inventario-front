@@ -96,16 +96,25 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Push notifications: adaptado para iOS (requiere Home Screen + user gesture)
-  setupPushNotifications();
+  await setupPushNotifications();
 });
 
 function isIOS() {
   return /iphone|ipad|ipod/i.test(navigator.userAgent);
 }
 
-function setupPushNotifications() {
-  if (!isSupported() || isSubscribed()) return;
+async function setupPushNotifications() {
+  if (!isSupported()) return;
   if (Notification.permission === 'denied') return;
+
+  // Verificar suscripción real (no solo localStorage)
+  if (isSubscribed()) {
+    const registration = await navigator.serviceWorker.ready;
+    const sub = await registration.pushManager.getSubscription();
+    if (sub) return;
+    // Suscripción inválida, limpiar flag para mostrar el botón
+    localStorage.removeItem('push-subscribed');
+  }
 
   if (isIOS() && !window.navigator.standalone) {
     showInstallBanner();

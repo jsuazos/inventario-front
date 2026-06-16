@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1.7.9';
+const CACHE_VERSION = 'v1.8.0';
 const CACHE_NAME = `musica-inventario-${CACHE_VERSION}`;
 
 self.addEventListener('install', () => {
