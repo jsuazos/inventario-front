@@ -97,15 +97,29 @@ self.addEventListener('notificationclick', event => {
 
   if (event.action === 'close') return;
 
-  const urlToOpen = event.notification.data?.url || './';
+  const scopeUrl = new URL(self.registration.scope);
+  const requestedUrl = event.notification.data?.url;
+  const urlToOpen = !requestedUrl || requestedUrl === '/'
+    ? scopeUrl.href
+    : new URL(requestedUrl, scopeUrl).href;
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-      const matchingClient = windowClients.find(client =>
-        client.url.includes(urlToOpen) && 'focus' in client
-      );
+      const matchingClient = windowClients.find(client => {
+        if (!('focus' in client)) return false;
+
+        try {
+          const clientUrl = new URL(client.url);
+          return clientUrl.href === urlToOpen || clientUrl.href.startsWith(scopeUrl.href);
+        } catch {
+          return false;
+        }
+      });
+
       if (matchingClient) {
         return matchingClient.focus();
       }
+
       return clients.openWindow(urlToOpen);
     })
   );
