@@ -14,6 +14,21 @@ function getHeaders() {
   return headers;
 }
 
+async function saveSubscriptionOnServer(subscription) {
+  const apiUrl = await getApiUrl();
+  const response = await fetch(`${apiUrl}/push/subscribe`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ subscription: subscription.toJSON() }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Push subscribe failed: ${response.status}`);
+  }
+
+  localStorage.setItem(SUB_KEY, 'true');
+}
+
 export async function requestPermission() {
   if (!('Notification' in window)) {
     console.warn('Push: Notification API no soportada');
@@ -52,17 +67,33 @@ export async function subscribe() {
       });
     }
 
-    await fetch(`${apiUrl}/push/subscribe`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({ subscription: subscription.toJSON() }),
-    });
-
-    localStorage.setItem(SUB_KEY, 'true');
+    await saveSubscriptionOnServer(subscription);
     console.log('Push: suscrito exitosamente');
     return true;
   } catch (err) {
     console.error('Push: error al suscribir:', err);
+    return false;
+  }
+}
+
+export async function syncExistingSubscription() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    return false;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+      localStorage.removeItem(SUB_KEY);
+      return false;
+    }
+
+    await saveSubscriptionOnServer(subscription);
+    console.log('Push: suscripción existente resincronizada con el servidor');
+    return true;
+  } catch (err) {
+    console.error('Push: error al resincronizar suscripción:', err);
     return false;
   }
 }

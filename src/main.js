@@ -18,7 +18,7 @@ import { libraryStore } from "./state/libraryStore.js";
 import { errorHandler } from "./services/errorHandler.js";
 import { setupOnlineOfflineHandlers } from './services/dbService.js';
 import { loadArtistCatalog } from './services/artistCatalogService.js';
-import { subscribe, isSubscribed, isSupported } from './services/pushService.js';
+import { subscribe, isSubscribed, isSupported, syncExistingSubscription } from './services/pushService.js';
 
 window.addEventListener("DOMContentLoaded", async () => {
   // Inicializar el store desde localStorage/IndexedDB
@@ -111,7 +111,10 @@ async function setupPushNotifications() {
   if (isSubscribed()) {
     const registration = await navigator.serviceWorker.ready;
     const sub = await registration.pushManager.getSubscription();
-    if (sub) return;
+    if (sub) {
+      await syncExistingSubscription();
+      return;
+    }
     // Suscripción inválida, limpiar flag para mostrar el botón
     localStorage.removeItem('push-subscribed');
   }
