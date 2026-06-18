@@ -1,5 +1,8 @@
 import { libraryStore } from '../state/libraryStore.js';
 
+import { normalizeGenreTag, splitGenreTags } from '../utils/genreTags.js';
+import { normalizeTypeTag, splitTypeTags } from '../utils/typeTags.js';
+
 class Navbar extends HTMLElement {
   constructor() {
     super();
@@ -296,30 +299,44 @@ class Navbar extends HTMLElement {
         }
 
         // Géneros
-        if (item.Genero && item.Genero.toLowerCase().includes(queryLower)) {
-          if (!otherSuggestions.has(`genre-${item.Genero}`) && !artistSuggestions.has(`genre-${item.Genero}`)) {
-            otherSuggestions.set(`genre-${item.Genero}`, {
-              text: item.Genero,
+        splitGenreTags(item.Genero).forEach(genreTag => {
+          if (!genreTag.toLowerCase().includes(queryLower)) {
+            return;
+          }
+
+          const genreKey = `genre-${normalizeGenreTag(genreTag)}`;
+          if (!otherSuggestions.has(genreKey) && !artistSuggestions.has(genreKey)) {
+            otherSuggestions.set(genreKey, {
+              text: genreTag,
               type: 'Género',
               icon: '🎵',
-              count: this.libraryData.filter(i => i.Genero === item.Genero).length,
+              count: this.libraryData.filter(i =>
+                splitGenreTags(i.Genero).some(tag => normalizeGenreTag(tag) === normalizeGenreTag(genreTag))
+              ).length,
               priority: 2
             });
           }
-        }
+        });
 
         // Tipos
-        if (item.Tipo && item.Tipo.toLowerCase().includes(queryLower)) {
-          if (!otherSuggestions.has(`type-${item.Tipo}`) && !artistSuggestions.has(`type-${item.Tipo}`)) {
-            otherSuggestions.set(`type-${item.Tipo}`, {
-              text: item.Tipo,
+        splitTypeTags(item.Tipo).forEach(typeTag => {
+          if (!typeTag.toLowerCase().includes(queryLower)) {
+            return;
+          }
+
+          const typeKey = `type-${normalizeTypeTag(typeTag)}`;
+          if (!otherSuggestions.has(typeKey) && !artistSuggestions.has(typeKey)) {
+            otherSuggestions.set(typeKey, {
+              text: typeTag,
               type: 'Tipo',
               icon: '📀',
-              count: this.libraryData.filter(i => i.Tipo === item.Tipo).length,
+              count: this.libraryData.filter(i =>
+                splitTypeTags(i.Tipo).some(tag => normalizeTypeTag(tag) === normalizeTypeTag(typeTag))
+              ).length,
               priority: 3
             });
           }
-        }
+        });
 
         // Años
         if (item.Año && item.Año.toString().includes(query)) {

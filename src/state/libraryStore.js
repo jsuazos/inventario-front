@@ -4,6 +4,16 @@
  */
 
 import { storageService } from '../services/storageService.js';
+import { hasGenreTag, splitGenreTags } from '../utils/genreTags.js';
+import { hasTypeTag } from '../utils/typeTags.js';
+
+function matchesSearchTerm(item, term) {
+  return hasTypeTag(item.Tipo, term) ||
+    hasGenreTag(item.Genero, term) ||
+    item.Disco.toLowerCase().includes(term) ||
+    item.Artista.toLowerCase().includes(term) ||
+    item.Año.toString().includes(term);
+}
 
 export class LibraryStore {
   constructor() {
@@ -123,15 +133,11 @@ export class LibraryStore {
 
     this.filteredData = this.data.filter(item => {
       const matchSearch = searchTerms.length === 0 || searchTerms.every(term =>
-        item.Tipo.toLowerCase().includes(term) ||
-        item.Genero.toLowerCase().includes(term) ||
-        item.Disco.toLowerCase().includes(term) ||
-        item.Artista.toLowerCase().includes(term) ||
-        item.Año.toString().includes(term)
+        matchesSearchTerm(item, term)
       );
 
-      const matchType = !type || item.Tipo === type;
-      const matchGenre = !genre || item.Genero.includes(genre);
+      const matchType = !type || hasTypeTag(item.Tipo, type);
+      const matchGenre = !genre || hasGenreTag(item.Genero, genre);
       const matchArtist = !artist || item.Artista === artist;
       const matchYear = !year || item.Año.toString() === year;
       const matchRecibido = !recibido || (item.Recibido && item.Recibido === recibido);
@@ -250,9 +256,7 @@ export class LibraryStore {
     const stats = {
       totalItems: this.data.length,
       filteredItems: this.filteredData.length,
-      genres: new Set(this.data.flatMap(item => 
-        item.Genero.split(',').map(g => g.trim())
-      )).size,
+      genres: new Set(this.data.flatMap(item => splitGenreTags(item.Genero))).size,
       artists: new Set(this.data.map(item => item.Artista)).size,
       years: new Set(this.data.map(item => item.Año)).size
     };

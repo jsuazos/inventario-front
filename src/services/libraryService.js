@@ -5,6 +5,7 @@ import obtenerTopEstilos from '../utils/obtenerTopEstilos.js';
 import { loadAlphabet } from '../utils/ui.js';
 import configService from './configService.js';
 import obtenerGeneros from '../utils/obtenerGeneros.js';
+import { splitTypeTags } from '../utils/typeTags.js';
 // import fillSelect from '../utils/filters.js';
 import { libraryStore } from '../state/libraryStore.js';
 import { errorHandler } from './errorHandler.js';
@@ -12,7 +13,7 @@ import { errorHandler } from './errorHandler.js';
 export function populateFilters(libraryData) {
     const types = new Set(), genres = new Set(), artists = new Set(), years = new Set();
     libraryData.forEach(item => {
-      types.add(item.Tipo);
+      splitTypeTags(item.Tipo).forEach(type => types.add(type));
       artists.add(item.Artista);
       years.add(item.Año);
     });
