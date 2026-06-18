@@ -16,6 +16,7 @@ class Navbar extends HTMLElement {
     this.searchBadges = [];
     this.filterTimeout = null;
     this.unsubscribeStore = [];
+    this.connectionStatusHandler = null;
   }
 
   connectedCallback() {
@@ -174,6 +175,15 @@ class Navbar extends HTMLElement {
 
     this.unsubscribeStore.forEach(unsubscribe => unsubscribe());
     this.unsubscribeStore = [];
+
+    if (this.connectionStatusHandler) {
+      window.removeEventListener('online', this.connectionStatusHandler);
+      window.removeEventListener('offline', this.connectionStatusHandler);
+      window.removeEventListener('focus', this.connectionStatusHandler);
+      window.removeEventListener('pageshow', this.connectionStatusHandler);
+      document.removeEventListener('visibilitychange', this.connectionStatusHandler);
+      this.connectionStatusHandler = null;
+    }
   }
 
   /**
@@ -516,12 +526,13 @@ class Navbar extends HTMLElement {
    */
   setupConnectionStatus() {
     const statusElement = this.querySelector('#connection-status');
-    const mobileStatus = document.getElementById('connection-status-mobile');
     
     const updateStatus = () => {
       const online = navigator.onLine;
       const cls = online ? 'bg-success' : 'bg-warning';
       const txt = online ? 'Online' : 'Offline';
+      const mobileStatus = document.getElementById('connection-status-mobile');
+
       if (statusElement) {
         statusElement.className = `badge ${cls} ms-2 badge-desktop`;
         statusElement.innerHTML = `<small>${txt}</small>`;
@@ -533,8 +544,20 @@ class Navbar extends HTMLElement {
     };
 
     updateStatus();
-    window.addEventListener('online', updateStatus);
-    window.addEventListener('offline', updateStatus);
+    this.connectionStatusHandler = () => {
+      if (document.visibilityState && document.visibilityState !== 'visible' && !navigator.onLine) {
+        updateStatus();
+        return;
+      }
+
+      updateStatus();
+    };
+
+    window.addEventListener('online', this.connectionStatusHandler);
+    window.addEventListener('offline', this.connectionStatusHandler);
+    window.addEventListener('focus', this.connectionStatusHandler);
+    window.addEventListener('pageshow', this.connectionStatusHandler);
+    document.addEventListener('visibilitychange', this.connectionStatusHandler);
   }
 
   /**
