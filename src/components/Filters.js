@@ -1,3 +1,5 @@
+import { libraryStore } from '../state/libraryStore.js';
+
 class Filters extends HTMLElement {
   connectedCallback() {
     this.innerHTML = `
@@ -47,11 +49,9 @@ class Filters extends HTMLElement {
 
     button.addEventListener('click', (e) => {
       e.stopPropagation();
-      import('../state/libraryStore.js').then(({ libraryStore }) => {
-        const currentSort = libraryStore.getFilters().sortBy;
-        options.forEach(opt => {
-          opt.classList.toggle('active', opt.dataset.sort === currentSort);
-        });
+      const currentSort = libraryStore.getFilters().sortBy;
+      options.forEach(opt => {
+        opt.classList.toggle('active', opt.dataset.sort === currentSort);
       });
       menu.classList.toggle('d-none');
     });
@@ -75,9 +75,7 @@ class Filters extends HTMLElement {
         }
         menu.classList.add('d-none');
 
-        import('../state/libraryStore.js').then(({ libraryStore }) => {
-          libraryStore.updateFilters({ sortBy });
-        });
+        libraryStore.updateFilters({ sortBy });
       });
     });
 

@@ -9,7 +9,7 @@ import './components/Footer.js';
 
 import { loadLibrary, checkForUpdatesInBackground } from "./services/libraryService.js";
 import { filterLibrary } from "./utils/libraryFilters.js";
-import { toggleSidebar, loadAlphabet } from "./utils/ui.js";
+import { toggleSidebar } from "./utils/ui.js";
 // import { clearFilters } from "./utils/libraryFilters.js";
 import { clearLibrary, modalLogin, updateLoginUI } from "./utils/modals.js";
 import { authStore } from "./state/authStore.js";
@@ -49,7 +49,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Configurar manejo de conexión
   setupOnlineOfflineHandlers();
   
-  let libraryData = JSON.parse(localStorage.getItem("libraryData")) || [];
+  let libraryData = libraryStore.getAllData();
 
   libraryData = await loadLibrary(libraryData);
 
@@ -234,10 +234,7 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', (event) => {
     if (event.data?.type === 'SYNC_COMPLETE') {
       console.log('🔄 Sincronización completada:', event.data.data);
-      // Recargar datos después de sincronización
-      loadLibrary([]).then(data => {
-        libraryStore.loadData(data);
-      });
+      triggerBackgroundRefresh(500);
       return;
     }
 

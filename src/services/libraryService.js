@@ -3,10 +3,13 @@ import displayLibrary from '../utils/libraryDisplay.js';
 import aplicarColoresPorGenero from '../utils/aplicarColoresPorGenero.js';
 import obtenerTopEstilos from '../utils/obtenerTopEstilos.js';
 import { loadAlphabet } from '../utils/ui.js';
-import configService from './configService.js';
 import obtenerGeneros from '../utils/obtenerGeneros.js';
 import { splitTypeTags } from '../utils/typeTags.js';
-// import fillSelect from '../utils/filters.js';
+import { apiClient } from './api.js';
+import {
+  showBackgroundUpdateNotification,
+  showDetailedChangesNotification,
+} from './backgroundNotificationService.js';
 import { libraryStore } from '../state/libraryStore.js';
 import { errorHandler } from './errorHandler.js';
 
@@ -35,19 +38,8 @@ export async function checkForUpdatesInBackground() {
   }
 
   try {
-    // Mostrar mensaje de búsqueda en segundo plano
     showBackgroundUpdateNotification('🔄 Buscando actualizaciones ...', 'info');
-
-    const { apiUrl } = await configService();
-    const url = `${apiUrl.replace(/\/$/, "")}/inventario-public`;
-
-    
-    const res = await fetch(url);
-    const data = await res.json();
-    const apiData = data.data || [];
-    
-    // Filtrar solo registros con Visible == "SI"
-    const filteredApiData = apiData;
+    const filteredApiData = await fetchLibraryFromApi();
 
     // Comparar con datos locales usando comparación detallada
     const localData = libraryStore.getAllData();
@@ -61,25 +53,11 @@ export async function checkForUpdatesInBackground() {
 
     if (hasChanges && filteredApiData.length > 0) {
 
-      // Ordenar datos de API igual que los locales
-      filteredApiData.sort((a, b) => {
-        const claveA = a.Artista.toLowerCase() + ' ' + a.Año + ' ' + a.Disco.toLowerCase() + ' ' + a.Recibido.toLowerCase();
-        const claveB = b.Artista.toLowerCase() + ' ' + b.Año + ' ' + b.Disco.toLowerCase() + ' ' + b.Recibido.toLowerCase();
-        return claveA.localeCompare(claveB);
-      });
-
-      // Actualizar store con nuevos datos
       libraryStore.loadData(filteredApiData);
-
-      // Actualizar filtros y display
       populateFilters(filteredApiData);
-      displayLibrary(filteredApiData);
       aplicarColoresPorGenero();
-
-      // Mostrar notificación detallada con listado de cambios
       showDetailedChangesNotification(added, removed);
     } else {
-      // Mostrar mensaje de que no hay cambios
       showBackgroundUpdateNotification('📋 No hay cambios disponibles', 'info');
     }
 
@@ -140,217 +118,19 @@ async function triggerPushNotification(added, removed) {
   }
 
   try {
-    const { apiUrl } = await configService();
-    const url = `${apiUrl.replace(/\/$/, '')}/push/notify`;
-    await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: '📀 Biblioteca actualizada',
-        body,
-        data: { url: './' },
-      }),
+    await apiClient.post('/push/notify', {
+      title: '📀 Biblioteca actualizada',
+      body,
+      data: { url: './' },
     });
   } catch (err) {
     console.error('Error sending push notification:', err);
   }
 }
 
-/**
- * Muestra notificación detallada con listado de cambios
- */
-function showDetailedChangesNotification(added, removed) {
-  if (added.length === 0 && removed.length === 0) {
-    showBackgroundUpdateNotification('📋 No hay cambios disponibles', 'info');
-    return;
-  }
-
-  let message = '✅ Biblioteca actualizada\n\n';
-
-  if (added.length > 0) {
-    message += `➕ Agregados (${added.length}):\n`;
-    added.slice(0, 5).forEach(item => {
-      message += `  • ${item.Artista} - ${item.Disco}\n`;
-    });
-    if (added.length > 5) {
-      message += `  ... y ${added.length - 5} más\n`;
-    }
-    message += '\n';
-  }
-
-  if (removed.length > 0) {
-    message += `➖ Eliminados (${removed.length}):\n`;
-    removed.slice(0, 5).forEach(item => {
-      message += `  • ${item.Artista} - ${item.Disco}\n`;
-    });
-    if (removed.length > 5) {
-      message += `  ... y ${removed.length - 5} más\n`;
-    }
-  }
-
-  // Crear contenedor de notificaciones si no existe
-  let notificationContainer = document.getElementById('background-update-notifications');
-  if (!notificationContainer) {
-    notificationContainer = document.createElement('div');
-    notificationContainer.id = 'background-update-notifications';
-    notificationContainer.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 9999;
-      max-width: 400px;
-    `;
-    document.body.appendChild(notificationContainer);
-  }
-
-  // Crear notificación detallada
-  const notification = document.createElement('div');
-  notification.style.cssText = `
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-    border-radius: 4px;
-    padding: 16px;
-    margin-bottom: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    font-size: 14px;
-    font-family: monospace;
-    white-space: pre-line;
-    max-height: 300px;
-    overflow-y: auto;
-    animation: slideIn 0.3s ease-out;
-  `;
-
-  notification.innerHTML = `
-    <div style="display: flex; align-items: flex-start; gap: 8px;">
-      <div style="flex: 1;">${message.replace(/\n/g, '<br>')}</div>
-      <button onclick="this.parentElement.parentElement.remove()" style="
-        background: none;
-        border: none;
-        color: inherit;
-        cursor: pointer;
-        font-size: 18px;
-        line-height: 1;
-        padding: 0;
-        margin-left: auto;
-        flex-shrink: 0;
-      ">×</button>
-    </div>
-  `;
-
-  // Agregar animación CSS si no existe
-  if (!document.getElementById('background-update-styles')) {
-    const style = document.createElement('style');
-    style.id = 'background-update-styles';
-    style.textContent = `
-      @keyframes slideIn {
-        from { transform: translateY(100%); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-      }
-      @keyframes slideOut {
-        from { transform: translateY(0); opacity: 1; }
-        to { transform: translateY(100%); opacity: 0; }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  notificationContainer.appendChild(notification);
-
-  // Auto-remover después de 10 segundos para notificaciones detalladas
-  setTimeout(() => {
-    if (notification.parentElement) {
-      notification.style.animation = 'slideOut 0.3s ease-in';
-      setTimeout(() => notification.remove(), 300);
-    }
-  }, 10000);
-}
-
-/**
- * Muestra notificaciones de actualización en segundo plano
- */
-function showBackgroundUpdateNotification(message, type = 'info') {
-  // Crear contenedor de notificaciones si no existe
-  let notificationContainer = document.getElementById('background-update-notifications');
-  if (!notificationContainer) {
-    notificationContainer = document.createElement('div');
-    notificationContainer.id = 'background-update-notifications';
-    notificationContainer.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 9999;
-      max-width: 300px;
-    `;
-    document.body.appendChild(notificationContainer);
-  }
-
-  // Crear notificación
-  const notification = document.createElement('div');
-  notification.style.cssText = `
-    background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
-    color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
-    border: 1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#bee5eb'};
-    border-radius: 4px;
-    padding: 12px 16px;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    font-size: 14px;
-    animation: slideIn 0.3s ease-out;
-  `;
-
-  notification.innerHTML = `
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <span>${message}</span>
-      <button onclick="this.parentElement.parentElement.remove()" style="
-        background: none;
-        border: none;
-        color: inherit;
-        cursor: pointer;
-        font-size: 18px;
-        line-height: 1;
-        padding: 0;
-        margin-left: auto;
-      ">×</button>
-    </div>
-  `;
-
-  // Agregar animación CSS
-  if (!document.getElementById('background-update-styles')) {
-    const style = document.createElement('style');
-    style.id = 'background-update-styles';
-    style.textContent = `
-      @keyframes slideIn {
-        from { transform: translateY(100%); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-      }
-      @keyframes slideOut {
-        from { transform: translateY(0); opacity: 1; }
-        to { transform: translateY(100%); opacity: 0; }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  notificationContainer.appendChild(notification);
-
-  // Auto-remover después de 5 segundos para mensajes de éxito/info, 8 para errores
-  const timeout = type === 'error' ? 8000 : 5000;
-  setTimeout(() => {
-    if (notification.parentElement) {
-      notification.style.animation = 'slideOut 0.3s ease-in';
-      setTimeout(() => notification.remove(), 300);
-    }
-  }, timeout);
-}
-
 async function fetchLibraryFromApi() {
-  const { apiUrl } = await configService();
-  const url = `${apiUrl.replace(/\/$/, "")}/inventario-public`;
-  const res = await fetch(url);
-  const data = await res.json();
-  let result = data.data || [];
-  return result;
+  const data = await apiClient.get('/inventario-public', { timeout: 15000 });
+  return Array.isArray(data.data) ? data.data : [];
 }
 
 function completeLoad(data) {
@@ -387,22 +167,20 @@ export async function loadLibrary(libraryData) {
   showLoader();
   libraryStore.setLoading(true);
 
-  const isCacheEmpty = libraryData === null || libraryData.length === 0;
+  const cachedData = Array.isArray(libraryData) ? libraryData : [];
+  const isCacheEmpty = cachedData.length === 0;
 
   if (isCacheEmpty && navigator.onLine) {
     fetchLibraryFromApi()
       .then(apiData => {
-        if (apiData.length > 0) {
-          libraryStore.loadData(apiData);
-        }
-        populateFilters(apiData || []);
+        libraryStore.loadData(apiData);
+        populateFilters(apiData);
         aplicarColoresPorGenero();
-        requestAnimationFrame(() => { obtenerTopEstilos(); loadAlphabet(); });
-        libraryStore.setLoading(false);
-        hideLoader();
       })
       .catch(e => {
         errorHandler.handleNetworkError(e, 'loadLibrary');
+      })
+      .finally(() => {
         libraryStore.setLoading(false);
         hideLoader();
       });
@@ -410,10 +188,9 @@ export async function loadLibrary(libraryData) {
     return [];
   }
 
-  await libraryStore.init();
-  finishLoad(libraryData);
+  finishLoad(cachedData);
 
-  return libraryData;
+  return cachedData;
 }
 
 

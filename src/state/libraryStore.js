@@ -6,6 +6,7 @@
 import { storageService } from '../services/storageService.js';
 import { hasGenreTag, splitGenreTags } from '../utils/genreTags.js';
 import { hasTypeTag } from '../utils/typeTags.js';
+import normalizeLibraryItem from '../utils/normalizeLibraryItem.js';
 
 function matchesSearchTerm(item, term) {
   return hasTypeTag(item.Tipo, term) ||
@@ -13,6 +14,10 @@ function matchesSearchTerm(item, term) {
     item.Disco.toLowerCase().includes(term) ||
     item.Artista.toLowerCase().includes(term) ||
     item.Año.toString().includes(term);
+}
+
+function normalizeLibraryData(data) {
+  return Array.isArray(data) ? data.map(item => normalizeLibraryItem(item)) : [];
 }
 
 export class LibraryStore {
@@ -39,8 +44,7 @@ export class LibraryStore {
   async init() {
     try {
       const data = await storageService.getLibraryData();
-      // console.log('📥 Datos cargados desde storage:', data);
-      this.data = Array.isArray(data) ? data : [];
+      this.data = normalizeLibraryData(data);
       if (!Array.isArray(data)) {
         console.warn('⚠️ Datos de storage no son un array, usando array vacío');
       }
@@ -59,14 +63,15 @@ export class LibraryStore {
    * @param {Array} apiData - Datos desde API
    */
   loadData(apiData) {
-    if (apiData && Array.isArray(apiData) && apiData.length > 0) {
-      this.data = apiData;
-      storageService.saveLibraryData(this.data);
-      this.applyFilters();
-      this.notifyListeners();
-    } else {
+    if (!Array.isArray(apiData)) {
       console.warn('⚠️ Datos inválidos recibidos en loadData:', apiData);
+      return;
     }
+
+    this.data = normalizeLibraryData(apiData);
+    storageService.saveLibraryData(this.data);
+    this.applyFilters();
+    this.notifyListeners();
   }
 
   /**

@@ -14,6 +14,8 @@ class Navbar extends HTMLElement {
     this.versionShown = false;
     this.clickOutsideHandler = null;
     this.searchBadges = [];
+    this.filterTimeout = null;
+    this.unsubscribeStore = [];
   }
 
   connectedCallback() {
@@ -64,13 +66,14 @@ class Navbar extends HTMLElement {
     this.updateCacheVersion();
 
     // Sincronizar badges cuando el store cambie
-    libraryStore.subscribe(() => {
+    const unsubscribeBadges = libraryStore.subscribe(() => {
       const currentBadges = libraryStore.getFilters().searchBadges;
       if (JSON.stringify(this.searchBadges) !== JSON.stringify(currentBadges)) {
         this.searchBadges = currentBadges;
         this.renderBadges();
       }
     });
+    this.unsubscribeStore.push(unsubscribeBadges);
   }
 
   /**
@@ -82,8 +85,7 @@ class Navbar extends HTMLElement {
     
     if (!searchInput || !searchDropdown) return;
 
-    // Cargar datos de la biblioteca cuando estén disponibles
-    this.loadLibraryData();
+    this.syncLibraryData();
 
     // Event listeners para el input
     searchInput.addEventListener('input', (e) => this.handleInput(e));
@@ -99,30 +101,19 @@ class Navbar extends HTMLElement {
     };
     document.addEventListener('click', handleClickOutside);
 
-    // Guardar referencia para poder remover el listener más tarde
     this.clickOutsideHandler = handleClickOutside;
   }
 
   /**
    * Carga los datos de la biblioteca para autocompletado
    */
-  async loadLibraryData() {
-    try {
-      // Intentar obtener datos del localStorage primero
-      const storedData = localStorage.getItem('libraryData');
-      if (storedData) {
-        this.libraryData = JSON.parse(storedData);
-        console.log('📚 Datos de biblioteca cargados para autocompletado:', this.libraryData.length, 'items');
-      }
+  syncLibraryData() {
+    const updateLibraryData = ({ allData = [] }) => {
+      this.libraryData = Array.isArray(allData) ? allData : [];
+    };
 
-      // También escuchar por actualizaciones de datos
-      window.addEventListener('libraryDataLoaded', (e) => {
-        this.libraryData = e.detail;
-        console.log('📚 Datos de biblioteca actualizados para autocompletado:', this.libraryData.length, 'items');
-      });
-    } catch (error) {
-      console.error('❌ Error cargando datos para autocompletado:', error);
-    }
+    updateLibraryData({ allData: libraryStore.getAllData() });
+    this.unsubscribeStore.push(libraryStore.subscribe(updateLibraryData));
   }
 
   /**
@@ -143,8 +134,13 @@ class Navbar extends HTMLElement {
 
     const query = e.target.value.trim();
 
-    // Actualizar filtro en vivo en el store
-    libraryStore.setSearchInput(e.target.value);
+    if (this.filterTimeout) {
+      clearTimeout(this.filterTimeout);
+    }
+
+    this.filterTimeout = setTimeout(() => {
+      libraryStore.setSearchInput(e.target.value);
+    }, 120);
 
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
@@ -158,6 +154,26 @@ class Navbar extends HTMLElement {
     this.searchTimeout = setTimeout(() => {
       this.showSuggestions(query);
     }, 200);
+  }
+
+  disconnectedCallback() {
+    if (this.clickOutsideHandler) {
+      document.removeEventListener('click', this.clickOutsideHandler);
+      this.clickOutsideHandler = null;
+    }
+
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+      this.searchTimeout = null;
+    }
+
+    if (this.filterTimeout) {
+      clearTimeout(this.filterTimeout);
+      this.filterTimeout = null;
+    }
+
+    this.unsubscribeStore.forEach(unsubscribe => unsubscribe());
+    this.unsubscribeStore = [];
   }
 
   /**
