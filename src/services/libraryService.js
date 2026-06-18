@@ -38,7 +38,7 @@ export async function checkForUpdatesInBackground() {
     showBackgroundUpdateNotification('🔄 Buscando actualizaciones ...', 'info');
 
     const { apiUrl } = await configService();
-    const url = `${apiUrl.replace(/\/$/, "")}/inventario`;
+    const url = `${apiUrl.replace(/\/$/, "")}/inventario-public`;
 
     
     const res = await fetch(url);
@@ -46,7 +46,7 @@ export async function checkForUpdatesInBackground() {
     const apiData = data.data || [];
     
     // Filtrar solo registros con Visible == "SI"
-    const filteredApiData = apiData.filter(item => item.Visible === "SI");
+    const filteredApiData = apiData;
 
     // Comparar con datos locales usando comparación detallada
     const localData = libraryStore.getAllData();
@@ -345,16 +345,10 @@ function showBackgroundUpdateNotification(message, type = 'info') {
 
 async function fetchLibraryFromApi() {
   const { apiUrl } = await configService();
-  const url = `${apiUrl.replace(/\/$/, "")}/inventario`;
+  const url = `${apiUrl.replace(/\/$/, "")}/inventario-public`;
   const res = await fetch(url);
   const data = await res.json();
   let result = data.data || [];
-  result = result.filter(item => item.Visible === "SI");
-  result.sort((a, b) => {
-    const claveA = a.Artista.toLowerCase() + ' ' + a.Año;
-    const claveB = b.Artista.toLowerCase() + ' ' + b.Año;
-    return claveA.localeCompare(claveB);
-  });
   return result;
 }
 
