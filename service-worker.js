@@ -64,8 +64,9 @@ self.addEventListener('message', event => {
 });
 
 self.addEventListener('push', event => {
-  const ICON = './img/music_icon_192.png';
-  let data = { title: 'Inventario Musical', body: '', icon: ICON };
+  const iconUrl = new URL('./img/music_icon_192.png', self.registration.scope).href;
+  const badgeUrl = new URL('./img/notification_badge.svg', self.registration.scope).href;
+  let data = { title: 'Inventario Musical', body: '', icon: iconUrl, badge: badgeUrl };
   try {
     if (event.data) {
       const parsed = event.data.json();
@@ -77,8 +78,8 @@ self.addEventListener('push', event => {
 
   const options = {
     body: data.body,
-    icon: data.icon,
-    badge: ICON,
+    icon: data.icon || iconUrl,
+    badge: data.badge || badgeUrl,
     vibrate: [200, 100, 200],
     data: data.data || {},
     actions: [
