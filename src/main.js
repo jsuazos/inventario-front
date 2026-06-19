@@ -311,68 +311,6 @@ async function openWishlistFormModal(initialData = {}, { title = 'Agregar a mi w
     return `<option value="${tipo}" ${selected}>${tipo}</option>`;
   }).join('');
 
-  const fillFormFromDiscogs = async (statusElement) => {
-    const artistaInput = document.getElementById('wishlist-artista');
-    const discoInput = document.getElementById('wishlist-disco');
-    const anioInput = document.getElementById('wishlist-anio');
-    const tipoSelect = document.getElementById('wishlist-tipo');
-    const discogsInput = document.getElementById('wishlist-discogs');
-
-    if (!artistaInput || !discoInput || !anioInput || !tipoSelect || !discogsInput) {
-      return;
-    }
-
-    const draftItem = {
-      Artista: artistaInput.value.trim(),
-      Disco: discoInput.value.trim(),
-      Año: anioInput.value.trim(),
-      Tipo: tipoSelect.value.trim(),
-      discogsId: discogsInput.value.replace(/\D+/g, '').trim(),
-      notes: document.getElementById('wishlist-notes')?.value.trim() || '',
-      Genero: '',
-      img: '',
-      imgFULL: '',
-      Recibido: 'NO',
-    };
-
-    if (!draftItem.Artista || !draftItem.Disco) {
-      statusElement.textContent = 'Completa artista y disco para buscar en Discogs.';
-      statusElement.className = 'wishlist-discogs-status error';
-      return;
-    }
-
-    statusElement.textContent = 'Buscando en Discogs...';
-    statusElement.className = 'wishlist-discogs-status loading';
-
-    const enrichedItem = await enrichWishlistItemWithDiscogs(draftItem);
-    const foundSomething = enrichedItem.discogsId || enrichedItem.img || enrichedItem.imgFULL || enrichedItem.Año || enrichedItem.Tipo || enrichedItem.Genero;
-
-    if (!foundSomething) {
-      statusElement.textContent = 'No se encontraron coincidencias claras en Discogs.';
-      statusElement.className = 'wishlist-discogs-status error';
-      return;
-    }
-
-    discogsInput.value = String(enrichedItem.discogsId || '').replace(/\D+/g, '');
-    if (enrichedItem.Año && !anioInput.value.trim()) {
-      anioInput.value = enrichedItem.Año;
-    }
-    if (enrichedItem.Tipo) {
-      if (![...tipoSelect.options].some(option => option.value === enrichedItem.Tipo)) {
-        const option = document.createElement('option');
-        option.value = enrichedItem.Tipo;
-        option.textContent = enrichedItem.Tipo;
-        tipoSelect.appendChild(option);
-      }
-      tipoSelect.value = enrichedItem.Tipo;
-    }
-
-    statusElement.textContent = enrichedItem.imgFULL || enrichedItem.img
-      ? 'Datos y portada encontrados en Discogs.'
-      : 'Datos encontrados en Discogs.';
-    statusElement.className = 'wishlist-discogs-status success';
-  };
-
   return Swal.fire({
     title,
     background: '#1a1a1a',
@@ -381,39 +319,32 @@ async function openWishlistFormModal(initialData = {}, { title = 'Agregar a mi w
     showCancelButton: true,
     cancelButtonText: 'Cancelar',
     focusConfirm: false,
+    customClass: {
+      popup: 'wishlist-swal-popup',
+      htmlContainer: 'wishlist-swal-html',
+    },
     html: `
-      <input id="wishlist-artista" class="swal2-input" placeholder="Artista" autocomplete="off" value="${initialData.Artista || ''}">
-      <input id="wishlist-disco" class="swal2-input" placeholder="Disco" autocomplete="off" value="${initialData.Disco || ''}">
-      <input id="wishlist-anio" class="swal2-input" placeholder="Año" autocomplete="off" value="${initialData.Año || ''}">
-      <select id="wishlist-tipo" class="swal2-select wishlist-type-select">
-        <option value="">Selecciona un tipo</option>
-        ${tipoOptions}
-      </select>
-      <input id="wishlist-discogs" class="swal2-input" placeholder="ID Discogs (opcional)" autocomplete="off" value="${initialData.discogsId || initialData.ID || ''}">
-      <button id="wishlist-discogs-autofill" type="button" class="wishlist-discogs-button">Autocompletar desde Discogs</button>
-      <div id="wishlist-discogs-status" class="wishlist-discogs-status"></div>
-      <textarea id="wishlist-notes" class="swal2-textarea" placeholder="Notas (opcional)">${initialData.notes || ''}</textarea>
+      <div class="wishlist-form-grid">
+        <input id="wishlist-artista" class="swal2-input" placeholder="Artista" autocomplete="off" value="${initialData.Artista || ''}">
+        <input id="wishlist-disco" class="swal2-input" placeholder="Disco" autocomplete="off" value="${initialData.Disco || ''}">
+        <div class="wishlist-form-row wishlist-form-row-2">
+          <input id="wishlist-anio" class="swal2-input" placeholder="Año" autocomplete="off" value="${initialData.Año || ''}">
+          <input id="wishlist-discogs" class="swal2-input" placeholder="ID Discogs" autocomplete="off" value="${initialData.discogsId || initialData.ID || ''}">
+        </div>
+        <select id="wishlist-tipo" class="swal2-select wishlist-type-select">
+          <option value="">Selecciona un tipo</option>
+          ${tipoOptions}
+        </select>
+        <textarea id="wishlist-notes" class="swal2-textarea" placeholder="Notas (opcional)">${initialData.notes || ''}</textarea>
+      </div>
     `,
     didOpen: () => {
       const discogsInput = document.getElementById('wishlist-discogs');
-      const autofillButton = document.getElementById('wishlist-discogs-autofill');
-      const statusElement = document.getElementById('wishlist-discogs-status');
 
       if (discogsInput) {
         discogsInput.value = discogsInput.value.replace(/\D+/g, '');
         discogsInput.addEventListener('input', () => {
           discogsInput.value = discogsInput.value.replace(/\D+/g, '');
-        });
-      }
-
-      if (autofillButton && statusElement) {
-        autofillButton.addEventListener('click', async () => {
-          autofillButton.disabled = true;
-          try {
-            await fillFormFromDiscogs(statusElement);
-          } finally {
-            autofillButton.disabled = false;
-          }
         });
       }
     },

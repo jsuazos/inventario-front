@@ -887,6 +887,12 @@ body.ios-install-banner-visible .global-action-menu {
   transform: translateY(16px);
 }
 
+body.swal2-shown .global-action-menu {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+}
+
 .global-action-items {
   display: flex;
   flex-direction: column;
@@ -1059,9 +1065,57 @@ body.ios-install-banner-visible .global-action-menu {
 }
 
 .wishlist-type-select.swal2-select {
-  width: 56%;
-  margin: 1em auto 0;
-  height: 3em;
+  width: 100%;
+}
+
+.wishlist-swal-popup {
+  width: min(34rem, calc(100vw - 1.5rem)) !important;
+  padding: 1rem 1rem 1.15rem !important;
+}
+
+.wishlist-swal-html {
+  margin: 0.5rem 0 0 !important;
+  overflow: visible !important;
+}
+
+.wishlist-form-grid {
+  width: min(100%, 21rem);
+  margin: 0 auto;
+}
+
+.wishlist-form-row {
+  width: 100%;
+}
+
+.wishlist-form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.wishlist-form-row-2 .swal2-input {
+  margin: 0 !important;
+}
+
+.wishlist-form-grid .swal2-input,
+.wishlist-form-grid .swal2-textarea,
+.wishlist-type-select.swal2-select {
+  width: 100% !important;
+  margin: 0 0 0.85rem !important;
+}
+
+.wishlist-form-grid .swal2-input,
+.wishlist-type-select.swal2-select {
+  height: 2.75rem;
+}
+
+.wishlist-form-grid .swal2-textarea {
+  min-height: 6.25rem;
+}
+
+.wishlist-type-select.swal2-select {
+  margin: 0 0 0.85rem !important;
   border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 0.25em;
   background: #1d1d1d;
@@ -1075,51 +1129,61 @@ body.ios-install-banner-visible .global-action-menu {
   color: #fff;
 }
 
-.wishlist-discogs-button {
-  width: 55%;
-  margin: 0.75em auto 0;
-  padding: 0.75em 1em;
-  border: 1px solid rgba(13, 202, 240, 0.35);
-  border-radius: 0.5em;
-  background: linear-gradient(180deg, rgba(13, 202, 240, 0.18) 0%, rgba(13, 202, 240, 0.08) 100%);
-  color: #baf6ff;
-  font-weight: 600;
-  display: block;
-  transition: background 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
-}
-
-.wishlist-discogs-button:hover:not(:disabled) {
-  background: linear-gradient(180deg, rgba(13, 202, 240, 0.26) 0%, rgba(13, 202, 240, 0.12) 100%);
-  transform: translateY(-1px);
-}
-
-.wishlist-discogs-button:disabled {
-  opacity: 0.7;
-  cursor: wait;
-}
-
-.wishlist-discogs-status {
-  width: 55%;
-  min-height: 1.5em;
-  margin: 0.5em auto 0;
-  font-size: 0.85rem;
-  text-align: left;
-  color: rgba(255, 255, 255, 0.62);
-}
-
-.wishlist-discogs-status.loading {
-  color: #8eefff;
-}
-
-.wishlist-discogs-status.success {
-  color: #7fe3a7;
-}
-
-.wishlist-discogs-status.error {
-  color: #ff9ba6;
-}
-
 @media (max-width: 576px) {
+  .wishlist-swal-popup {
+    width: calc(100vw - 1rem) !important;
+    max-height: calc(100vh - 1rem);
+    padding: 0.9rem 0.85rem 1rem !important;
+  }
+
+  .wishlist-swal-popup .swal2-title {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .wishlist-form-grid {
+    width: 100%;
+  }
+
+  .wishlist-form-row-2 {
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-bottom: 0.7rem;
+  }
+
+  .wishlist-form-row-2 .swal2-input {
+    margin: 0 0 0.7rem !important;
+  }
+
+  .wishlist-form-row-2 .swal2-input:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  .wishlist-form-grid .swal2-input,
+  .wishlist-form-grid .swal2-textarea,
+  .wishlist-type-select.swal2-select {
+    width: 100% !important;
+  }
+
+  .wishlist-form-grid .swal2-input,
+  .wishlist-type-select.swal2-select {
+    height: 2.55rem;
+    margin: 0 0 0.7rem !important;
+  }
+
+  .wishlist-discogs-button {
+    font-size: 0.9rem;
+    padding: 0.68em 0.8em;
+  }
+
+  .wishlist-form-grid .swal2-textarea {
+    min-height: 5.25rem;
+  }
+
+  .wishlist-swal-popup .swal2-actions {
+    margin-top: 0.75rem !important;
+  }
+
   .global-action-menu {
     right: 14px;
     bottom: 88px;
