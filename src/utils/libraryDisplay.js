@@ -14,6 +14,7 @@ export default async function displayLibrary(items, options = {}) {
       wishlistMode = false,
       canManageWishlist = false,
       onRemoveWishlist = null,
+      onEditWishlist = null,
       showEditButton = true,
     } = options;
 
@@ -46,6 +47,8 @@ export default async function displayLibrary(items, options = {}) {
         const tipo = String(item.Tipo || '');
         const genero = String(item.Genero || '');
         const artista = String(item.Artista || '');
+        const discogsId = String(item.ID || item.discogsId || '').trim();
+        const discogsReleaseId = discogsId.replace(/^[^0-9]+/, '');
         let imageUrl =  item.imgFULL && 
                         item.imgFULL.length > 0 && 
                         item.imgFULL !== 'No matching results' && 
@@ -73,7 +76,6 @@ export default async function displayLibrary(items, options = {}) {
 
         const card = document.createElement('div');
         const generoPrincipal = genero.toLowerCase().split(',')[0] || 'sin-genero';
-        const discogsId = item.ID || item.discogsId || '';
         card.className = `col-xxl-2 col-xl-2 col-lg-2 col-md-4 col-sm-6 col-6 h-100`;
         card.innerHTML = `
         <div class="card-with-border rounded-1">
@@ -83,9 +85,10 @@ export default async function displayLibrary(items, options = {}) {
             ${item.Recibido === 'NO' ? '<div class="not-received-badge"><span>NO RECIBIDO</span></div>' : ''}
             <div class="card-img-overlay d-flex flex-column justify-content-end pb-1">
                 <div class="position-absolute top-0 start-0 d-flex gap-2 p-3">
-                ${discogsId !== '' ? `<a href="https://www.discogs.com/es/release/${String(discogsId).replace(/^D/, '')}" target="_blank" class="btn btn-dark btn-sm btn-discorgs">Discogs</a>` : '' }
+                ${discogsReleaseId !== '' ? `<a href="https://www.discogs.com/es/release/${discogsReleaseId}" target="_blank" class="btn btn-dark btn-sm btn-discorgs">Discogs</a>` : '' }
+                ${wishlistMode && canManageWishlist ? '<button class="btn btn-sm btn-dark border-0 btn-edit-card" title="Editar wishlist">\n                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>\n                </button>' : ''}
                 ${wishlistMode && canManageWishlist ? '<button class="btn btn-sm btn-dark btn-wishlist-remove" title="Quitar de mi wishlist">×</button>' : ''}
-                ${showEditButton ? '<button class="btn btn-sm btn-outline-info border-0 btn-edit-card" title="Editar">\n                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>\n                </button>' : ''}
+                ${showEditButton && !(wishlistMode && canManageWishlist) ? '<button class="btn btn-sm btn-dark border-0 btn-edit-card" title="Editar">\n                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>\n                </button>' : ''}
                 </div>
                 <ul class="list-unstyled text-white">
                  <li class="fw-bold text-hide">${ artista }</li>
@@ -98,6 +101,23 @@ export default async function displayLibrary(items, options = {}) {
           <div class="side-label px-1 py-3" ${item.Recibido === 'NO' ? 'style="z-index: -1;"' : ''}>${ genero.toUpperCase().substring(0, 15) || 'WISHLIST' }</div>
         </div>
         `;
+
+        const editWishlistButton = card.querySelector('.btn-edit-card');
+        if (editWishlistButton && typeof onEditWishlist === 'function' && wishlistMode && canManageWishlist) {
+          editWishlistButton.addEventListener('click', async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            editWishlistButton.disabled = true;
+            try {
+              await onEditWishlist(item);
+            } catch (error) {
+              console.error('Error editando wishlist:', error);
+            } finally {
+              editWishlistButton.disabled = false;
+            }
+          });
+        }
 
         const removeWishlistButton = card.querySelector('.btn-wishlist-remove');
         if (removeWishlistButton && typeof onRemoveWishlist === 'function') {

@@ -20,6 +20,11 @@ export async function addToWishlist(item) {
   return response.item;
 }
 
+export async function updateWishlistItem(rowId, item) {
+  const response = await apiClient.put(`/wishlist/${encodeURIComponent(rowId)}`, item, { timeout: 15000 });
+  return response.item;
+}
+
 export async function removeFromWishlist(rowId) {
   const response = await apiClient.delete(`/wishlist/${encodeURIComponent(rowId)}`, { timeout: 15000 });
   return !!response.ok;

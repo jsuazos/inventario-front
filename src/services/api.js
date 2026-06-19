@@ -23,6 +23,20 @@ function handleUnauthorized() {
   }
 }
 
+async function parseResponseSafely(response) {
+  const contentType = response.headers.get('content-type') || '';
+
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  const text = await response.text();
+  return {
+    error: text || `HTTP ${response.status}`,
+    raw: text,
+  };
+}
+
 export async function fetchConStatusOk(url, opciones = {}) {
   try {
     const respuesta = await fetch(url, opciones);
@@ -100,7 +114,7 @@ export class ApiClient {
       const response = await fetch(url, fetchOptions);
       clearTimeout(timeoutId);
 
-      const data = await response.json();
+      const data = await parseResponseSafely(response);
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -156,4 +170,3 @@ export class ApiClient {
 }
 
 export const apiClient = new ApiClient();
-

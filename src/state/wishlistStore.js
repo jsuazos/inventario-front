@@ -1,4 +1,4 @@
-import { addToWishlist, getMyWishlist, removeFromWishlist } from '../services/wishlistService.js';
+import { addToWishlist, getMyWishlist, removeFromWishlist, updateWishlistItem } from '../services/wishlistService.js';
 
 class WishlistStore {
   constructor() {
@@ -66,6 +66,16 @@ class WishlistStore {
     }
 
     throw new Error('No se pudo quitar de la wishlist');
+  }
+
+  async update(rowId, item) {
+    const updated = await updateWishlistItem(rowId, item);
+    if (updated) {
+      this.setItems(this.items.map(entry => entry.rowId === rowId ? updated : entry));
+      return updated;
+    }
+
+    throw new Error('No se pudo editar la wishlist');
   }
 }
 

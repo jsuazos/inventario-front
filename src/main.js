@@ -21,6 +21,8 @@ import { setupOnlineOfflineHandlers } from './services/dbService.js';
 import { loadArtistCatalog } from './services/artistCatalogService.js';
 import { subscribe, isSubscribed, isSupported, syncExistingSubscription } from './services/pushService.js';
 import { getPublicWishlist } from './services/wishlistService.js';
+import { enrichWishlistItemWithDiscogs } from './services/discogsService.js';
+import { splitTypeTags } from './utils/typeTags.js';
 
 let backgroundCheckTimeout = null;
 let lastBackgroundCheckAt = 0;
@@ -292,33 +294,135 @@ function attachWishlistBannerActions() {
   };
 }
 
-async function openWishlistAddModal() {
+async function openWishlistFormModal(initialData = {}, { title = 'Agregar a mi wishlist', confirmText = 'Guardar' } = {}) {
   if (typeof Swal === 'undefined') {
-    return;
+    return null;
   }
 
-  const result = await Swal.fire({
-    title: 'Agregar a mi wishlist',
+  const availableTypes = [...new Set(
+    libraryStore.getAllData().flatMap(item => splitTypeTags(item.Tipo))
+  )].sort((a, b) => a.localeCompare(b));
+
+  const defaultTypes = ['Vinilo', 'CD', 'Cassette', 'DVD'];
+  const wishlistTypes = [...new Set([...defaultTypes, ...availableTypes])];
+
+  const tipoOptions = wishlistTypes.map(tipo => {
+    const selected = (initialData.Tipo || '') === tipo ? 'selected' : '';
+    return `<option value="${tipo}" ${selected}>${tipo}</option>`;
+  }).join('');
+
+  const fillFormFromDiscogs = async (statusElement) => {
+    const artistaInput = document.getElementById('wishlist-artista');
+    const discoInput = document.getElementById('wishlist-disco');
+    const anioInput = document.getElementById('wishlist-anio');
+    const tipoSelect = document.getElementById('wishlist-tipo');
+    const discogsInput = document.getElementById('wishlist-discogs');
+
+    if (!artistaInput || !discoInput || !anioInput || !tipoSelect || !discogsInput) {
+      return;
+    }
+
+    const draftItem = {
+      Artista: artistaInput.value.trim(),
+      Disco: discoInput.value.trim(),
+      Año: anioInput.value.trim(),
+      Tipo: tipoSelect.value.trim(),
+      discogsId: discogsInput.value.replace(/\D+/g, '').trim(),
+      notes: document.getElementById('wishlist-notes')?.value.trim() || '',
+      Genero: '',
+      img: '',
+      imgFULL: '',
+      Recibido: 'NO',
+    };
+
+    if (!draftItem.Artista || !draftItem.Disco) {
+      statusElement.textContent = 'Completa artista y disco para buscar en Discogs.';
+      statusElement.className = 'wishlist-discogs-status error';
+      return;
+    }
+
+    statusElement.textContent = 'Buscando en Discogs...';
+    statusElement.className = 'wishlist-discogs-status loading';
+
+    const enrichedItem = await enrichWishlistItemWithDiscogs(draftItem);
+    const foundSomething = enrichedItem.discogsId || enrichedItem.img || enrichedItem.imgFULL || enrichedItem.Año || enrichedItem.Tipo || enrichedItem.Genero;
+
+    if (!foundSomething) {
+      statusElement.textContent = 'No se encontraron coincidencias claras en Discogs.';
+      statusElement.className = 'wishlist-discogs-status error';
+      return;
+    }
+
+    discogsInput.value = String(enrichedItem.discogsId || '').replace(/\D+/g, '');
+    if (enrichedItem.Año && !anioInput.value.trim()) {
+      anioInput.value = enrichedItem.Año;
+    }
+    if (enrichedItem.Tipo) {
+      if (![...tipoSelect.options].some(option => option.value === enrichedItem.Tipo)) {
+        const option = document.createElement('option');
+        option.value = enrichedItem.Tipo;
+        option.textContent = enrichedItem.Tipo;
+        tipoSelect.appendChild(option);
+      }
+      tipoSelect.value = enrichedItem.Tipo;
+    }
+
+    statusElement.textContent = enrichedItem.imgFULL || enrichedItem.img
+      ? 'Datos y portada encontrados en Discogs.'
+      : 'Datos encontrados en Discogs.';
+    statusElement.className = 'wishlist-discogs-status success';
+  };
+
+  return Swal.fire({
+    title,
     background: '#1a1a1a',
     color: '#fff',
-    confirmButtonText: 'Guardar',
+    confirmButtonText: confirmText,
     showCancelButton: true,
     cancelButtonText: 'Cancelar',
     focusConfirm: false,
     html: `
-      <input id="wishlist-artista" class="swal2-input" placeholder="Artista" autocomplete="off">
-      <input id="wishlist-disco" class="swal2-input" placeholder="Disco" autocomplete="off">
-      <input id="wishlist-anio" class="swal2-input" placeholder="Año" autocomplete="off">
-      <input id="wishlist-tipo" class="swal2-input" placeholder="Tipo (Vinilo, CD...)" autocomplete="off">
-      <input id="wishlist-discogs" class="swal2-input" placeholder="ID Discogs (opcional)" autocomplete="off">
-      <textarea id="wishlist-notes" class="swal2-textarea" placeholder="Notas (opcional)"></textarea>
+      <input id="wishlist-artista" class="swal2-input" placeholder="Artista" autocomplete="off" value="${initialData.Artista || ''}">
+      <input id="wishlist-disco" class="swal2-input" placeholder="Disco" autocomplete="off" value="${initialData.Disco || ''}">
+      <input id="wishlist-anio" class="swal2-input" placeholder="Año" autocomplete="off" value="${initialData.Año || ''}">
+      <select id="wishlist-tipo" class="swal2-select wishlist-type-select">
+        <option value="">Selecciona un tipo</option>
+        ${tipoOptions}
+      </select>
+      <input id="wishlist-discogs" class="swal2-input" placeholder="ID Discogs (opcional)" autocomplete="off" value="${initialData.discogsId || initialData.ID || ''}">
+      <button id="wishlist-discogs-autofill" type="button" class="wishlist-discogs-button">Autocompletar desde Discogs</button>
+      <div id="wishlist-discogs-status" class="wishlist-discogs-status"></div>
+      <textarea id="wishlist-notes" class="swal2-textarea" placeholder="Notas (opcional)">${initialData.notes || ''}</textarea>
     `,
+    didOpen: () => {
+      const discogsInput = document.getElementById('wishlist-discogs');
+      const autofillButton = document.getElementById('wishlist-discogs-autofill');
+      const statusElement = document.getElementById('wishlist-discogs-status');
+
+      if (discogsInput) {
+        discogsInput.value = discogsInput.value.replace(/\D+/g, '');
+        discogsInput.addEventListener('input', () => {
+          discogsInput.value = discogsInput.value.replace(/\D+/g, '');
+        });
+      }
+
+      if (autofillButton && statusElement) {
+        autofillButton.addEventListener('click', async () => {
+          autofillButton.disabled = true;
+          try {
+            await fillFormFromDiscogs(statusElement);
+          } finally {
+            autofillButton.disabled = false;
+          }
+        });
+      }
+    },
     preConfirm: () => {
       const Artista = document.getElementById('wishlist-artista')?.value.trim();
       const Disco = document.getElementById('wishlist-disco')?.value.trim();
       const Año = document.getElementById('wishlist-anio')?.value.trim();
       const Tipo = document.getElementById('wishlist-tipo')?.value.trim();
-      const discogsId = document.getElementById('wishlist-discogs')?.value.trim();
+      const discogsId = document.getElementById('wishlist-discogs')?.value.replace(/\D+/g, '').trim();
       const notes = document.getElementById('wishlist-notes')?.value.trim();
 
       if (!Artista || !Disco) {
@@ -327,6 +431,7 @@ async function openWishlistAddModal() {
       }
 
       return {
+        rowId: initialData.rowId || '',
         Artista,
         Disco,
         Año,
@@ -340,17 +445,22 @@ async function openWishlistAddModal() {
       };
     }
   });
+}
+
+async function openWishlistAddModal() {
+  const result = await openWishlistFormModal();
 
   if (!result.isConfirmed || !result.value) {
     return;
   }
 
-  try {
-    await wishlistStore.add(result.value);
-    await syncRouteView();
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
+      try {
+        const enrichedItem = await enrichWishlistItemWithDiscogs(result.value);
+        await wishlistStore.add(enrichedItem);
+        await syncRouteView();
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
       icon: 'success',
       title: 'Disco agregado a tu wishlist',
       showConfirmButton: false,
@@ -360,6 +470,42 @@ async function openWishlistAddModal() {
     });
   } catch (error) {
     console.error('No se pudo agregar a la wishlist:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'No se pudo guardar',
+      text: 'Intenta nuevamente en unos segundos.',
+      background: '#1a1a1a',
+      color: '#fff'
+    });
+  }
+}
+
+async function openWishlistEditModal(item) {
+  const result = await openWishlistFormModal(item, {
+    title: 'Editar wishlist',
+    confirmText: 'Guardar cambios',
+  });
+
+  if (!result?.isConfirmed || !result.value) {
+    return;
+  }
+
+  try {
+    const enrichedItem = await enrichWishlistItemWithDiscogs(result.value);
+    await wishlistStore.update(item.rowId, enrichedItem);
+    await syncRouteView();
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Wishlist actualizada',
+      showConfirmButton: false,
+      timer: 1800,
+      background: '#1a1a1a',
+      color: '#fff'
+    });
+  } catch (error) {
+    console.error('No se pudo editar la wishlist:', error);
     Swal.fire({
       icon: 'error',
       title: 'No se pudo guardar',
@@ -489,6 +635,9 @@ async function renderCurrentView() {
       fetchArtistBanner: false,
       wishlistMode: true,
       canManageWishlist: isOwnView,
+      onEditWishlist: async (item) => {
+        await openWishlistEditModal(item);
+      },
       onRemoveWishlist: async (item) => {
         await wishlistStore.remove(item.rowId);
       },
