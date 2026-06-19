@@ -13,6 +13,7 @@ export default async function displayLibrary(items, options = {}) {
       fetchArtistBanner = true,
       wishlistMode = false,
       canManageWishlist = false,
+      onAddToInventory = null,
       onRemoveWishlist = null,
       onEditWishlist = null,
       showEditButton = true,
@@ -86,6 +87,7 @@ export default async function displayLibrary(items, options = {}) {
             <div class="card-img-overlay d-flex flex-column justify-content-end pb-1">
                 <div class="position-absolute top-0 start-0 d-flex gap-2 p-3">
                 ${discogsReleaseId !== '' ? `<a href="https://www.discogs.com/es/release/${discogsReleaseId}" target="_blank" class="btn btn-dark btn-sm btn-discorgs">Discogs</a>` : '' }
+                ${wishlistMode && canManageWishlist ? '<button class="btn btn-sm btn-success border-0 btn-wishlist-add" title="Agregar al inventario">✓</button>' : ''}
                 ${wishlistMode && canManageWishlist ? '<button class="btn btn-sm btn-dark border-0 btn-edit-card" title="Editar wishlist">\n                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>\n                </button>' : ''}
                 ${wishlistMode && canManageWishlist ? '<button class="btn btn-sm btn-dark btn-wishlist-remove" title="Quitar de mi wishlist">×</button>' : ''}
                 ${showEditButton && !(wishlistMode && canManageWishlist) ? '<button class="btn btn-sm btn-dark border-0 btn-edit-card" title="Editar">\n                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>\n                </button>' : ''}
@@ -101,6 +103,23 @@ export default async function displayLibrary(items, options = {}) {
           <div class="side-label px-1 py-3" ${item.Recibido === 'NO' ? 'style="z-index: -1;"' : ''}>${ genero.toUpperCase().substring(0, 15) || 'WISHLIST' }</div>
         </div>
         `;
+
+        const addToInventoryButton = card.querySelector('.btn-wishlist-add');
+        if (addToInventoryButton && typeof onAddToInventory === 'function') {
+          addToInventoryButton.addEventListener('click', async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            addToInventoryButton.disabled = true;
+            try {
+              await onAddToInventory(item);
+            } catch (error) {
+              console.error('Error agregando al inventario:', error);
+            } finally {
+              addToInventoryButton.disabled = false;
+            }
+          });
+        }
 
         const editWishlistButton = card.querySelector('.btn-edit-card');
         if (editWishlistButton && typeof onEditWishlist === 'function' && wishlistMode && canManageWishlist) {

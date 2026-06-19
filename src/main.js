@@ -22,6 +22,7 @@ import { loadArtistCatalog } from './services/artistCatalogService.js';
 import { subscribe, isSubscribed, isSupported, syncExistingSubscription } from './services/pushService.js';
 import { getPublicWishlist } from './services/wishlistService.js';
 import { enrichWishlistItemWithDiscogs } from './services/discogsService.js';
+import { addToInventory } from './services/inventoryService.js';
 import { splitTypeTags } from './utils/typeTags.js';
 
 let backgroundCheckTimeout = null;
@@ -566,6 +567,29 @@ async function renderCurrentView() {
       fetchArtistBanner: false,
       wishlistMode: true,
       canManageWishlist: isOwnView,
+      onAddToInventory: async (item) => {
+        const enrichedItem = await enrichWishlistItemWithDiscogs({
+          ...item,
+          Recibido: 'SI',
+        });
+
+        await addToInventory(enrichedItem);
+        await wishlistStore.remove(item.rowId);
+        loadLibrary([]);
+
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Agregado al inventario',
+            showConfirmButton: false,
+            timer: 1800,
+            background: '#1a1a1a',
+            color: '#fff'
+          });
+        }
+      },
       onEditWishlist: async (item) => {
         await openWishlistEditModal(item);
       },

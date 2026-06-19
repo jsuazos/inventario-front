@@ -1,5 +1,39 @@
 import { apiClient } from './api.js';
 
+const COUNTRY_TO_ISO = {
+  argentina: 'ar',
+  australia: 'au',
+  austria: 'at',
+  belgium: 'be',
+  brazil: 'br',
+  canada: 'ca',
+  chile: 'cl',
+  colombia: 'co',
+  denmark: 'dk',
+  finland: 'fi',
+  france: 'fr',
+  germany: 'de',
+  greece: 'gr',
+  ireland: 'ie',
+  italy: 'it',
+  japan: 'jp',
+  mexico: 'mx',
+  netherlands: 'nl',
+  newzealand: 'nz',
+  norway: 'no',
+  peru: 'pe',
+  poland: 'pl',
+  portugal: 'pt',
+  spain: 'es',
+  sweden: 'se',
+  switzerland: 'ch',
+  uk: 'gb',
+  us: 'us',
+  usa: 'us',
+  'united kingdom': 'gb',
+  'united states': 'us',
+};
+
 function normalizeDiscogsType(formats = []) {
   const primaryFormat = formats[0]?.name || '';
   if (!primaryFormat) {
@@ -14,7 +48,23 @@ function normalizeDiscogsType(formats = []) {
   return primaryFormat;
 }
 
+function normalizeCountryToIso(country = '') {
+  const normalized = String(country || '').trim().toLowerCase();
+  return COUNTRY_TO_ISO[normalized] || '';
+}
+
+function getLabelData(data = {}) {
+  const firstLabel = data.labels?.[0] || {};
+  return {
+    Disqueria: firstLabel.name || '',
+    Catalogo: firstLabel.catno || '',
+  };
+}
+
 function toWishlistDiscogsData(data = {}) {
+  const labelData = getLabelData(data);
+  const origen = data.country || '';
+
   return {
     discogsId: data.id ? String(data.id) : '',
     img: data.thumb || data.cover_image || '',
@@ -22,6 +72,10 @@ function toWishlistDiscogsData(data = {}) {
     Año: data.year ? String(data.year) : '',
     Tipo: normalizeDiscogsType(data.formats || []),
     Genero: Array.isArray(data.genres) ? data.genres.join(', ') : '',
+    Disqueria: labelData.Disqueria,
+    Catalogo: labelData.Catalogo,
+    Origen: origen,
+    OrigenISO: normalizeCountryToIso(origen),
   };
 }
 
@@ -53,6 +107,10 @@ export async function searchDiscogsReleaseData(query) {
     Año: firstResult.year ? String(firstResult.year) : '',
     Tipo: normalizeDiscogsType(firstResult.format ? [{ name: firstResult.format[0] }] : []),
     Genero: Array.isArray(firstResult.genre) ? firstResult.genre.join(', ') : '',
+    Disqueria: Array.isArray(firstResult.label) ? (firstResult.label[0] || '') : '',
+    Catalogo: firstResult.catno || '',
+    Origen: firstResult.country || '',
+    OrigenISO: normalizeCountryToIso(firstResult.country || ''),
   };
 }
 
@@ -69,6 +127,10 @@ export async function enrichWishlistItemWithDiscogs(item) {
           Año: item.Año || exact.Año || '',
           Tipo: item.Tipo || exact.Tipo || '',
           Genero: item.Genero || exact.Genero || '',
+          Disqueria: item.Disqueria || exact.Disqueria || '',
+          Catalogo: item.Catalogo || exact.Catalogo || '',
+          Origen: item.Origen || exact.Origen || '',
+          OrigenISO: item.OrigenISO || exact.OrigenISO || '',
         };
       }
     }
@@ -87,6 +149,10 @@ export async function enrichWishlistItemWithDiscogs(item) {
       Año: item.Año || search.Año || '',
       Tipo: item.Tipo || search.Tipo || '',
       Genero: item.Genero || search.Genero || '',
+      Disqueria: item.Disqueria || search.Disqueria || '',
+      Catalogo: item.Catalogo || search.Catalogo || '',
+      Origen: item.Origen || search.Origen || '',
+      OrigenISO: item.OrigenISO || search.OrigenISO || '',
     };
   } catch (error) {
     console.warn('No se pudo enriquecer wishlist con Discogs:', error.message);

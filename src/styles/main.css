@@ -255,6 +255,11 @@ body.sidebar-open {
   opacity: 0;
   transition: opacity 0.2s ease;
 }
+.btn-wishlist-add {
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  min-width: 32px;
+}
 .btn-wishlist-remove {
   opacity: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -264,16 +269,23 @@ body.sidebar-open {
 .card-with-border:hover .btn-edit-card {
   opacity: 1;
 }
+.card-with-border:hover .btn-wishlist-add {
+  opacity: 1;
+}
 .card-with-border:hover .btn-wishlist-remove {
   opacity: 1;
 }
 
 body.auth-editor .btn-edit-card,
+body.auth-editor .btn-wishlist-add,
 body.auth-editor .btn-wishlist-remove {
   opacity: 1;
 }
 
 body:not(.auth-editor) .btn-edit-card {
+  display: none;
+}
+body:not(.auth-editor) .btn-wishlist-add {
   display: none;
 }
 body:not(.auth-editor) .btn-wishlist-remove {
@@ -386,6 +398,7 @@ body:not(.auth-editor) .btn-wishlist-remove {
 }
 
 .btn-edit-card,
+.btn-wishlist-add,
 .btn-wishlist-remove {
   position: relative;
   z-index: 100000;
