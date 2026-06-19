@@ -30,6 +30,17 @@ let publicWishlistView = {
 };
 let globalActionMenu = null;
 
+function syncGlobalActionDock() {
+  const wrapper = document.getElementById('global-action-menu');
+  const slot = document.getElementById('global-action-subscribe-slot');
+  if (!wrapper || !slot) {
+    return;
+  }
+
+  const hasSubscribeButton = !!slot.querySelector('#push-subscribe-btn');
+  wrapper.classList.toggle('has-subscribe-button', hasSubscribeButton);
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   // Inicializar el store desde localStorage/IndexedDB
   await libraryStore.init();
@@ -373,10 +384,14 @@ function setupGlobalActionMenu() {
       <button type="button" class="global-action-item" data-action="no-recibido">No Recibido</button>
       <button type="button" class="global-action-item" data-action="wishlist">Wishlist</button>
     </div>
-    <button type="button" id="global-action-toggle" class="global-action-toggle" aria-expanded="false" aria-label="Abrir acciones rápidas">+</button>
+    <div class="global-action-dock">
+      <div id="global-action-subscribe-slot" class="global-action-subscribe-slot"></div>
+      <button type="button" id="global-action-toggle" class="global-action-toggle" aria-expanded="false" aria-label="Abrir acciones rápidas">+</button>
+    </div>
   `;
   document.body.appendChild(wrapper);
   globalActionMenu = wrapper;
+  syncGlobalActionDock();
 
   const toggleButton = wrapper.querySelector('#global-action-toggle');
   const toggleMenu = (forceOpen) => {
@@ -529,12 +544,17 @@ function showInstallBanner() {
 }
 
 function showSubscribeBell() {
+  const existing = document.getElementById('push-subscribe-btn');
+  if (existing) {
+    existing.remove();
+  }
+
   const btn = document.createElement('button');
   btn.id = 'push-subscribe-btn';
+  btn.className = 'push-subscribe-fab';
   btn.title = 'Activar notificaciones de cambios';
   btn.style.cssText = `
-    position: fixed; bottom: 80px; right: 20px; z-index: 9999;
-    width: 50px; height: 50px; border-radius: 50%; border: none;
+    width: 58px; height: 58px; border-radius: 50%; border: none;
     background: #0dcaf0; color: #000; font-size: 22px;
     cursor: pointer; box-shadow: 0 3px 12px rgba(13,202,240,0.4);
     display: flex; align-items: center; justify-content: center;
@@ -544,12 +564,28 @@ function showSubscribeBell() {
   btn.onmouseenter = () => btn.style.transform = 'scale(1.1)';
   btn.onmouseleave = () => btn.style.transform = 'scale(1)';
   btn.onclick = async () => {
-    btn.style.display = 'none';
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
     const ok = await subscribe();
+    if (ok || Notification.permission === 'granted') {
+      btn.remove();
+      syncGlobalActionDock();
+      return;
+    }
+
     if (!ok && Notification.permission !== 'denied') {
-      btn.style.display = 'flex';
+      btn.disabled = false;
+      btn.style.opacity = '1';
     }
   };
+
+  const slot = document.getElementById('global-action-subscribe-slot');
+  if (slot) {
+    slot.appendChild(btn);
+    syncGlobalActionDock();
+    return;
+  }
+
   document.body.appendChild(btn);
 }
 
