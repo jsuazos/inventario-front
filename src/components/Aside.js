@@ -24,7 +24,8 @@ class Aside extends HTMLElement {
         </div>
 
         <ul class="nav flex-column">
-            <li class="nav-item"><a class="nav-link text-white" href="#">🎵 Todos</a></li>
+            <li class="nav-item"><a class="nav-link text-white" href="#biblioteca">🎵 Biblioteca</a></li>
+            <li class="nav-item d-none" id="wishlist-link-item"><a class="nav-link text-white" id="wishlist-link" href="#wishlist/me">♡ Mi wishlist</a></li>
             <li class="nav-item mx-3">
             <div class="top-estilos">
                 <h6>🔥 Top 10</h6>
@@ -56,11 +57,19 @@ class Aside extends HTMLElement {
     this._unsubscribe = authStore.subscribe(({ isLoggedIn, user }) => {
       const adminSection = this.querySelector('#admin-section');
       const usernameSpan = this.querySelector('#admin-username');
+      const wishlistLinkItem = this.querySelector('#wishlist-link-item');
+      const wishlistLink = this.querySelector('#wishlist-link');
       if (adminSection) {
         adminSection.classList.toggle('d-none', !isLoggedIn);
       }
+      if (wishlistLinkItem) {
+        wishlistLinkItem.classList.toggle('d-none', !isLoggedIn);
+      }
       if (usernameSpan && user) {
         usernameSpan.textContent = user;
+      }
+      if (wishlistLink && user) {
+        wishlistLink.textContent = `♡ Wishlist de ${user}`;
       }
     });
   }

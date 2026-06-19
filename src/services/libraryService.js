@@ -1,5 +1,4 @@
 import { toggleLoader } from '../utils/ui.js';
-import displayLibrary from '../utils/libraryDisplay.js';
 import aplicarColoresPorGenero from '../utils/aplicarColoresPorGenero.js';
 import obtenerTopEstilos from '../utils/obtenerTopEstilos.js';
 import { loadAlphabet } from '../utils/ui.js';
@@ -38,7 +37,7 @@ export async function checkForUpdatesInBackground() {
   }
 
   try {
-    showBackgroundUpdateNotification('🔄 Buscando actualizaciones ...', 'info');
+    // showBackgroundUpdateNotification('🔄 Buscando actualizaciones ...', 'info');
     const filteredApiData = await fetchLibraryFromApi();
 
     // Comparar con datos locales usando comparación detallada
@@ -58,7 +57,7 @@ export async function checkForUpdatesInBackground() {
       aplicarColoresPorGenero();
       showDetailedChangesNotification(added, removed);
     } else {
-      showBackgroundUpdateNotification('📋 No hay cambios disponibles', 'info');
+      // showBackgroundUpdateNotification('📋 No hay cambios disponibles', 'info');
     }
 
   } catch (e) {
@@ -135,7 +134,6 @@ async function fetchLibraryFromApi() {
 
 function completeLoad(data) {
   populateFilters(data || []);
-  displayLibrary(data || []);
   aplicarColoresPorGenero();
   requestAnimationFrame(() => {
     obtenerTopEstilos();

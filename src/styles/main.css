@@ -255,11 +255,28 @@ body.sidebar-open {
   opacity: 0;
   transition: opacity 0.2s ease;
 }
+.btn-wishlist-remove {
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  min-width: 32px;
+  color: #ffd7dc;
+}
 .card-with-border:hover .btn-edit-card {
+  opacity: 1;
+}
+.card-with-border:hover .btn-wishlist-remove {
+  opacity: 1;
+}
+
+body.auth-editor .btn-edit-card,
+body.auth-editor .btn-wishlist-remove {
   opacity: 1;
 }
 
 body:not(.auth-editor) .btn-edit-card {
+  display: none;
+}
+body:not(.auth-editor) .btn-wishlist-remove {
   display: none;
 }
 
@@ -844,5 +861,83 @@ body.offline .offline-badge {
 
   .sort-label {
     display: none;
+  }
+}
+
+.global-action-menu {
+  position: fixed;
+  right: 88px;
+  bottom: 28px;
+  z-index: 9990;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+body.ios-install-banner-visible .global-action-menu {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(16px);
+}
+
+.global-action-items {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.global-action-menu.is-open .global-action-items {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.global-action-toggle,
+.global-action-item {
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
+}
+
+.global-action-toggle {
+  width: 58px;
+  height: 58px;
+  background: linear-gradient(180deg, #13d2b4 0%, #0ea78f 100%);
+  font-size: 2rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.global-action-menu.is-open .global-action-toggle {
+  transform: rotate(45deg);
+}
+
+.global-action-item {
+  background: rgba(18, 24, 33, 0.96);
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 576px) {
+  .global-action-menu {
+    right: 14px;
+    bottom: 88px;
+  }
+
+  .global-action-toggle {
+    width: 54px;
+    height: 54px;
   }
 }

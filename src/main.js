@@ -15,13 +15,20 @@ import { clearLibrary, modalLogin, updateLoginUI } from "./utils/modals.js";
 import { authStore } from "./state/authStore.js";
 import displayLibrary from "./utils/libraryDisplay.js";
 import { libraryStore } from "./state/libraryStore.js";
+import { wishlistStore } from './state/wishlistStore.js';
 import { errorHandler } from "./services/errorHandler.js";
 import { setupOnlineOfflineHandlers } from './services/dbService.js';
 import { loadArtistCatalog } from './services/artistCatalogService.js';
 import { subscribe, isSubscribed, isSupported, syncExistingSubscription } from './services/pushService.js';
+import { getPublicWishlist } from './services/wishlistService.js';
 
 let backgroundCheckTimeout = null;
 let lastBackgroundCheckAt = 0;
+let publicWishlistView = {
+  user: '',
+  items: [],
+};
+let globalActionMenu = null;
 
 window.addEventListener("DOMContentLoaded", async () => {
   // Inicializar el store desde localStorage/IndexedDB
@@ -31,8 +38,11 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Registrado temprano para capturar todas las notificaciones
   libraryStore.subscribe((state) => {
     if (!state.isLoading) {
-      displayLibrary(state.data).catch(() => {});
+      renderCurrentView().catch(() => {});
     }
+  });
+  wishlistStore.subscribe(() => {
+    renderCurrentView().catch(() => {});
   });
 
   // Restaurar sesión si existe token válido
@@ -44,7 +54,33 @@ window.addEventListener("DOMContentLoaded", async () => {
     document.body.classList.toggle('auth-editor', isLoggedIn);
   };
   toggleAuthEditor({ isLoggedIn: authStore.isLoggedIn });
-  authStore.subscribe(toggleAuthEditor);
+  authStore.subscribe(async ({ isLoggedIn }) => {
+    toggleAuthEditor({ isLoggedIn });
+
+    if (isLoggedIn) {
+      try {
+        await wishlistStore.loadMine();
+      } catch (error) {
+        console.error('No se pudo cargar la wishlist del usuario:', error);
+      }
+    } else {
+      wishlistStore.clear();
+      if (parseRoute().mode === 'wishlist' && parseRoute().user === 'me') {
+        window.location.hash = '#biblioteca';
+        return;
+      }
+    }
+
+    renderCurrentView().catch(() => {});
+  });
+
+  if (authStore.isLoggedIn) {
+    try {
+      await wishlistStore.loadMine();
+    } catch (error) {
+      console.error('No se pudo cargar la wishlist inicial:', error);
+    }
+  }
   
   // Configurar manejo de conexión
   setupOnlineOfflineHandlers();
@@ -69,6 +105,13 @@ window.addEventListener("DOMContentLoaded", async () => {
   clearLibrary();
 
   modalLogin();
+  setupGlobalActionMenu();
+
+  window.addEventListener('hashchange', () => {
+    syncRouteView().catch(() => {});
+  });
+
+  await syncRouteView();
 
   setupBackgroundRefresh();
 
@@ -167,11 +210,291 @@ async function setupPushNotifications() {
   showSubscribeBell();
 }
 
+function parseRoute() {
+  const hash = window.location.hash.replace(/^#/, '').trim();
+
+  if (!hash || hash === 'biblioteca') {
+    return { mode: 'library' };
+  }
+
+  const match = hash.match(/^wishlist\/(.+)$/i);
+  if (match) {
+    return { mode: 'wishlist', user: decodeURIComponent(match[1]) };
+  }
+
+  return { mode: 'library' };
+}
+
+function toggleFiltersVisibility(isVisible) {
+  const filters = document.querySelector('app-filters');
+  if (filters) {
+    filters.style.display = isVisible ? '' : 'none';
+  }
+}
+
+function buildWishlistBanner(label, isOwnView) {
+  const routeUser = isOwnView ? 'me' : encodeURIComponent(label);
+
+  return `
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 p-3 rounded-3" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+      <div>
+        <small class="text-info text-uppercase">Wishlist pública</small>
+        <h4 class="text-white mb-1">Wishlist de ${label}</h4>
+        <p class="text-secondary mb-0">Disponible públicamente dentro de la app.</p>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <a href="#biblioteca" class="btn btn-outline-light btn-sm">Volver a biblioteca</a>
+        <button id="copy-wishlist-link" class="btn btn-info btn-sm text-dark" data-route="#wishlist/${routeUser}">Copiar enlace</button>
+      </div>
+    </div>
+  `;
+}
+
+function attachWishlistBannerActions() {
+  const copyButton = document.getElementById('copy-wishlist-link');
+
+  if (!copyButton) {
+    return;
+  }
+
+  copyButton.onclick = async () => {
+    const route = copyButton.dataset.route || '#biblioteca';
+    const url = `${window.location.origin}${window.location.pathname}${route}`;
+
+    try {
+      await navigator.clipboard.writeText(url);
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Enlace copiado',
+          showConfirmButton: false,
+          timer: 1800,
+          background: '#1a1a1a',
+          color: '#fff'
+        });
+      }
+    } catch (error) {
+      console.error('No se pudo copiar el enlace de wishlist:', error);
+    }
+  };
+}
+
+async function openWishlistAddModal() {
+  if (typeof Swal === 'undefined') {
+    return;
+  }
+
+  const result = await Swal.fire({
+    title: 'Agregar a mi wishlist',
+    background: '#1a1a1a',
+    color: '#fff',
+    confirmButtonText: 'Guardar',
+    showCancelButton: true,
+    cancelButtonText: 'Cancelar',
+    focusConfirm: false,
+    html: `
+      <input id="wishlist-artista" class="swal2-input" placeholder="Artista" autocomplete="off">
+      <input id="wishlist-disco" class="swal2-input" placeholder="Disco" autocomplete="off">
+      <input id="wishlist-anio" class="swal2-input" placeholder="Año" autocomplete="off">
+      <input id="wishlist-tipo" class="swal2-input" placeholder="Tipo (Vinilo, CD...)" autocomplete="off">
+      <input id="wishlist-discogs" class="swal2-input" placeholder="ID Discogs (opcional)" autocomplete="off">
+      <textarea id="wishlist-notes" class="swal2-textarea" placeholder="Notas (opcional)"></textarea>
+    `,
+    preConfirm: () => {
+      const Artista = document.getElementById('wishlist-artista')?.value.trim();
+      const Disco = document.getElementById('wishlist-disco')?.value.trim();
+      const Año = document.getElementById('wishlist-anio')?.value.trim();
+      const Tipo = document.getElementById('wishlist-tipo')?.value.trim();
+      const discogsId = document.getElementById('wishlist-discogs')?.value.trim();
+      const notes = document.getElementById('wishlist-notes')?.value.trim();
+
+      if (!Artista || !Disco) {
+        Swal.showValidationMessage('Artista y disco son obligatorios');
+        return false;
+      }
+
+      return {
+        Artista,
+        Disco,
+        Año,
+        Tipo,
+        discogsId,
+        notes,
+        Genero: '',
+        img: '',
+        imgFULL: '',
+        Recibido: 'NO',
+      };
+    }
+  });
+
+  if (!result.isConfirmed || !result.value) {
+    return;
+  }
+
+  try {
+    await wishlistStore.add(result.value);
+    await syncRouteView();
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Disco agregado a tu wishlist',
+      showConfirmButton: false,
+      timer: 1800,
+      background: '#1a1a1a',
+      color: '#fff'
+    });
+  } catch (error) {
+    console.error('No se pudo agregar a la wishlist:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'No se pudo guardar',
+      text: 'Intenta nuevamente en unos segundos.',
+      background: '#1a1a1a',
+      color: '#fff'
+    });
+  }
+}
+
+function setupGlobalActionMenu() {
+  if (globalActionMenu) {
+    return;
+  }
+
+  const wrapper = document.createElement('div');
+  wrapper.id = 'global-action-menu';
+  wrapper.className = 'global-action-menu d-none';
+  wrapper.innerHTML = `
+    <div class="global-action-items">
+      <button type="button" class="global-action-item" data-action="recibido">Recibido</button>
+      <button type="button" class="global-action-item" data-action="no-recibido">No Recibido</button>
+      <button type="button" class="global-action-item" data-action="wishlist">Wishlist</button>
+    </div>
+    <button type="button" id="global-action-toggle" class="global-action-toggle" aria-expanded="false" aria-label="Abrir acciones rápidas">+</button>
+  `;
+  document.body.appendChild(wrapper);
+  globalActionMenu = wrapper;
+
+  const toggleButton = wrapper.querySelector('#global-action-toggle');
+  const toggleMenu = (forceOpen) => {
+    const isOpen = typeof forceOpen === 'boolean'
+      ? forceOpen
+      : !wrapper.classList.contains('is-open');
+
+    wrapper.classList.toggle('is-open', isOpen);
+    toggleButton?.setAttribute('aria-expanded', String(isOpen));
+  };
+
+  toggleButton?.addEventListener('click', (event) => {
+    event.preventDefault();
+    toggleMenu();
+  });
+
+  wrapper.querySelectorAll('.global-action-item').forEach(button => {
+    button.addEventListener('click', async () => {
+      const action = button.dataset.action;
+      toggleMenu(false);
+
+      if (action === 'wishlist') {
+        await openWishlistAddModal();
+        return;
+      }
+
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'info',
+          title: 'Próximamente',
+          text: `La opción "${button.textContent}" estará disponible en una siguiente iteración.`,
+          background: '#1a1a1a',
+          color: '#fff'
+        });
+      }
+    });
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!wrapper.contains(event.target)) {
+      toggleMenu(false);
+    }
+  });
+
+  authStore.subscribe(({ isLoggedIn }) => {
+    wrapper.classList.toggle('d-none', !isLoggedIn);
+    if (!isLoggedIn) {
+      toggleMenu(false);
+    }
+  });
+
+  wrapper.classList.toggle('d-none', !authStore.isLoggedIn);
+}
+
+async function syncRouteView() {
+  const route = parseRoute();
+
+  if (route.mode === 'wishlist') {
+    toggleFiltersVisibility(false);
+
+    if (route.user === 'me') {
+      if (!authStore.isLoggedIn) {
+        window.location.hash = '#biblioteca';
+        return;
+      }
+
+      publicWishlistView = {
+        user: authStore.user,
+        items: wishlistStore.getItems(),
+      };
+    } else {
+      publicWishlistView = {
+        user: route.user,
+        items: await getPublicWishlist(route.user),
+      };
+    }
+  } else {
+    toggleFiltersVisibility(true);
+  }
+
+  await renderCurrentView();
+}
+
+async function renderCurrentView() {
+  const route = parseRoute();
+
+  if (route.mode === 'wishlist') {
+    const isOwnView = route.user === 'me';
+    const label = isOwnView ? (authStore.user || 'Mi usuario') : publicWishlistView.user || route.user;
+    const items = isOwnView ? wishlistStore.getItems() : publicWishlistView.items;
+
+    await displayLibrary(items, {
+      counterText: `Wishlist de ${label} · ${items.length} item${items.length === 1 ? '' : 's'}`,
+      bannerHtml: buildWishlistBanner(label, isOwnView),
+      fetchArtistBanner: false,
+      wishlistMode: true,
+      canManageWishlist: isOwnView,
+      onRemoveWishlist: async (item) => {
+        await wishlistStore.remove(item.rowId);
+      },
+    });
+    attachWishlistBannerActions();
+    return;
+  }
+
+  await displayLibrary(libraryStore.getFilteredData());
+}
+
 function showInstallBanner() {
+  if (document.getElementById('ios-install-banner')) {
+    return;
+  }
+
   const banner = document.createElement('div');
   banner.id = 'ios-install-banner';
+  document.body.classList.add('ios-install-banner-visible');
   banner.style.cssText = `
-    position: fixed; bottom: 20px; left: 20px; right: 20px;
+    position: fixed; bottom: 24px; left: 20px; right: 20px;
     z-index: 10000; background: #1a1a2e; color: #fff;
     border: 1px solid #0dcaf0; border-radius: 12px;
     padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
@@ -200,6 +523,7 @@ function showInstallBanner() {
   document.body.appendChild(banner);
 
   document.getElementById('close-install-banner').onclick = () => {
+    document.body.classList.remove('ios-install-banner-visible');
     banner.remove();
   };
 }
