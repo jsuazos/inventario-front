@@ -66,9 +66,7 @@ self.addEventListener('message', event => {
 self.addEventListener('push', event => {
   const iconUrl = new URL('./img/music_icon_192.png', self.registration.scope).href;
   const badgeUrl = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
-      <path fill="#ffffff" d="M60 14c-4.4 0-8 3.6-8 8v31.5c-2.9-2.6-7-4.2-11.6-4.2-9.2 0-16.7 6-16.7 13.4S31.2 76 40.4 76s16.6-6 16.6-13.3V33.5l22-5.2v17.2c-2.9-2.6-7-4.2-11.6-4.2-9.2 0-16.7 6-16.7 13.4S58.2 68 67.4 68 84 62 84 54.7V21.3c0-4.9-4.5-8.6-9.2-7.5L60 17.2V22c0-1.1.9-2 2-2h11.8l-16.3 3.8c-.9.2-1.5 1-1.5 1.9v36.9c0 4.4-6.6 8.3-15.6 8.3s-15.7-3.9-15.7-8.3 6.7-8.4 15.7-8.4c4.9 0 9.2 1.2 12.2 3.5l2.4 1.8V22c0-2.9 2-5.4 4.8-6l14.8-3.4c.9-.2 1.8 0 2.5.6.7.6 1.1 1.4 1.1 2.3v39.2c0 4.4-6.6 8.3-15.6 8.3s-15.7-3.9-15.7-8.3 6.7-8.4 15.7-8.4c4.9 0 9.2 1.2 12.2 3.5l2.4 1.8V25.9l-22 5.2V22c0-4.4 3.6-8 8-8h2z"/>
-    </svg>
+    <svg viewBox="0 0 17 17" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="si-glyph si-glyph-music" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>115</title> <defs> </defs> <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <path d="M7.942,0.751 L6.035,0.042 L6.035,11.139 C5.433,11.089 4.75,11.176 4.111,11.438 C2.517,12.089 1.689,13.655 2.146,14.75 C2.604,15.848 4.175,16.354 5.767,15.703 C6.991,15.203 7.84,14.252 7.951,13.341 L7.943,3.524 C10.57,4.322 12.463,5.197 12.463,7.808 C12.463,8.735 13.983,9.631 13.983,5.996 C13.982,2.904 11.33,1.034 7.942,0.751 L7.942,0.751 Z" fill="#ffffff" class="si-glyph-fill"> </path> </g> </g></svg>
   `);
   let data = { title: 'Inventario Musical', body: '', icon: iconUrl, badge: badgeUrl };
   try {
