@@ -46,10 +46,6 @@ export async function checkForUpdatesInBackground() {
 
     const hasChanges = added.length > 0 || removed.length > 0;
 
-    if (hasChanges) {
-      triggerPushNotification(added, removed);
-    }
-
     if (hasChanges && filteredApiData.length > 0) {
 
       libraryStore.loadData(filteredApiData);
@@ -101,30 +97,6 @@ function getDetailedChanges(oldArray, newArray) {
   });
 
   return { added, removed };
-}
-
-/**
- * Envía notificación push a todos los dispositivos via el backend
- */
-async function triggerPushNotification(added, removed) {
-  let body = '';
-  if (added.length > 0) {
-    body += `${added.length} agregado${added.length !== 1 ? 's' : ''}`;
-  }
-  if (removed.length > 0) {
-    if (body) body += ' · ';
-    body += `${removed.length} eliminado${removed.length !== 1 ? 's' : ''}`;
-  }
-
-  try {
-    await apiClient.post('/push/notify', {
-      title: '📀 Biblioteca actualizada',
-      body,
-      data: { url: './' },
-    });
-  } catch (err) {
-    console.error('Error sending push notification:', err);
-  }
 }
 
 async function fetchLibraryFromApi() {
