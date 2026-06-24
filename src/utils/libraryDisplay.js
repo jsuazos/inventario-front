@@ -16,6 +16,7 @@ export default async function displayLibrary(items, options = {}) {
       onAddToInventory = null,
       onRemoveWishlist = null,
       onEditWishlist = null,
+      onEditInventory = null,
       showEditButton = true,
     } = options;
 
@@ -85,12 +86,14 @@ export default async function displayLibrary(items, options = {}) {
             <div class="borde-overlay" data-genero="${ generoPrincipal }"></div>
             ${item.Recibido === 'NO' ? '<div class="not-received-badge"><span>NO RECIBIDO</span></div>' : ''}
             <div class="card-img-overlay d-flex flex-column justify-content-end pb-1">
-                <div class="position-absolute top-0 start-0 d-flex gap-2 p-3">
+                <div class="position-absolute top-0 start-0 p-3">
                 ${discogsReleaseId !== '' ? `<a href="https://www.discogs.com/es/release/${discogsReleaseId}" target="_blank" class="btn btn-dark btn-sm btn-discorgs">Discogs</a>` : '' }
-                ${wishlistMode && canManageWishlist ? '<button class="btn btn-sm btn-success border-0 btn-wishlist-add" title="Agregar al inventario">✓</button>' : ''}
-                ${wishlistMode && canManageWishlist ? '<button class="btn btn-sm btn-dark border-0 btn-edit-card" title="Editar wishlist">\n                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>\n                </button>' : ''}
-                ${wishlistMode && canManageWishlist ? '<button class="btn btn-sm btn-dark btn-wishlist-remove" title="Quitar de mi wishlist">×</button>' : ''}
-                ${showEditButton && !(wishlistMode && canManageWishlist) ? '<button class="btn btn-sm btn-dark border-0 btn-edit-card" title="Editar">\n                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>\n                </button>' : ''}
+                </div>
+                <div class="position-absolute top-0 end-0 d-flex flex-column gap-2 p-3 card-action-group">
+                ${wishlistMode && canManageWishlist ? '<button class="btn btn-sm btn-success border-0 btn-wishlist-add card-action-btn" title="Mover al inventario">✓</button>' : ''}
+                ${wishlistMode && canManageWishlist ? '<button class="btn btn-sm btn-dark border-0 btn-edit-card card-action-btn" title="Editar wishlist">\n                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>\n                </button>' : ''}
+                ${wishlistMode && canManageWishlist ? '<button class="btn btn-sm btn-danger btn-wishlist-remove card-action-btn" title="Quitar de wishlist" aria-label="Quitar de wishlist">🗑</button>' : ''}
+                ${showEditButton && !(wishlistMode && canManageWishlist) ? '<button class="btn btn-sm btn-dark border-0 btn-edit-card card-action-btn" title="Editar">\n                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>\n                </button>' : ''}
                 </div>
                 <ul class="list-unstyled text-white">
                  <li class="fw-bold text-hide">${ artista }</li>
@@ -110,6 +113,23 @@ export default async function displayLibrary(items, options = {}) {
             event.preventDefault();
             event.stopPropagation();
 
+            if (typeof Swal !== 'undefined') {
+              const confirmation = await Swal.fire({
+                title: 'Mover al inventario',
+                text: `Se moverá "${item.Disco}" desde tu wishlist al inventario.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Mover',
+                cancelButtonText: 'Cancelar',
+                background: '#1a1a1a',
+                color: '#fff'
+              });
+
+              if (!confirmation.isConfirmed) {
+                return;
+              }
+            }
+
             addToInventoryButton.disabled = true;
             try {
               await onAddToInventory(item);
@@ -121,19 +141,35 @@ export default async function displayLibrary(items, options = {}) {
           });
         }
 
-        const editWishlistButton = card.querySelector('.btn-edit-card');
-        if (editWishlistButton && typeof onEditWishlist === 'function' && wishlistMode && canManageWishlist) {
-          editWishlistButton.addEventListener('click', async (event) => {
+        const editButton = card.querySelector('.btn-edit-card');
+        if (editButton && typeof onEditWishlist === 'function' && wishlistMode && canManageWishlist) {
+          editButton.addEventListener('click', async (event) => {
             event.preventDefault();
             event.stopPropagation();
 
-            editWishlistButton.disabled = true;
+            editButton.disabled = true;
             try {
               await onEditWishlist(item);
             } catch (error) {
               console.error('Error editando wishlist:', error);
             } finally {
-              editWishlistButton.disabled = false;
+              editButton.disabled = false;
+            }
+          });
+        }
+
+        if (editButton && typeof onEditInventory === 'function' && !wishlistMode) {
+          editButton.addEventListener('click', async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            editButton.disabled = true;
+            try {
+              await onEditInventory(item);
+            } catch (error) {
+              console.error('Error editando inventario:', error);
+            } finally {
+              editButton.disabled = false;
             }
           });
         }
@@ -144,9 +180,39 @@ export default async function displayLibrary(items, options = {}) {
             event.preventDefault();
             event.stopPropagation();
 
+            if (typeof Swal !== 'undefined') {
+              const confirmation = await Swal.fire({
+                title: 'Quitar de wishlist',
+                text: `Se eliminará "${item.Disco}" de tu wishlist. Esta acción no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Quitar',
+                cancelButtonText: 'Cancelar',
+                background: '#1a1a1a',
+                color: '#fff'
+              });
+
+              if (!confirmation.isConfirmed) {
+                return;
+              }
+            }
+
             removeWishlistButton.disabled = true;
             try {
               await onRemoveWishlist(item);
+
+              if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                  toast: true,
+                  position: 'top-end',
+                  icon: 'success',
+                  title: 'Eliminado de tu wishlist',
+                  showConfirmButton: false,
+                  timer: 1800,
+                  background: '#1a1a1a',
+                  color: '#fff'
+                });
+              }
             } catch (error) {
               console.error('Error actualizando wishlist:', error);
             } finally {

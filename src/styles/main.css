@@ -263,8 +263,26 @@ body.sidebar-open {
 .btn-wishlist-remove {
   opacity: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
-  min-width: 32px;
-  color: #ffd7dc;
+  min-width: 36px;
+  font-size: 0.9rem;
+}
+.card-action-group {
+  align-items: flex-end;
+}
+
+.card-action-btn {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 10px;
+}
+
+.card-action-btn svg {
+  flex-shrink: 0;
 }
 .card-with-border:hover .btn-edit-card {
   opacity: 1;

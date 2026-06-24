@@ -22,7 +22,7 @@ import { loadArtistCatalog } from './services/artistCatalogService.js';
 import { subscribe, isSubscribed, isSupported, syncExistingSubscription } from './services/pushService.js';
 import { getPublicWishlist } from './services/wishlistService.js';
 import { enrichWishlistItemWithDiscogs } from './services/discogsService.js';
-import { addToInventory } from './services/inventoryService.js';
+import { addToInventory, updateInventory } from './services/inventoryService.js';
 import { splitTypeTags } from './utils/typeTags.js';
 
 let backgroundCheckTimeout = null;
@@ -308,8 +308,7 @@ async function openWishlistFormModal(initialData = {}, { title = 'Agregar a mi w
   const wishlistTypes = [...new Set([...defaultTypes, ...availableTypes])];
 
   const tipoOptions = wishlistTypes.map(tipo => {
-    const selected = (initialData.Tipo || '') === tipo ? 'selected' : '';
-    return `<option value="${tipo}" ${selected}>${tipo}</option>`;
+    return `<option value="${tipo}">${tipo}</option>`;
   }).join('');
 
   return Swal.fire({
@@ -341,6 +340,11 @@ async function openWishlistFormModal(initialData = {}, { title = 'Agregar a mi w
     `,
     didOpen: () => {
       const discogsInput = document.getElementById('wishlist-discogs');
+      const tipoSelect = document.getElementById('wishlist-tipo');
+
+      if (tipoSelect && initialData.Tipo) {
+        tipoSelect.value = initialData.Tipo;
+      }
 
       if (discogsInput) {
         discogsInput.value = discogsInput.value.replace(/\D+/g, '');
@@ -377,6 +381,170 @@ async function openWishlistFormModal(initialData = {}, { title = 'Agregar a mi w
       };
     }
   });
+}
+
+async function openInventoryFormModal(initialData = {}, { title, confirmText = 'Guardar', recibidoDefault = 'SI' } = {}) {
+  if (typeof Swal === 'undefined') {
+    return null;
+  }
+
+  const availableTypes = [...new Set(
+    libraryStore.getAllData().flatMap(item => splitTypeTags(item.Tipo))
+  )].sort((a, b) => a.localeCompare(b));
+
+  const defaultTypes = ['Vinilo', 'CD', 'Cassette', 'DVD'];
+  const wishlistTypes = [...new Set([...defaultTypes, ...availableTypes])];
+
+  const tipoOptions = wishlistTypes.map(tipo => {
+    return `<option value="${tipo}">${tipo}</option>`;
+  }).join('');
+
+  return Swal.fire({
+    title: title || (recibidoDefault === 'NO' ? 'Agregar al inventario (No recibido)' : 'Agregar al inventario'),
+    background: '#1a1a1a',
+    color: '#fff',
+    confirmButtonText: confirmText,
+    showCancelButton: true,
+    cancelButtonText: 'Cancelar',
+    focusConfirm: false,
+    customClass: {
+      popup: 'wishlist-swal-popup',
+      htmlContainer: 'wishlist-swal-html',
+    },
+    html: `
+      <div class="wishlist-form-grid">
+        <input id="wishlist-artista" class="swal2-input" placeholder="Artista" autocomplete="off" value="${initialData.Artista || ''}">
+        <input id="wishlist-disco" class="swal2-input" placeholder="Disco" autocomplete="off" value="${initialData.Disco || ''}">
+        <div class="wishlist-form-row wishlist-form-row-2">
+          <input id="wishlist-anio" class="swal2-input" placeholder="Año" autocomplete="off" value="${initialData.Año || ''}">
+          <input id="wishlist-discogs" class="swal2-input" placeholder="ID Discogs" autocomplete="off" value="${initialData.discogsId || initialData.ID || ''}">
+        </div>
+        <select id="wishlist-tipo" class="swal2-select wishlist-type-select">
+          <option value="">Selecciona un tipo</option>
+          ${tipoOptions}
+        </select>
+      </div>
+    `,
+    didOpen: () => {
+      const discogsInput = document.getElementById('wishlist-discogs');
+      const tipoSelect = document.getElementById('wishlist-tipo');
+
+      if (tipoSelect && initialData.Tipo) {
+        tipoSelect.value = initialData.Tipo;
+      }
+
+      if (discogsInput) {
+        discogsInput.value = discogsInput.value.replace(/\D+/g, '');
+        discogsInput.addEventListener('input', () => {
+          discogsInput.value = discogsInput.value.replace(/\D+/g, '');
+        });
+      }
+    },
+    preConfirm: () => {
+      const Artista = document.getElementById('wishlist-artista')?.value.trim();
+      const Disco = document.getElementById('wishlist-disco')?.value.trim();
+      const Año = document.getElementById('wishlist-anio')?.value.trim();
+      const Tipo = document.getElementById('wishlist-tipo')?.value.trim();
+      const discogsId = document.getElementById('wishlist-discogs')?.value.replace(/\D+/g, '').trim();
+      if (!Artista || !Disco) {
+        Swal.showValidationMessage('Artista y disco son obligatorios');
+        return false;
+      }
+
+      return {
+        ...initialData,
+        Artista,
+        Disco,
+        Año,
+        Tipo,
+        discogsId,
+        Genero: '',
+        img: '',
+        imgFULL: '',
+        Recibido: initialData.Recibido || recibidoDefault,
+      };
+    }
+  });
+}
+
+async function openInventoryAddModal(recibido = 'SI') {
+  const result = await openInventoryFormModal({}, { recibidoDefault: recibido });
+
+  if (!result?.isConfirmed || !result.value) {
+    return;
+  }
+
+  try {
+    const enrichedItem = await enrichWishlistItemWithDiscogs(result.value);
+    await addToInventory(enrichedItem);
+    loadLibrary([]);
+
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: recibido === 'NO' ? 'Agregado al inventario como no recibido' : 'Agregado al inventario',
+        showConfirmButton: false,
+        timer: 1800,
+        background: '#1a1a1a',
+        color: '#fff'
+      });
+    }
+  } catch (error) {
+    console.error('No se pudo agregar al inventario:', error);
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        icon: 'error',
+        title: 'No se pudo guardar',
+        text: 'Intenta nuevamente en unos segundos.',
+        background: '#1a1a1a',
+        color: '#fff'
+      });
+    }
+  }
+}
+
+async function openInventoryEditModal(item) {
+  const result = await openInventoryFormModal(item, {
+    title: 'Editar inventario',
+    confirmText: 'Guardar cambios',
+    recibidoDefault: item.Recibido || 'SI',
+  });
+
+  if (!result?.isConfirmed || !result.value) {
+    return;
+  }
+
+  try {
+    const enrichedItem = await enrichWishlistItemWithDiscogs(result.value);
+    await updateInventory(item, enrichedItem);
+    loadLibrary([]);
+
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Inventario actualizado',
+        showConfirmButton: false,
+        timer: 1800,
+        background: '#1a1a1a',
+        color: '#fff'
+      });
+    }
+  } catch (error) {
+    console.error('No se pudo editar el inventario:', error);
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        icon: 'error',
+        title: 'No se pudo guardar',
+        text: 'Intenta nuevamente en unos segundos.',
+        background: '#1a1a1a',
+        color: '#fff'
+      });
+    }
+  }
 }
 
 async function openWishlistAddModal() {
@@ -496,6 +664,16 @@ function setupGlobalActionMenu() {
         return;
       }
 
+      if (action === 'recibido') {
+        await openInventoryAddModal('SI');
+        return;
+      }
+
+      if (action === 'no-recibido') {
+        await openInventoryAddModal('NO');
+        return;
+      }
+
       if (typeof Swal !== 'undefined') {
         Swal.fire({
           icon: 'info',
@@ -601,7 +779,11 @@ async function renderCurrentView() {
     return;
   }
 
-  await displayLibrary(libraryStore.getFilteredData());
+  await displayLibrary(libraryStore.getFilteredData(), {
+    onEditInventory: async (item) => {
+      await openInventoryEditModal(item);
+    },
+  });
 }
 
 function showInstallBanner() {
