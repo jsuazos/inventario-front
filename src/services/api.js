@@ -82,8 +82,18 @@ export class ApiClient {
     return this.request('PUT', endpoint, body, options);
   }
 
-  async delete(endpoint, options = {}) {
-    return this.request('DELETE', endpoint, null, options);
+  async delete(endpoint, bodyOrOptions = null, maybeOptions = {}) {
+    const hasBody = bodyOrOptions && Object.prototype.hasOwnProperty.call(bodyOrOptions, 'body');
+
+    if (hasBody && Object.keys(bodyOrOptions).length <= 2) {
+      return this.request('DELETE', endpoint, bodyOrOptions.body, maybeOptions);
+    }
+
+    if (bodyOrOptions && !hasBody && (maybeOptions === undefined || Object.keys(maybeOptions).length === 0)) {
+      return this.request('DELETE', endpoint, null, bodyOrOptions);
+    }
+
+    return this.request('DELETE', endpoint, bodyOrOptions, maybeOptions);
   }
 
   async request(method, endpoint, body = null, options = {}) {

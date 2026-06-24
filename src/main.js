@@ -22,7 +22,7 @@ import { loadArtistCatalog } from './services/artistCatalogService.js';
 import { subscribe, isSubscribed, isSupported, syncExistingSubscription } from './services/pushService.js';
 import { getPublicWishlist } from './services/wishlistService.js';
 import { enrichWishlistItemWithDiscogs } from './services/discogsService.js';
-import { addToInventory, updateInventory } from './services/inventoryService.js';
+import { addToInventory, removeFromInventory, updateInventory } from './services/inventoryService.js';
 import { splitTypeTags } from './utils/typeTags.js';
 
 let backgroundCheckTimeout = null;
@@ -782,6 +782,10 @@ async function renderCurrentView() {
   await displayLibrary(libraryStore.getFilteredData(), {
     onEditInventory: async (item) => {
       await openInventoryEditModal(item);
+    },
+    onRemoveInventory: async (item) => {
+      await removeFromInventory(item);
+      loadLibrary([]);
     },
   });
 }
