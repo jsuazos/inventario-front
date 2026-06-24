@@ -1,4 +1,5 @@
 import { authStore } from '../state/authStore.js';
+import { closeSidebar } from '../utils/ui.js';
 
 class Aside extends HTMLElement {
   constructor() {
@@ -71,6 +72,14 @@ class Aside extends HTMLElement {
       if (wishlistLink && user) {
         wishlistLink.textContent = `♡ Wishlist de ${user}`;
       }
+    });
+
+    this.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.matchMedia('(max-width: 991.98px)').matches) {
+          closeSidebar();
+        }
+      });
     });
   }
 

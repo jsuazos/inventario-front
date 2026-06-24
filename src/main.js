@@ -9,7 +9,7 @@ import './components/Footer.js';
 
 import { loadLibrary, checkForUpdatesInBackground } from "./services/libraryService.js";
 import { filterLibrary } from "./utils/libraryFilters.js";
-import { toggleSidebar } from "./utils/ui.js";
+import { closeSidebar, toggleSidebar } from "./utils/ui.js";
 // import { clearFilters } from "./utils/libraryFilters.js";
 import { clearLibrary, modalLogin, updateLoginUI } from "./utils/modals.js";
 import { authStore } from "./state/authStore.js";
@@ -122,6 +122,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   setupGlobalActionMenu();
 
   window.addEventListener('hashchange', () => {
+    closeSidebar();
     syncRouteView().catch(() => {});
   });
 

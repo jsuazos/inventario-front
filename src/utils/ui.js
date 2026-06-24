@@ -35,10 +35,19 @@ export function toggleSidebar() {
     // Cerrar al hacer clic fuera
     document.addEventListener("click", (e) => {
     if (!sidebar.contains(e.target) && !tSidebar.contains(e.target)) {
-        sidebar.classList.remove("show");
-        document.body.classList.remove("sidebar-open");
+        closeSidebar();
     }
     });
+}
+
+export function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) {
+        return;
+    }
+
+    sidebar.classList.remove('show');
+    document.body.classList.remove('sidebar-open');
 }
 
 export function loadAlphabet(){
