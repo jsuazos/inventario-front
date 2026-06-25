@@ -27,6 +27,7 @@ class Aside extends HTMLElement {
         <ul class="nav flex-column">
             <li class="nav-item"><a class="nav-link text-white" href="#biblioteca">🎵 Biblioteca</a></li>
             <li class="nav-item d-none" id="wishlist-link-item"><a class="nav-link text-white" id="wishlist-link" href="#wishlist/me">♡ Mi wishlist</a></li>
+            <li class="nav-item"><a class="nav-link text-white" href="#wishlists">👥 Wishlists públicas</a></li>
             <li class="nav-item mx-3">
             <div class="top-estilos">
                 <h6>🔥 Top 10</h6>

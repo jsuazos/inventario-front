@@ -20,7 +20,7 @@ import { errorHandler } from "./services/errorHandler.js";
 import { setupOnlineOfflineHandlers } from './services/dbService.js';
 import { loadArtistCatalog } from './services/artistCatalogService.js';
 import { subscribe, isSubscribed, isSupported, syncExistingSubscription } from './services/pushService.js';
-import { getPublicWishlist } from './services/wishlistService.js';
+import { getPublicWishlist, getWishlistUsers } from './services/wishlistService.js';
 import { enrichWishlistItemWithDiscogs } from './services/discogsService.js';
 import { addToInventory, removeFromInventory, updateInventory } from './services/inventoryService.js';
 import { splitTypeTags } from './utils/typeTags.js';
@@ -31,12 +31,31 @@ let publicWishlistView = {
   user: '',
   items: [],
 };
+let publicWishlistUsers = [];
 let globalActionMenu = null;
+let wishlistStatusFilter = 'all';
 const WISHLIST_STATUS_OPTIONS = [
   { value: 'wishlist', label: 'Wishlist' },
   { value: 'pedido', label: 'Pedido' },
   { value: 'comprado', label: 'Comprado' },
 ];
+
+function normalizeWishlistStatus(status) {
+  const normalized = String(status || 'wishlist').trim().toLowerCase();
+  return WISHLIST_STATUS_OPTIONS.some(option => option.value === normalized) ? normalized : 'wishlist';
+}
+
+function getWishlistStatusLabel(status) {
+  return WISHLIST_STATUS_OPTIONS.find(option => option.value === status)?.label || 'Wishlist';
+}
+
+function filterWishlistItemsByStatus(items) {
+  if (wishlistStatusFilter === 'all') {
+    return items;
+  }
+
+  return items.filter(item => normalizeWishlistStatus(item.status) === wishlistStatusFilter);
+}
 
 function syncGlobalActionDock() {
   const wrapper = document.getElementById('global-action-menu');
@@ -237,6 +256,10 @@ function parseRoute() {
     return { mode: 'library' };
   }
 
+  if (hash === 'wishlists') {
+    return { mode: 'wishlists' };
+  }
+
   const match = hash.match(/^wishlist\/(.+)$/i);
   if (match) {
     return { mode: 'wishlist', user: decodeURIComponent(match[1]) };
@@ -254,6 +277,14 @@ function toggleFiltersVisibility(isVisible) {
 
 function buildWishlistBanner(label, isOwnView) {
   const routeUser = isOwnView ? 'me' : encodeURIComponent(label);
+  const filterButtons = [
+    { value: 'all', label: 'Todos' },
+    ...WISHLIST_STATUS_OPTIONS,
+  ].map(option => `
+    <button type="button" class="wishlist-filter-chip ${wishlistStatusFilter === option.value ? 'is-active' : ''}" data-status-filter="${option.value}">
+      ${option.label}
+    </button>
+  `).join('');
 
   return `
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 p-3 rounded-3" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
@@ -261,6 +292,7 @@ function buildWishlistBanner(label, isOwnView) {
         <small class="text-info text-uppercase">Wishlist pública</small>
         <h4 class="text-white mb-1">Wishlist de ${label}</h4>
         <p class="text-secondary mb-0">Disponible públicamente dentro de la app.</p>
+        <div class="wishlist-filter-chip-row mt-3">${filterButtons}</div>
       </div>
       <div class="d-flex gap-2 align-items-center">
         <a href="#biblioteca" class="btn btn-outline-light btn-sm">Volver a biblioteca</a>
@@ -270,8 +302,28 @@ function buildWishlistBanner(label, isOwnView) {
   `;
 }
 
+function buildWishlistsBanner(usersCount) {
+  return `
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 p-3 rounded-3" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+      <div>
+        <small class="text-info text-uppercase">Comunidad</small>
+        <h4 class="text-white mb-1">Wishlists públicas</h4>
+        <p class="text-secondary mb-0">Explora las listas públicas disponibles dentro de la app.</p>
+      </div>
+      <div class="text-secondary small">${usersCount} usuario${usersCount === 1 ? '' : 's'} con wishlist pública</div>
+    </div>
+  `;
+}
+
 function attachWishlistBannerActions() {
   const copyButton = document.getElementById('copy-wishlist-link');
+
+  document.querySelectorAll('[data-status-filter]').forEach(button => {
+    button.onclick = async () => {
+      wishlistStatusFilter = button.dataset.statusFilter || 'all';
+      await renderCurrentView();
+    };
+  });
 
   if (!copyButton) {
     return;
@@ -744,8 +796,13 @@ async function syncRouteView() {
         items: await getPublicWishlist(route.user),
       };
     }
+  } else if (route.mode === 'wishlists') {
+    toggleFiltersVisibility(false);
+    wishlistStatusFilter = 'all';
+    publicWishlistUsers = await getWishlistUsers();
   } else {
     toggleFiltersVisibility(true);
+    wishlistStatusFilter = 'all';
   }
 
   await renderCurrentView();
@@ -753,14 +810,19 @@ async function syncRouteView() {
 
 async function renderCurrentView() {
   const route = parseRoute();
+  const artistBanner = document.getElementById('artistBanner');
+  const grid = document.getElementById('libraryGrid');
+  const counter = document.getElementById('resultCount');
 
   if (route.mode === 'wishlist') {
     const isOwnView = route.user === 'me';
     const label = isOwnView ? (authStore.user || 'Mi usuario') : publicWishlistView.user || route.user;
-    const items = isOwnView ? wishlistStore.getItems() : publicWishlistView.items;
+    const sourceItems = isOwnView ? wishlistStore.getItems() : publicWishlistView.items;
+    const items = filterWishlistItemsByStatus(sourceItems);
+    const filterLabel = wishlistStatusFilter === 'all' ? 'Todos' : getWishlistStatusLabel(wishlistStatusFilter);
 
     await displayLibrary(items, {
-      counterText: `Wishlist de ${label} · ${items.length} item${items.length === 1 ? '' : 's'}`,
+      counterText: `Wishlist de ${label} · ${filterLabel} · ${items.length} item${items.length === 1 ? '' : 's'}`,
       bannerHtml: buildWishlistBanner(label, isOwnView),
       fetchArtistBanner: false,
       wishlistMode: true,
@@ -796,6 +858,46 @@ async function renderCurrentView() {
       },
     });
     attachWishlistBannerActions();
+    return;
+  }
+
+  if (route.mode === 'wishlists') {
+    if (!artistBanner || !grid || !counter) {
+      return;
+    }
+
+    counter.textContent = `Wishlists públicas · ${publicWishlistUsers.length} usuario${publicWishlistUsers.length === 1 ? '' : 's'}`;
+    artistBanner.innerHTML = buildWishlistsBanner(publicWishlistUsers.length);
+    grid.innerHTML = '';
+
+    if (window.alphabetObserver) {
+      window.alphabetObserver.disconnect();
+      window.alphabetObserver = null;
+    }
+
+    if (!publicWishlistUsers.length) {
+      grid.innerHTML = '<div class="col-12"><div class="alert alert-secondary">Todavía no hay wishlists públicas para mostrar.</div></div>';
+      return;
+    }
+
+    publicWishlistUsers.forEach(user => {
+      const card = document.createElement('div');
+      card.className = 'col-12 col-sm-6 col-lg-4 col-xl-3';
+      card.innerHTML = `
+        <a href="#wishlist/${encodeURIComponent(user)}" class="wishlist-user-card text-decoration-none d-block h-100">
+          <div class="wishlist-user-card__inner h-100">
+            <div class="wishlist-user-card__icon">♡</div>
+            <div>
+              <small class="text-info text-uppercase d-block mb-1">Wishlist pública</small>
+              <h5 class="text-white mb-1">${user}</h5>
+              <p class="text-secondary mb-0 small">Ver discos deseados de ${user}</p>
+            </div>
+          </div>
+        </a>
+      `;
+      grid.appendChild(card);
+    });
+
     return;
   }
 

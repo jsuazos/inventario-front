@@ -305,6 +305,64 @@ body.sidebar-open {
 .badge-wishlist-status.status-comprado {
   background: #059669;
 }
+
+.wishlist-user-card__inner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(30, 35, 45, 0.92) 0%, rgba(18, 22, 30, 0.94) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.wishlist-user-card:hover .wishlist-user-card__inner {
+  transform: translateY(-2px);
+  border-color: rgba(13, 202, 240, 0.35);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.24);
+}
+
+.wishlist-user-card__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: #fff;
+  background: linear-gradient(180deg, #5b7cff 0%, #7a4df5 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.wishlist-filter-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.wishlist-filter-chip {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #d7dee8;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.wishlist-filter-chip:hover {
+  border-color: rgba(13, 202, 240, 0.32);
+  transform: translateY(-1px);
+}
+
+.wishlist-filter-chip.is-active {
+  background: rgba(13, 202, 240, 0.18);
+  border-color: rgba(13, 202, 240, 0.45);
+  color: #b9f6ff;
+}
 .card-with-border:hover .btn-edit-card {
   opacity: 1;
 }
