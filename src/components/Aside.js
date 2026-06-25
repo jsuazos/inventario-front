@@ -81,6 +81,15 @@ class Aside extends HTMLElement {
         }
       });
     });
+
+    const clearLibraryButton = this.querySelector('#btn-clear-library');
+    if (clearLibraryButton) {
+      clearLibraryButton.addEventListener('click', () => {
+        if (window.matchMedia('(max-width: 991.98px)').matches) {
+          closeSidebar();
+        }
+      });
+    }
   }
 
   disconnectedCallback() {

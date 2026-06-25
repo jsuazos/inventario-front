@@ -32,6 +32,11 @@ let publicWishlistView = {
   items: [],
 };
 let globalActionMenu = null;
+const WISHLIST_STATUS_OPTIONS = [
+  { value: 'wishlist', label: 'Wishlist' },
+  { value: 'pedido', label: 'Pedido' },
+  { value: 'comprado', label: 'Comprado' },
+];
 
 function syncGlobalActionDock() {
   const wrapper = document.getElementById('global-action-menu');
@@ -311,6 +316,10 @@ async function openWishlistFormModal(initialData = {}, { title = 'Agregar a mi w
   const tipoOptions = wishlistTypes.map(tipo => {
     return `<option value="${tipo}">${tipo}</option>`;
   }).join('');
+  const statusOptions = WISHLIST_STATUS_OPTIONS.map(status => {
+    const selected = (initialData.status || 'wishlist') === status.value ? 'selected' : '';
+    return `<option value="${status.value}" ${selected}>${status.label}</option>`;
+  }).join('');
 
   return Swal.fire({
     title,
@@ -336,15 +345,23 @@ async function openWishlistFormModal(initialData = {}, { title = 'Agregar a mi w
           <option value="">Selecciona un tipo</option>
           ${tipoOptions}
         </select>
+        <select id="wishlist-status" class="swal2-select wishlist-type-select">
+          ${statusOptions}
+        </select>
         <textarea id="wishlist-notes" class="swal2-textarea" placeholder="Notas (opcional)">${initialData.notes || ''}</textarea>
       </div>
     `,
     didOpen: () => {
       const discogsInput = document.getElementById('wishlist-discogs');
       const tipoSelect = document.getElementById('wishlist-tipo');
+      const statusSelect = document.getElementById('wishlist-status');
 
       if (tipoSelect && initialData.Tipo) {
         tipoSelect.value = initialData.Tipo;
+      }
+
+      if (statusSelect) {
+        statusSelect.value = initialData.status || 'wishlist';
       }
 
       if (discogsInput) {
@@ -359,6 +376,7 @@ async function openWishlistFormModal(initialData = {}, { title = 'Agregar a mi w
       const Disco = document.getElementById('wishlist-disco')?.value.trim();
       const Año = document.getElementById('wishlist-anio')?.value.trim();
       const Tipo = document.getElementById('wishlist-tipo')?.value.trim();
+      const status = document.getElementById('wishlist-status')?.value.trim() || 'wishlist';
       const discogsId = document.getElementById('wishlist-discogs')?.value.replace(/\D+/g, '').trim();
       const notes = document.getElementById('wishlist-notes')?.value.trim();
 
@@ -374,6 +392,7 @@ async function openWishlistFormModal(initialData = {}, { title = 'Agregar a mi w
         Año,
         Tipo,
         discogsId,
+        status,
         notes,
         Genero: '',
         img: '',

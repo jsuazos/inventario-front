@@ -50,6 +50,7 @@ export default async function displayLibrary(items, options = {}) {
         const tipo = String(item.Tipo || '');
         const genero = String(item.Genero || '');
         const artista = String(item.Artista || '');
+        const wishlistStatus = String(item.status || 'wishlist');
         const discogsId = String(item.ID || item.discogsId || '').trim();
         const discogsReleaseId = discogsId.replace(/^[^0-9]+/, '');
         let imageUrl =  item.imgFULL && 
@@ -101,7 +102,10 @@ export default async function displayLibrary(items, options = {}) {
                  <li class="fw-bold text-hide">${ artista }</li>
                  <li class="text-hide"><small>${item.Disco}</small></li>
                  <li class="text-hide"><small>${item.Año}</small></li>
-                 <li><span class="badge badge-type mt-1">${tipo || 'Wishlist'}</span></li>
+                 <li class="d-flex flex-wrap gap-1"> 
+                   <span class="badge badge-type mt-1">${tipo || 'Wishlist'}</span>
+                   ${wishlistMode ? `<span class="badge badge-wishlist-status mt-1 status-${wishlistStatus}">${wishlistStatus.toUpperCase()}</span>` : ''}
+                 </li>
                  </ul>
             </div>
           </div>

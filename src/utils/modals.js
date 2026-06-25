@@ -41,15 +41,17 @@ function showLoginModal() {
   Swal.fire({
     title: 'Iniciar sesión',
     html:
-      `<input type="text" id="swal-usuario" class="swal2-input" placeholder="Usuario">
-       <div style="position:relative">
-         <input type="password" id="swal-contrasena" class="swal2-input" placeholder="Contraseña" style="padding-right:40px">
-         <button type="button" id="toggle-password" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#aaa;cursor:pointer;padding:4px;display:flex;align-items:center;line-height:1" tabindex="-1">
-           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-             <circle cx="12" cy="12" r="3"></circle>
-           </svg>
-         </button>
+      `<div class="login-form-grid">
+         <input type="text" id="swal-usuario" class="swal2-input login-swal-input" placeholder="Usuario" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
+         <div class="login-password-wrap">
+           <input type="password" id="swal-contrasena" class="swal2-input login-swal-input login-password-input" placeholder="Contraseña" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
+           <button type="button" id="toggle-password" class="login-password-toggle" tabindex="-1" aria-label="Mostrar u ocultar contraseña">
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+               <circle cx="12" cy="12" r="3"></circle>
+             </svg>
+           </button>
+         </div>
        </div>`,
     confirmButtonText: 'Ingresar',
     focusConfirm: false,
@@ -57,6 +59,10 @@ function showLoginModal() {
     background: '#1a1a1a',
     color: '#fff',
     backdrop: 'rgba(0,0,0,0.85)',
+    customClass: {
+      popup: 'login-swal-popup',
+      htmlContainer: 'login-swal-html',
+    },
     didOpen: () => {
       const toggle = document.getElementById('toggle-password');
       const input = document.getElementById('swal-contrasena');
