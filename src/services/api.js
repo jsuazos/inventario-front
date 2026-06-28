@@ -82,6 +82,10 @@ export class ApiClient {
     return this.request('PUT', endpoint, body, options);
   }
 
+  async patch(endpoint, body, options = {}) {
+    return this.request('PATCH', endpoint, body, options);
+  }
+
   async delete(endpoint, bodyOrOptions = null, maybeOptions = {}) {
     const hasBody = bodyOrOptions && Object.prototype.hasOwnProperty.call(bodyOrOptions, 'body');
 
@@ -117,7 +121,7 @@ export class ApiClient {
         }
       };
 
-      if (body && (method === 'POST' || method === 'PUT')) {
+      if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE')) {
         fetchOptions.body = JSON.stringify(body);
       }
 

@@ -14,3 +14,8 @@ export async function removeFromInventory(originalItem) {
   const response = await apiClient.delete('/inventario', { originalItem }, { timeout: 15000 });
   return response.item;
 }
+
+export async function markInventoryReceived(originalItem) {
+  const response = await apiClient.patch('/inventario/recibido', { originalItem }, { timeout: 15000 });
+  return response.item;
+}

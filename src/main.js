@@ -22,7 +22,7 @@ import { loadArtistCatalog } from './services/artistCatalogService.js';
 import { subscribe, isSubscribed, isSupported, syncExistingSubscription } from './services/pushService.js';
 import { getPublicWishlist, getWishlistUsers } from './services/wishlistService.js';
 import { enrichWishlistItemWithDiscogs } from './services/discogsService.js';
-import { addToInventory, removeFromInventory, updateInventory } from './services/inventoryService.js';
+import { addToInventory, markInventoryReceived, removeFromInventory, updateInventory } from './services/inventoryService.js';
 import { splitTypeTags } from './utils/typeTags.js';
 
 let backgroundCheckTimeout = null;
@@ -223,6 +223,40 @@ function setupBackgroundRefresh() {
       triggerBackgroundRefresh(1000);
     }
   });
+}
+
+function isSameInventoryItem(left = {}, right = {}) {
+  if (left.Orden && right.Orden) {
+    return String(left.Orden) === String(right.Orden);
+  }
+
+  return String(left.ID || '') === String(right.ID || '') &&
+    String(left.Artista || '') === String(right.Artista || '') &&
+    String(left.Disco || '') === String(right.Disco || '') &&
+    String(left.Año || '') === String(right.Año || '') &&
+    String(left.Recibido || '') === String(right.Recibido || '');
+}
+
+function upsertInventoryItemLocally(originalItem, updatedItem, { removeIfHidden = false, addIfMissing = false } = {}) {
+  const currentData = libraryStore.getAllData();
+  const nextData = [...currentData];
+  const index = nextData.findIndex(item => isSameInventoryItem(item, originalItem));
+
+  if (removeIfHidden && updatedItem?.Visible === 'NO') {
+    if (index !== -1) {
+      nextData.splice(index, 1);
+    }
+    libraryStore.loadData(nextData);
+    return;
+  }
+
+  if (index !== -1) {
+    nextData[index] = { ...nextData[index], ...updatedItem };
+  } else if (addIfMissing && updatedItem?.Visible !== 'NO') {
+    nextData.unshift(updatedItem);
+  }
+
+  libraryStore.loadData(nextData);
 }
 
 async function setupPushNotifications() {
@@ -548,8 +582,8 @@ async function openInventoryAddModal(recibido = 'SI') {
 
   try {
     const enrichedItem = await enrichWishlistItemWithDiscogs(result.value);
-    await addToInventory(enrichedItem);
-    loadLibrary([]);
+    const savedItem = await addToInventory(enrichedItem);
+    upsertInventoryItemLocally(savedItem, savedItem, { addIfMissing: true });
 
     if (typeof Swal !== 'undefined') {
       Swal.fire({
@@ -590,8 +624,8 @@ async function openInventoryEditModal(item) {
 
   try {
     const enrichedItem = await enrichWishlistItemWithDiscogs(result.value);
-    await updateInventory(item, enrichedItem);
-    loadLibrary([]);
+    const updatedItem = await updateInventory(item, enrichedItem);
+    upsertInventoryItemLocally(item, updatedItem);
 
     if (typeof Swal !== 'undefined') {
       Swal.fire({
@@ -833,9 +867,9 @@ async function renderCurrentView() {
           Recibido: 'SI',
         });
 
-        await addToInventory(enrichedItem);
+        const savedItem = await addToInventory(enrichedItem);
         await wishlistStore.remove(item.rowId);
-        loadLibrary([]);
+        upsertInventoryItemLocally(savedItem, savedItem, { addIfMissing: true });
 
         if (typeof Swal !== 'undefined') {
           Swal.fire({
@@ -905,9 +939,13 @@ async function renderCurrentView() {
     onEditInventory: async (item) => {
       await openInventoryEditModal(item);
     },
+    onMarkReceived: async (item) => {
+      const updatedItem = await markInventoryReceived(item);
+      upsertInventoryItemLocally(item, updatedItem);
+    },
     onRemoveInventory: async (item) => {
-      await removeFromInventory(item);
-      loadLibrary([]);
+      const updatedItem = await removeFromInventory(item);
+      upsertInventoryItemLocally(item, updatedItem, { removeIfHidden: true });
     },
   });
 }

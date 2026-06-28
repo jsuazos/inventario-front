@@ -38,7 +38,7 @@ export async function checkForUpdatesInBackground() {
 
   try {
     // showBackgroundUpdateNotification('🔄 Buscando actualizaciones ...', 'info');
-    const filteredApiData = await fetchLibraryFromApi();
+    const filteredApiData = await fetchLibraryFromApi(true);
 
     // Comparar con datos locales usando comparación detallada
     const localData = libraryStore.getAllData();
@@ -99,8 +99,9 @@ function getDetailedChanges(oldArray, newArray) {
   return { added, removed };
 }
 
-async function fetchLibraryFromApi() {
-  const data = await apiClient.get('/inventario-public', { timeout: 15000 });
+async function fetchLibraryFromApi(forceRefresh = false) {
+  const endpoint = forceRefresh ? '/inventario-public?refresh=1' : '/inventario-public';
+  const data = await apiClient.get(endpoint, { timeout: 15000 });
   return Array.isArray(data.data) ? data.data : [];
 }
 

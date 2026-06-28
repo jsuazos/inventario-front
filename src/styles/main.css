@@ -270,6 +270,11 @@ body.sidebar-open {
   transition: opacity 0.2s ease, transform 0.2s ease;
   min-width: 36px;
 }
+.btn-mark-received {
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  min-width: 36px;
+}
 .card-action-group {
   align-items: flex-end;
 }
@@ -375,11 +380,15 @@ body.sidebar-open {
 .card-with-border:hover .btn-inventory-remove {
   opacity: 1;
 }
+.card-with-border:hover .btn-mark-received {
+  opacity: 1;
+}
 
 body.auth-editor .btn-edit-card,
 body.auth-editor .btn-wishlist-add,
 body.auth-editor .btn-wishlist-remove,
-body.auth-editor .btn-inventory-remove {
+body.auth-editor .btn-inventory-remove,
+body.auth-editor .btn-mark-received {
   opacity: 1;
 }
 
@@ -393,6 +402,9 @@ body:not(.auth-editor) .btn-wishlist-remove {
   display: none;
 }
 body:not(.auth-editor) .btn-inventory-remove {
+  display: none;
+}
+body:not(.auth-editor) .btn-mark-received {
   display: none;
 }
 
@@ -504,7 +516,8 @@ body:not(.auth-editor) .btn-inventory-remove {
 .btn-edit-card,
 .btn-wishlist-add,
 .btn-wishlist-remove,
-.btn-inventory-remove {
+.btn-inventory-remove,
+.btn-mark-received {
   position: relative;
   z-index: 100000;
 }
