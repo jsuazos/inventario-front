@@ -277,6 +277,7 @@ body.sidebar-open {
 }
 .card-action-group {
   align-items: flex-end;
+  z-index: 4;
 }
 
 .card-action-btn {
@@ -433,6 +434,11 @@ body:not(.auth-editor) .btn-mark-received {
 .card-with-border {
   position: relative;
   font-size: 0.8rem;
+}
+
+.card-with-border > .card {
+  position: relative;
+  z-index: 1;
 }
 
 .card-with-border::before {

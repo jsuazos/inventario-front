@@ -161,6 +161,18 @@ export async function loadLibrary(libraryData) {
 
   finishLoad(cachedData);
 
+  if (navigator.onLine) {
+    fetchLibraryFromApi()
+      .then(apiData => {
+        libraryStore.loadData(apiData);
+        populateFilters(apiData);
+        aplicarColoresPorGenero();
+      })
+      .catch(e => {
+        console.warn('Background refresh falló (modo offline mantenido):', e.message);
+      });
+  }
+
   return cachedData;
 }
 
