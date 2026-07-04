@@ -10,24 +10,28 @@ class Aside extends HTMLElement {
   connectedCallback() {
     this.innerHTML = `
         <aside id="sidebar" class="bg-dark text-white px-3 pt-3 pb-5 sidebar-custom d-flex flex-column min-vh-100">
-        <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-4">Explorar</h5>
-            <login-modal></login-modal>
+        <div class="d-flex justify-content-end align-items-center mb-4" id="sidebar-login-slot" style="min-height:36px;">
+          <button id="btnLogoutSidebar" class="btn btn-outline-info border-0" title="Cerrar sesi&oacute;n">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
         </div>
+        <h5 class="mb-4" style="margin-top:-16px;">Explorar</h5>
 
         <div id="admin-section" class="d-none">
           <hr class="border-secondary">
-          <h6 class="text-info mb-2">Administración</h6>
           <div id="admin-controls">
-            <p class="small text-secondary mb-0">Sesión: <span id="admin-username" class="text-info"></span></p>
+            <p class="small text-secondary mb-0"><span id="admin-username" class="text-info"></span></p>
           </div>
           <hr class="border-secondary">
         </div>
 
-        <ul class="nav flex-column">
+        <ul id="sidebar-nav" class="nav flex-column">
             <li class="nav-item"><a class="nav-link text-white" href="#biblioteca">🎵 Biblioteca</a></li>
             <li class="nav-item d-none" id="wishlist-link-item"><a class="nav-link text-white" id="wishlist-link" href="#wishlist/me">♡ Mi wishlist</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="#wishlists">👥 Wishlists públicas</a></li>
             <li class="nav-item mx-3">
             <div class="top-estilos">
                 <h6>🔥 Top 10</h6>

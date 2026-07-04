@@ -9,6 +9,7 @@ import {
   showBackgroundUpdateNotification,
   showDetailedChangesNotification,
 } from './backgroundNotificationService.js';
+import { authStore } from '../state/authStore.js';
 import { libraryStore } from '../state/libraryStore.js';
 import { errorHandler } from './errorHandler.js';
 
@@ -99,8 +100,9 @@ function getDetailedChanges(oldArray, newArray) {
   return { added, removed };
 }
 
-async function fetchLibraryFromApi(forceRefresh = false) {
-  const endpoint = forceRefresh ? '/inventario-public?refresh=1' : '/inventario-public';
+export async function fetchLibraryFromApi(forceRefresh = false) {
+  if (!authStore.isLoggedIn) return [];
+  const endpoint = forceRefresh ? '/inventario?refresh=1' : '/inventario';
   const data = await apiClient.get(endpoint, { timeout: 15000 });
   return Array.isArray(data.data) ? data.data : [];
 }

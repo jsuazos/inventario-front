@@ -37,7 +37,117 @@ export function clearLibrary() {
   });
 }
 
-function showLoginModal() {
+export function showRegisterModal() {
+  Swal.fire({
+    title: 'Crear cuenta',
+    html:
+      `<div class="login-form-grid">
+         <input type="text" id="swal-usuario" class="swal2-input login-swal-input" placeholder="Usuario" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
+         <div class="login-password-wrap">
+           <input type="password" id="swal-contrasena" class="swal2-input login-swal-input login-password-input" placeholder="Contraseña" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
+           <button type="button" id="toggle-password" class="login-password-toggle" tabindex="-1" aria-label="Mostrar u ocultar contraseña">
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+               <circle cx="12" cy="12" r="3"></circle>
+             </svg>
+           </button>
+         </div>
+         <p style="color:#888;font-size:0.8rem;margin:8px 0 0;text-align:center">El usuario puede contener letras, números y guión bajo</p>
+       </div>`,
+    confirmButtonText: 'Crear cuenta',
+    showCancelButton: true,
+    cancelButtonText: 'Cancelar',
+    background: '#1a1a1a',
+    color: '#fff',
+    backdrop: 'rgba(0,0,0,0.85)',
+    customClass: {
+      popup: 'login-swal-popup',
+      htmlContainer: 'login-swal-html',
+    },
+    didOpen: () => {
+      const toggle = document.getElementById('toggle-password');
+      const input = document.getElementById('swal-contrasena');
+      if (toggle && input) {
+        toggle.addEventListener('click', () => {
+          const isPassword = input.type === 'password';
+          input.type = isPassword ? 'text' : 'password';
+          const svg = toggle.querySelector('svg');
+          svg.innerHTML = isPassword
+            ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path><line x1="23" y1="1" x2="1" y2="23"></line><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>'
+            : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+        });
+      }
+    },
+    preConfirm: async () => {
+      const usuario = document.getElementById('swal-usuario').value.trim();
+      const contrasena = document.getElementById('swal-contrasena').value;
+
+      if (!usuario || !contrasena) {
+        Swal.showValidationMessage('Debe ingresar usuario y contraseña');
+        return false;
+      }
+
+      if (usuario.length < 3) {
+        Swal.showValidationMessage('El usuario debe tener al menos 3 caracteres');
+        return false;
+      }
+
+      if (contrasena.length < 4) {
+        Swal.showValidationMessage('La contraseña debe tener al menos 4 caracteres');
+        return false;
+      }
+
+      if (!/^[a-zA-Z0-9_]+$/.test(usuario)) {
+        Swal.showValidationMessage('Solo letras, números y guión bajo');
+        return false;
+      }
+
+      try {
+        const { apiUrl } = await configService();
+        const data = await fetchConStatusOk(`${apiUrl}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuario, contrasena })
+        });
+
+        return data;
+      } catch (error) {
+        Swal.showValidationMessage(error.message);
+        return false;
+      }
+    }
+  }).then(result => {
+    if (result.isConfirmed && result.value) {
+      authStore.login(result.value.token, result.value.usuario);
+      updateLoginUI();
+      Swal.fire({
+        icon: 'success',
+        title: `¡Bienvenido, ${result.value.usuario}!`,
+        html: `
+          <div style="text-align:left;color:#ccc;line-height:1.7;font-size:0.9rem">
+            <p style="margin:0 0 12px">Tu cuenta se creó correctamente. Aquí tienes algunos consejos para empezar:</p>
+            <ul style="margin:0;padding-left:18px">
+              <li>Usa el botón <strong style="color:#fff">+</strong> en la esquina inferior derecha para agregar discos a tu inventario.</li>
+              <li>Filtra tu colección por artista, género o año usando la barra de búsqueda.</li>
+              <li>Agrega discos a tu <strong style="color:#fff">wishlist</strong> desde el menú lateral y muévelos al inventario cuando los consigas.</li>
+              <li>Mantente online para recibir notificaciones de cambios en tu biblioteca.</li>
+            </ul>
+          </div>
+        `,
+        confirmButtonText: 'Comenzar',
+        background: '#1a1a1a',
+        color: '#fff',
+        backdrop: 'rgba(0,0,0,0.85)',
+        customClass: {
+          confirmButton: 'btn btn-info',
+        },
+        buttonsStyling: false,
+      });
+    }
+  });
+}
+
+export function showLoginModal() {
   Swal.fire({
     title: 'Iniciar sesión',
     html:
@@ -52,6 +162,10 @@ function showLoginModal() {
              </svg>
            </button>
          </div>
+         <p style="color:#888;font-size:0.85rem;margin:12px 0 0;text-align:center">
+¿No tienes cuenta?
+            <a href="#" id="link-to-register" style="color:#0dcaf0;text-decoration:none">Regístrate</a>
+         </p>
        </div>`,
     confirmButtonText: 'Ingresar',
     focusConfirm: false,
@@ -74,6 +188,15 @@ function showLoginModal() {
           svg.innerHTML = isPassword
             ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path><line x1="23" y1="1" x2="1" y2="23"></line><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>'
             : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+        });
+      }
+
+      const link = document.getElementById('link-to-register');
+      if (link) {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          Swal.close();
+          setTimeout(showRegisterModal, 200);
         });
       }
     },
@@ -156,10 +279,19 @@ export function updateLoginUI() {
   if (!btn) return;
 
   if (authStore.isLoggedIn) {
-    btn.innerHTML = `<span style="font-size:0.8rem;color:#0dcaf0">${authStore.user}</span>`;
+    btn.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>`;
     btn.title = 'Cerrar sesión';
   } else {
-    btn.innerHTML = `<svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M10.0909 11.9629L19.3636 8.63087V14.1707C18.8126 13.8538 18.1574 13.67 17.4545 13.67C15.4964 13.67 13.9091 15.096 13.9091 16.855C13.9091 18.614 15.4964 20.04 17.4545 20.04C19.4126 20.04 21 18.614 21 16.855C21 16.855 21 16.8551 21 16.855L21 7.49236C21 6.37238 21 5.4331 20.9123 4.68472C20.8999 4.57895 20.8852 4.4738 20.869 4.37569C20.7845 3.86441 20.6352 3.38745 20.347 2.98917C20.2028 2.79002 20.024 2.61055 19.8012 2.45628C19.7594 2.42736 19.716 2.39932 19.6711 2.3722L19.6621 2.36679C18.8906 1.90553 18.0233 1.93852 17.1298 2.14305C16.2657 2.34086 15.1944 2.74368 13.8808 3.23763L11.5963 4.09656C10.9806 4.32806 10.4589 4.52419 10.0494 4.72734C9.61376 4.94348 9.23849 5.1984 8.95707 5.57828C8.67564 5.95817 8.55876 6.36756 8.50501 6.81203C8.4545 7.22978 8.45452 7.7378 8.45455 8.33743V16.1307C7.90347 15.8138 7.24835 15.63 6.54545 15.63C4.58735 15.63 3 17.056 3 18.815C3 20.574 4.58735 22 6.54545 22C8.50355 22 10.0909 20.574 10.0909 18.815C10.0909 18.815 10.0909 18.8151 10.0909 18.815L10.0909 11.9629Z" fill="#1C274C"></path> </g></svg>`;
+    btn.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 21v-1a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v1"/>
+      </svg>`;
     btn.title = 'Iniciar sesión';
   }
 }
@@ -177,4 +309,9 @@ export function modalLogin() {
       showLoginModal();
     }
   });
+
+  const sidebarBtn = document.getElementById('btnLogoutSidebar');
+  if (sidebarBtn) {
+    sidebarBtn.addEventListener('click', showLogoutConfirm);
+  }
 }

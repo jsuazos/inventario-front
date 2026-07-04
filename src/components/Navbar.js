@@ -47,7 +47,8 @@ class Navbar extends HTMLElement {
                 </div>
             </div>
 
-            <!-- Lado derecho: badge de versión -->
+            <!-- Lado derecho: login y badges -->
+            <div id="navbar-login-wrapper"><login-modal></login-modal></div>
             <div id="cacheVersionBadge" class="badge bg-info text-dark align-self-center badge-desktop">
                 <small>Cache: <span id="cacheVersion">Cargando...</span></small>
             </div>
@@ -576,7 +577,7 @@ class Navbar extends HTMLElement {
             this.showVersionBadge(event.data.cacheVersion);
           } else {
             console.log('⚠️ Usando versión por defecto');
-            this.showVersionBadge('v1.8.3');
+            this.showVersionBadge('v2.0.0');
           }
         };
 
@@ -586,14 +587,14 @@ class Navbar extends HTMLElement {
         setTimeout(() => {
           if (!this.versionShown) {
             console.log('⚠️ Usando versión por defecto');
-            this.showVersionBadge('v1.8.3');
+            this.showVersionBadge('v2.0.0');
           }
         }, 2000);
 
       } else {
         // Método 2: Fallback con versión hardcodeada
         console.log('⚠️ Usando versión por defecto');
-        this.showVersionBadge('v1.8.3');
+        this.showVersionBadge('v2.0.0');
       }
     } catch (error) {
       console.error('❌ Error obteniendo versión:', error);
@@ -624,7 +625,7 @@ class Navbar extends HTMLElement {
 
       // Método 2: Fallback con versión hardcodeada
       console.log('⚠️ Usando versión por defecto');
-      this.showVersionBadge('v1.8.3');
+      this.showVersionBadge('v2.0.0');
 
     } catch (error) {
       console.error('❌ Error obteniendo versión:', error);

@@ -7,11 +7,12 @@ import './components/LoginModal.js';
 import './components/Alphabet.js';
 import './components/Footer.js';
 
-import { loadLibrary, checkForUpdatesInBackground } from "./services/libraryService.js";
+import { loadLibrary, checkForUpdatesInBackground, fetchLibraryFromApi } from "./services/libraryService.js";
+import obtenerTopEstilos from "./utils/obtenerTopEstilos.js";
 import { filterLibrary } from "./utils/libraryFilters.js";
 import { closeSidebar, toggleSidebar } from "./utils/ui.js";
 // import { clearFilters } from "./utils/libraryFilters.js";
-import { clearLibrary, modalLogin, updateLoginUI } from "./utils/modals.js";
+import { clearLibrary, modalLogin, updateLoginUI, showLoginModal, showRegisterModal } from "./utils/modals.js";
 import { authStore } from "./state/authStore.js";
 import displayLibrary from "./utils/libraryDisplay.js";
 import { libraryStore } from "./state/libraryStore.js";
@@ -20,18 +21,13 @@ import { errorHandler } from "./services/errorHandler.js";
 import { setupOnlineOfflineHandlers } from './services/dbService.js';
 import { loadArtistCatalog } from './services/artistCatalogService.js';
 import { subscribe, isSubscribed, isSupported, syncExistingSubscription } from './services/pushService.js';
-import { getPublicWishlist, getWishlistUsers } from './services/wishlistService.js';
+
 import { enrichWishlistItemWithDiscogs } from './services/discogsService.js';
 import { addToInventory, markInventoryReceived, removeFromInventory, updateInventory } from './services/inventoryService.js';
 import { splitTypeTags } from './utils/typeTags.js';
 
 let backgroundCheckTimeout = null;
 let lastBackgroundCheckAt = 0;
-let publicWishlistView = {
-  user: '',
-  items: [],
-};
-let publicWishlistUsers = [];
 let globalActionMenu = null;
 let wishlistStatusFilter = 'all';
 const WISHLIST_STATUS_OPTIONS = [
@@ -74,9 +70,10 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Suscribirse a cambios del store para refrescar la vista
   // Registrado temprano para capturar todas las notificaciones
-  libraryStore.subscribe((state) => {
+  libraryStore.subscribe(async (state) => {
     if (!state.isLoading) {
-      renderCurrentView().catch(() => {});
+      await renderCurrentView();
+      requestAnimationFrame(() => obtenerTopEstilos());
     }
   });
   wishlistStore.subscribe(() => {
@@ -98,11 +95,16 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (isLoggedIn) {
       try {
         await wishlistStore.loadMine();
+        const freshData = await fetchLibraryFromApi();
+        libraryStore.loadData(freshData);
       } catch (error) {
-        console.error('No se pudo cargar la wishlist del usuario:', error);
+        console.error('No se pudo cargar la data del usuario:', error);
       }
     } else {
       wishlistStore.clear();
+      await libraryStore.clearLibrary();
+      const publicData = await fetchLibraryFromApi();
+      libraryStore.loadData(publicData);
       if (parseRoute().mode === 'wishlist' && parseRoute().user === 'me') {
         window.location.hash = '#biblioteca';
         return;
@@ -290,13 +292,8 @@ function parseRoute() {
     return { mode: 'library' };
   }
 
-  if (hash === 'wishlists') {
-    return { mode: 'wishlists' };
-  }
-
-  const match = hash.match(/^wishlist\/(.+)$/i);
-  if (match) {
-    return { mode: 'wishlist', user: decodeURIComponent(match[1]) };
+  if (hash === 'wishlist/me') {
+    return { mode: 'wishlist', user: 'me' };
   }
 
   return { mode: 'library' };
@@ -332,19 +329,6 @@ function buildWishlistBanner(label, isOwnView) {
         <a href="#biblioteca" class="btn btn-outline-light btn-sm">Volver a biblioteca</a>
         <button id="copy-wishlist-link" class="btn btn-info btn-sm text-dark" data-route="#wishlist/${routeUser}">Copiar enlace</button>
       </div>
-    </div>
-  `;
-}
-
-function buildWishlistsBanner(usersCount) {
-  return `
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 p-3 rounded-3" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
-      <div>
-        <small class="text-info text-uppercase">Comunidad</small>
-        <h4 class="text-white mb-1">Wishlists públicas</h4>
-        <p class="text-secondary mb-0">Explora las listas públicas disponibles dentro de la app.</p>
-      </div>
-      <div class="text-secondary small">${usersCount} usuario${usersCount === 1 ? '' : 's'} con wishlist pública</div>
     </div>
   `;
 }
@@ -603,7 +587,7 @@ async function openInventoryAddModal(recibido = 'SI') {
       Swal.fire({
         icon: 'error',
         title: 'No se pudo guardar',
-        text: 'Intenta nuevamente en unos segundos.',
+        text: 'Intenta de nuevo en unos segundos.',
         background: '#1a1a1a',
         color: '#fff'
       });
@@ -645,7 +629,7 @@ async function openInventoryEditModal(item) {
       Swal.fire({
         icon: 'error',
         title: 'No se pudo guardar',
-        text: 'Intenta nuevamente en unos segundos.',
+        text: 'Intenta de nuevo en unos segundos.',
         background: '#1a1a1a',
         color: '#fff'
       });
@@ -679,7 +663,7 @@ async function openWishlistAddModal() {
     Swal.fire({
       icon: 'error',
       title: 'No se pudo guardar',
-      text: 'Intenta nuevamente en unos segundos.',
+      text: 'Intenta de nuevo en unos segundos.',
       background: '#1a1a1a',
       color: '#fff'
     });
@@ -715,7 +699,7 @@ async function openWishlistEditModal(item) {
     Swal.fire({
       icon: 'error',
       title: 'No se pudo guardar',
-      text: 'Intenta nuevamente en unos segundos.',
+      text: 'Intenta de nuevo en unos segundos.',
       background: '#1a1a1a',
       color: '#fff'
     });
@@ -814,26 +798,10 @@ async function syncRouteView() {
   if (route.mode === 'wishlist') {
     toggleFiltersVisibility(false);
 
-    if (route.user === 'me') {
-      if (!authStore.isLoggedIn) {
-        window.location.hash = '#biblioteca';
-        return;
-      }
-
-      publicWishlistView = {
-        user: authStore.user,
-        items: wishlistStore.getItems(),
-      };
-    } else {
-      publicWishlistView = {
-        user: route.user,
-        items: await getPublicWishlist(route.user),
-      };
+    if (!authStore.isLoggedIn) {
+      window.location.hash = '#biblioteca';
+      return;
     }
-  } else if (route.mode === 'wishlists') {
-    toggleFiltersVisibility(false);
-    wishlistStatusFilter = 'all';
-    publicWishlistUsers = await getWishlistUsers();
   } else {
     toggleFiltersVisibility(true);
     wishlistStatusFilter = 'all';
@@ -842,25 +810,173 @@ async function syncRouteView() {
   await renderCurrentView();
 }
 
+function renderLandingPage() {
+  toggleFiltersVisibility(false);
+  const artistBanner = document.getElementById('artistBanner');
+  const grid = document.getElementById('libraryGrid');
+  const counter = document.getElementById('resultCount');
+  if (artistBanner) artistBanner.innerHTML = '';
+  if (counter) counter.textContent = '';
+  if (grid) {
+    grid.innerHTML = `
+      <div class="landing-wrapper">
+        <div class="landing-hero">
+          <div class="landing-hero-icon">🎵</div>
+          <h1 class="landing-title">Mi Música</h1>
+          <p class="landing-subtitle">Gestiona tu colección musical personal</p>
+          <p class="landing-description">
+            Agrega discos de vinilo, CD, cassettes y más. Explora tu biblioteca por género, artista o año.
+            Crea tu wishlist con los discos que quieres conseguir y descubre nueva música.
+          </p>
+          <p class="landing-free">Completamente gratis, sin límites ni suscripciones.</p>
+        </div>
+
+        <div class="landing-features">
+          <div class="landing-feature-card">
+            <div class="landing-feature-icon">💿</div>
+            <h3>Inventario personal</h3>
+            <p>Organiza tu colección con filtros por género, artista, año y tipo de soporte.</p>
+          </div>
+          <div class="landing-feature-card">
+            <div class="landing-feature-icon">♡</div>
+            <h3>Wishlist</h3>
+            <p>Guarda los discos que quieres conseguir y llévalos a tu inventario cuando los recibas.</p>
+          </div>
+          <div class="landing-feature-card">
+            <div class="landing-feature-icon">📊</div>
+            <h3>Estadísticas</h3>
+            <p>Visualiza tu colección con el Top 10 de géneros y rankings por estilo.</p>
+          </div>
+          <div class="landing-feature-card">
+            <div class="landing-feature-icon">🔔</div>
+            <h3>Notificaciones</h3>
+            <p>Recibe alertas cuando haya actualizaciones en tu biblioteca, incluso sin abrir la app.</p>
+          </div>
+        </div>
+
+        <div class="landing-preview">
+          <h2 class="landing-preview-title">Así se ve tu biblioteca</h2>
+          <p class="landing-preview-desc">Cada disco aparece como una tarjeta con carátula, artista, año y tipo de soporte. Puedes editar, filtrar y organizar todo desde un solo lugar.</p>
+          <div class="landing-preview-grid">
+            <div class="landing-preview-card">
+              <div class="landing-preview-img" style="background:linear-gradient(135deg,#1a1a2e,#16213e);">
+                <span style="font-size:3rem;opacity:0.3;">💿</span>
+              </div>
+              <div class="landing-preview-info">
+                <strong>Pink Floyd</strong>
+                <small>The Dark Side of the Moon</small>
+                <span class="badge badge-type mt-1">Vinilo</span>
+              </div>
+            </div>
+            <div class="landing-preview-card">
+              <div class="landing-preview-img" style="background:linear-gradient(135deg,#2d1b1b,#1a1a1a);">
+                <span style="font-size:3rem;opacity:0.3;">💿</span>
+              </div>
+              <div class="landing-preview-info">
+                <strong>Nirvana</strong>
+                <small>Nevermind</small>
+                <span class="badge badge-type mt-1">CD</span>
+              </div>
+            </div>
+            <div class="landing-preview-card">
+              <div class="landing-preview-img" style="background:linear-gradient(135deg,#1b2d1b,#1a1a1a);">
+                <span style="font-size:3rem;opacity:0.3;">💿</span>
+              </div>
+              <div class="landing-preview-info">
+                <strong>Miles Davis</strong>
+                <small>Kind of Blue</small>
+                <span class="badge badge-type mt-1">Vinilo</span>
+              </div>
+            </div>
+            <div class="landing-preview-card">
+              <div class="landing-preview-img" style="background:linear-gradient(135deg,#2d2d1b,#1a1a2e);">
+                <span style="font-size:3rem;opacity:0.3;">💿</span>
+              </div>
+              <div class="landing-preview-info">
+                <strong>Daft Punk</strong>
+                <small>Random Access Memories</small>
+                <span class="badge badge-type mt-1">CD</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="landing-steps">
+          <h2 class="landing-steps-title">Primeros pasos</h2>
+          <div class="landing-steps-grid">
+            <div class="landing-step">
+              <span class="landing-step-num">1</span>
+              <div class="landing-step-body">
+                <strong>Crea tu cuenta</strong>
+                <p>Regístrate con un nombre de usuario y contraseña. Tus datos estarán protegidos.</p>
+              </div>
+            </div>
+            <div class="landing-step">
+              <span class="landing-step-num">2</span>
+              <div class="landing-step-body">
+                <strong>Agrega tu colección</strong>
+                <p>Usa el botón + para añadir discos al inventario. Puedes marcar si ya los recibiste o están en camino.</p>
+              </div>
+            </div>
+            <div class="landing-step">
+              <span class="landing-step-num">3</span>
+              <div class="landing-step-body">
+                <strong>Organiza y filtra</strong>
+                <p>Busca por artista, disco o género. Filtra por recibidos, ordena alfabéticamente y explora tu colección.</p>
+              </div>
+            </div>
+            <div class="landing-step">
+              <span class="landing-step-num">4</span>
+              <div class="landing-step-body">
+                <strong>Crea tu wishlist</strong>
+                <p>Guarda discos que quieres conseguir y muévelos al inventario cuando los recibas.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="landing-cta">
+          <p class="landing-cta-text">¿Ya tienes cuenta?</p>
+          <button class="btn btn-info btn-lg landing-btn" id="landing-login-btn">Iniciar sesión</button>
+          <p class="landing-cta-divider"><span>o</span></p>
+          <button class="btn btn-outline-info btn-lg landing-btn" id="landing-register-btn">Crear cuenta nueva</button>
+        </div>
+
+        <div class="landing-creator">
+          <p>Desarrollado por <strong>Javier Suazo</strong> &middot; <a href="https://github.com/jsuazos" target="_blank" rel="noopener">GitHub</a></p>
+          <p class="landing-creator-version">Versión 2.0 &middot; Supabase + Express</p>
+        </div>
+      </div>
+    `;
+
+    setTimeout(() => {
+      document.getElementById('landing-login-btn')?.addEventListener('click', showLoginModal);
+      document.getElementById('landing-register-btn')?.addEventListener('click', showRegisterModal);
+    }, 0);
+  }
+}
+
 async function renderCurrentView() {
   const route = parseRoute();
   const artistBanner = document.getElementById('artistBanner');
   const grid = document.getElementById('libraryGrid');
   const counter = document.getElementById('resultCount');
 
+  if (route.mode === 'library' && !authStore.isLoggedIn) {
+    renderLandingPage();
+    return;
+  }
+
   if (route.mode === 'wishlist') {
-    const isOwnView = route.user === 'me';
-    const label = isOwnView ? (authStore.user || 'Mi usuario') : publicWishlistView.user || route.user;
-    const sourceItems = isOwnView ? wishlistStore.getItems() : publicWishlistView.items;
-    const items = filterWishlistItemsByStatus(sourceItems);
+    const items = filterWishlistItemsByStatus(wishlistStore.getItems());
     const filterLabel = wishlistStatusFilter === 'all' ? 'Todos' : getWishlistStatusLabel(wishlistStatusFilter);
 
     await displayLibrary(items, {
-      counterText: `Wishlist de ${label} · ${filterLabel} · ${items.length} item${items.length === 1 ? '' : 's'}`,
-      bannerHtml: buildWishlistBanner(label, isOwnView),
+      counterText: `Mi wishlist · ${filterLabel} · ${items.length} item${items.length === 1 ? '' : 's'}`,
+      bannerHtml: buildWishlistBanner(authStore.user || 'Mi usuario', true),
       fetchArtistBanner: false,
       wishlistMode: true,
-      canManageWishlist: isOwnView,
+      canManageWishlist: true,
       onAddToInventory: async (item) => {
         const enrichedItem = await enrichWishlistItemWithDiscogs({
           ...item,
@@ -895,46 +1011,6 @@ async function renderCurrentView() {
     return;
   }
 
-  if (route.mode === 'wishlists') {
-    if (!artistBanner || !grid || !counter) {
-      return;
-    }
-
-    counter.textContent = `Wishlists públicas · ${publicWishlistUsers.length} usuario${publicWishlistUsers.length === 1 ? '' : 's'}`;
-    artistBanner.innerHTML = buildWishlistsBanner(publicWishlistUsers.length);
-    grid.innerHTML = '';
-
-    if (window.alphabetObserver) {
-      window.alphabetObserver.disconnect();
-      window.alphabetObserver = null;
-    }
-
-    if (!publicWishlistUsers.length) {
-      grid.innerHTML = '<div class="col-12"><div class="alert alert-secondary">Todavía no hay wishlists públicas para mostrar.</div></div>';
-      return;
-    }
-
-    publicWishlistUsers.forEach(user => {
-      const card = document.createElement('div');
-      card.className = 'col-12 col-sm-6 col-lg-4 col-xl-3';
-      card.innerHTML = `
-        <a href="#wishlist/${encodeURIComponent(user)}" class="wishlist-user-card text-decoration-none d-block h-100">
-          <div class="wishlist-user-card__inner h-100">
-            <div class="wishlist-user-card__icon">♡</div>
-            <div>
-              <small class="text-info text-uppercase d-block mb-1">Wishlist pública</small>
-              <h5 class="text-white mb-1">${user}</h5>
-              <p class="text-secondary mb-0 small">Ver discos deseados de ${user}</p>
-            </div>
-          </div>
-        </a>
-      `;
-      grid.appendChild(card);
-    });
-
-    return;
-  }
-
   await displayLibrary(libraryStore.getFilteredData(), {
     onEditInventory: async (item) => {
       await openInventoryEditModal(item);
@@ -948,6 +1024,23 @@ async function renderCurrentView() {
       upsertInventoryItemLocally(item, updatedItem, { removeIfHidden: true });
     },
   });
+
+  const hasItems = libraryStore.getAllData().length > 0;
+  const helpEl = document.querySelector('.dashboard-help');
+  if (!hasItems && !helpEl && artistBanner) {
+    artistBanner.insertAdjacentHTML('beforebegin', `
+      <div class="dashboard-help">
+        <h4>Bienvenido a tu biblioteca</h4>
+        <div class="dashboard-help-grid">
+          <div class="dashboard-help-item"><strong>+</strong> Agrega discos con el bot&oacute;n +</div>
+          <div class="dashboard-help-item"><strong>&#9776;</strong> Men&uacute; lateral para wishlist y top 10</div>
+          <div class="dashboard-help-item"><strong>&#128269;</strong> Busca por artista, disco o g&eacute;nero</div>
+          <div class="dashboard-help-item"><strong>&#128228;</strong> Mueve wishlist al inventario</div>
+        </div>
+      </div>`);
+  } else if (hasItems && helpEl) {
+    helpEl.remove();
+  }
 }
 
 function showInstallBanner() {
