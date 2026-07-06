@@ -60,7 +60,7 @@ class Aside extends HTMLElement {
         </aside>
     `;
 
-    this._unsubscribe = authStore.subscribe(({ isLoggedIn, user }) => {
+    const updateSidebar = ({ isLoggedIn, user }) => {
       const adminSection = this.querySelector('#admin-section');
       const usernameSpan = this.querySelector('#admin-username');
       const wishlistLinkItem = this.querySelector('#wishlist-link-item');
@@ -77,7 +77,11 @@ class Aside extends HTMLElement {
       if (wishlistLink && user) {
         wishlistLink.textContent = `♡ Wishlist de ${user}`;
       }
-    });
+    };
+
+    // Aplicar estado inicial (por si authStore ya notificó antes de que existiera el Aside)
+    updateSidebar({ isLoggedIn: authStore.isLoggedIn, user: authStore.user });
+    this._unsubscribe = authStore.subscribe(updateSidebar);
 
     this.querySelectorAll('.nav-link').forEach(link => {
       link.addEventListener('click', () => {

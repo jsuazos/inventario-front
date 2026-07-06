@@ -101,10 +101,6 @@ window.addEventListener("DOMContentLoaded", async () => {
         console.error('No se pudo cargar la data del usuario:', error);
       }
     } else {
-      wishlistStore.clear();
-      await libraryStore.clearLibrary();
-      const publicData = await fetchLibraryFromApi();
-      libraryStore.loadData(publicData);
       if (parseRoute().mode === 'wishlist' && parseRoute().user === 'me') {
         window.location.hash = '#biblioteca';
         return;

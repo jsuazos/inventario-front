@@ -12,14 +12,10 @@ class AuthStore {
     const stored = localStorage.getItem(AUTH_KEY);
     const user = localStorage.getItem(USER_KEY);
     if (stored && user) {
-      const payload = this.decodeToken(stored);
-      if (payload && payload.exp * 1000 > Date.now()) {
-        this.token = stored;
-        this.user = user;
-        this.notify();
-        return true;
-      }
-      this.logout();
+      this.token = stored;
+      this.user = user;
+      this.notify();
+      return true;
     }
     return false;
   }

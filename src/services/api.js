@@ -8,18 +8,29 @@ function getAuthHeaders() {
 }
 
 function handleUnauthorized() {
-  if (authStore.isLoggedIn) {
-    authStore.logout();
-    if (typeof Swal !== 'undefined') {
-      Swal.fire({
-        icon: 'info',
-        title: 'Sesión expirada',
-        text: 'Tu sesión ha expirado. Inicia sesión nuevamente.',
-        background: '#1a1a1a',
-        color: '#fff',
-        backdrop: 'rgba(0,0,0,0.85)'
-      });
-    }
+  if (!authStore.isLoggedIn) return;
+  authStore.logout();
+  if (typeof Swal !== 'undefined') {
+    Swal.fire({
+      icon: 'info',
+      title: 'Sesión expirada',
+      text: 'Tu sesión expiró. Inicia sesión para hacer cambios. Los datos guardados siguen visibles.',
+      confirmButtonText: 'Iniciar sesión',
+      showCancelButton: true,
+      cancelButtonText: 'Ver offline',
+      background: '#1a1a1a',
+      color: '#fff',
+      backdrop: 'rgba(0,0,0,0.85)',
+      customClass: {
+        confirmButton: 'btn btn-info',
+        cancelButton: 'btn btn-secondary me-2'
+      },
+      buttonsStyling: false,
+    }).then(result => {
+      if (result.isConfirmed) {
+        import('../utils/modals.js').then(m => m.showLoginModal());
+      }
+    });
   }
 }
 

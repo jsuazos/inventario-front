@@ -393,6 +393,16 @@ body.auth-editor .btn-mark-received {
   opacity: 1;
 }
 
+body.offline.auth-editor .global-action-menu,
+body.offline.auth-editor .btn-edit-card,
+body.offline.auth-editor .btn-wishlist-add,
+body.offline.auth-editor .btn-wishlist-remove,
+body.offline.auth-editor .btn-inventory-remove,
+body.offline.auth-editor .btn-mark-received,
+body.offline.auth-editor #btn-clear-library {
+  display: none !important;
+}
+
 body:not(.auth-editor) .btn-edit-card {
   display: none;
 }
