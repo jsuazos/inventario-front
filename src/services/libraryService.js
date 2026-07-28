@@ -1,7 +1,6 @@
 import { toggleLoader } from '../utils/ui.js';
 import aplicarColoresPorGenero from '../utils/aplicarColoresPorGenero.js';
 import obtenerTopEstilos from '../utils/obtenerTopEstilos.js';
-import { loadAlphabet } from '../utils/ui.js';
 import obtenerGeneros from '../utils/obtenerGeneros.js';
 import { splitTypeTags } from '../utils/typeTags.js';
 import { apiClient } from './api.js';
@@ -110,10 +109,7 @@ export async function fetchLibraryFromApi(forceRefresh = false) {
 function completeLoad(data) {
   populateFilters(data || []);
   aplicarColoresPorGenero();
-  requestAnimationFrame(() => {
-    obtenerTopEstilos();
-    loadAlphabet();
-  });
+  requestAnimationFrame(obtenerTopEstilos);
 }
 
 function finishLoad(data) {

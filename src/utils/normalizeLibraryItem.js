@@ -18,5 +18,6 @@ export default function normalizeLibraryItem(item = {}) {
     Orden: item.Orden || '',
     Origen: item.Origen || '',
     OrigenISO: item.OrigenISO || '',
+    createdAt: item.createdAt || '',
   };
 }

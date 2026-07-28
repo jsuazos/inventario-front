@@ -1,6 +1,7 @@
 import { toggleLoader, loadAlphabet } from './ui.js';
 import aplicarColoresPorGenero from './aplicarColoresPorGenero.js';
 import fetchArtistDetails from '../services/artistService.js';
+import { libraryStore } from '../state/libraryStore.js';
 
 export default async function displayLibrary(items, options = {}) {
     const artistBanner = document.getElementById('artistBanner');
@@ -25,6 +26,14 @@ export default async function displayLibrary(items, options = {}) {
     if (!grid || !artistBanner || !counter) {
         console.warn('displayLibrary: elementos del DOM no encontrados');
         return;
+    }
+
+    const sortBy = libraryStore.getFilters().sortBy;
+    const isAlphaSort = !sortBy || sortBy === 'artistAsc' || sortBy === 'artistDesc';
+
+    const alphabetEl = document.querySelector('app-alphabet');
+    if (alphabetEl) {
+        alphabetEl.classList.toggle('d-none', !isAlphaSort);
     }
 
     toggleLoader(true);
@@ -71,15 +80,18 @@ export default async function displayLibrary(items, options = {}) {
         }
 
 
-        const firstLetterPrev = grid.querySelector(`.letra-${artista.toUpperCase().charAt(0)}`);
-        const firstLetter = artista.toUpperCase().charAt(0) || '#';
-        let letterHeader = '';
-
-        const divLetra = document.createElement('div');
-        divLetra.id = `letra-${firstLetter}`;
-        divLetra.className = `letra-${firstLetter} text-uppercase text-left fw-bold fs-5 mt-3`;
-
         const card = document.createElement('div');
+
+        let firstLetterPrev = null;
+        let divLetra = null;
+
+        if (isAlphaSort) {
+            firstLetterPrev = grid.querySelector(`.letra-${artista.toUpperCase().charAt(0)}`);
+            const firstLetter = artista.toUpperCase().charAt(0) || '#';
+            divLetra = document.createElement('div');
+            divLetra.id = `letra-${firstLetter}`;
+            divLetra.className = `letra-${firstLetter} text-uppercase text-left fw-bold fs-5 mt-3`;
+        }
         const generoPrincipal = genero.toLowerCase().split(',')[0] || 'sin-genero';
         card.className = `col-xxl-2 col-xl-2 col-lg-2 col-md-4 col-sm-6 col-6 h-100`;
         card.innerHTML = `
@@ -325,11 +337,18 @@ export default async function displayLibrary(items, options = {}) {
 
         grid.appendChild(card);
 
-        if (!firstLetterPrev) {
+        if (isAlphaSort && !firstLetterPrev && divLetra) {
             card.before(divLetra);
         }
     });
     aplicarColoresPorGenero();
-    loadAlphabet();
+    if (isAlphaSort) {
+        loadAlphabet();
+    } else {
+        if (window.alphabetObserver) {
+            window.alphabetObserver.disconnect();
+            window.alphabetObserver = null;
+        }
+    }
     toggleLoader(false);
 }

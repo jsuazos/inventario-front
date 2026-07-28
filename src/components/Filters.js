@@ -28,11 +28,12 @@ class Filters extends HTMLElement {
                     </button>
                   </div>
                   <div id="sortDropdownMenu" class="position-absolute mt-1 p-2 d-none" style="right:0; min-width:220px; z-index:2000;">
-                    <button class="sort-option" data-sort="artistAsc">Ordenar A-Z (Artista)</button>
-                    <button class="sort-option" data-sort="artistDesc">Ordenar Z-A (Artista)</button>
-                    <button class="sort-option" data-sort="orden" disabled>Ordenar por compra (Orden)</button>
-                    <button class="sort-option" data-sort="anio">Ordenar por año</button>
-                    <button class="sort-option" data-sort="genero" disabled>Ordenar por género</button>
+                    <button class="sort-option" data-sort="artistAsc">A-Z (Artista)</button>
+                    <button class="sort-option" data-sort="artistDesc">Z-A (Artista)</button>
+                    <button class="sort-option" data-sort="orden" disabled>Por compra</button>
+                    <button class="sort-option" data-sort="anio">Por año</button>
+                    <button class="sort-option" data-sort="genero" disabled>Por género</button>
+                    <button class="sort-option" data-sort="createdAt">Por fecha de compra</button>
                   </div>
                 </div>
               </div>

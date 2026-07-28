@@ -160,6 +160,8 @@ export class LibraryStore {
       this.filteredData.sort((a, b) => a.Artista.localeCompare(b.Artista));
     } else if (sortBy === 'artistDesc') {
       this.filteredData.sort((a, b) => b.Artista.localeCompare(a.Artista));
+    } else if (sortBy === 'createdAt') {
+      this.filteredData.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
     }
   }
 
