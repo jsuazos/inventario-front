@@ -146,9 +146,9 @@ export class LibraryStore {
       const matchArtist = !artist || item.Artista === artist;
       const matchYear = !year || item.Año.toString() === year;
       const matchRecibido = !recibido || (item.Recibido && item.Recibido === recibido);
-      const matchVisibleWhenReceived = recibido !== 'SI' || item.Visible === 'SI' || item.Visible === true;
+      const matchVisible = item.Visible === 'SI' || item.Visible === true;
 
-      return matchSearch && matchType && matchGenre && matchArtist && matchYear && matchRecibido && matchVisibleWhenReceived;
+      return matchSearch && matchType && matchGenre && matchArtist && matchYear && matchRecibido && matchVisible;
     });
 
     if (sortBy === 'orden') {
