@@ -111,7 +111,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       }
     }
 
-    renderCurrentView().catch(() => {});
+    await syncRouteView();
   });
 
   if (authStore.isLoggedIn) {

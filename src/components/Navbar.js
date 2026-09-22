@@ -1,4 +1,5 @@
 import { libraryStore } from '../state/libraryStore.js';
+import { authStore } from '../state/authStore.js';
 import { escapeHtml } from '../utils/htmlSafety.js';
 
 import { normalizeGenreTag, splitGenreTags } from '../utils/genreTags.js';
@@ -53,7 +54,7 @@ class Navbar extends HTMLElement {
             <div id="cacheVersionBadge" class="badge bg-info text-dark align-self-center badge-desktop">
                 <small>Cache: <span id="cacheVersion">Cargando...</span></small>
             </div>
-            <button id="refreshLibrary" type="button" class="btn btn-outline-info btn-sm" title="Actualizar biblioteca" aria-label="Actualizar biblioteca">↻</button>
+            <button id="refreshLibrary" type="button" class="btn btn-outline-info btn-sm d-none" title="Actualizar biblioteca" aria-label="Actualizar biblioteca">↻</button>
             <div id="connection-status" class="badge bg-success ms-2 badge-desktop">
                 <small>Online</small>
             </div>
@@ -68,9 +69,16 @@ class Navbar extends HTMLElement {
     this.initSearchAutocomplete();
     this.setupConnectionStatus();
     this.updateCacheVersion();
-    this.querySelector('#refreshLibrary')?.addEventListener('click', () => {
+    const refreshButton = this.querySelector('#refreshLibrary');
+    refreshButton?.addEventListener('click', () => {
       window.dispatchEvent(new CustomEvent('library-refresh-requested'));
     });
+
+    const syncRefreshButton = ({ isLoggedIn }) => {
+      refreshButton?.classList.toggle('d-none', !isLoggedIn);
+    };
+    syncRefreshButton({ isLoggedIn: authStore.isLoggedIn });
+    this.unsubscribeStore.push(authStore.subscribe(syncRefreshButton));
 
     // Sincronizar badges cuando el store cambie
     const unsubscribeBadges = libraryStore.subscribe(() => {
@@ -660,14 +668,5 @@ class Navbar extends HTMLElement {
     }
   }
 
-  /**
-   * Limpia event listeners cuando el componente se desconecta
-   */
-  disconnectedCallback() {
-    if (this.clickOutsideHandler) {
-      document.removeEventListener('click', this.clickOutsideHandler);
-      this.clickOutsideHandler = null;
-    }
-  }
 }
 customElements.define("app-navbar", Navbar);
