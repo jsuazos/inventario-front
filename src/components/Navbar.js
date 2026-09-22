@@ -1,4 +1,5 @@
 import { libraryStore } from '../state/libraryStore.js';
+import { escapeHtml } from '../utils/htmlSafety.js';
 
 import { normalizeGenreTag, splitGenreTags } from '../utils/genreTags.js';
 import { normalizeTypeTag, splitTypeTags } from '../utils/typeTags.js';
@@ -410,9 +411,6 @@ class Navbar extends HTMLElement {
    * Crea el HTML para una sugerencia
    */
   createSuggestionHTML(suggestion) {
-    const subtitle = suggestion.artist ? `por ${suggestion.artist}` : 
-                    suggestion.count ? `(${suggestion.count} items)` : '';
-    
     return `
       <div class="search-suggestion-item">
         <span class="search-suggestion-icon">${suggestion.icon}</span>
@@ -426,9 +424,12 @@ class Navbar extends HTMLElement {
    * Resalta las coincidencias en el texto
    */
   highlightMatch(text, query) {
-    if (!query) return text;
-    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return text.replace(regex, '<mark>$1</mark>');
+    const safeText = escapeHtml(text);
+    if (!query) return safeText;
+
+    const safeQuery = escapeHtml(query);
+    const regex = new RegExp(`(${safeQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return safeText.replace(regex, '<mark>$1</mark>');
   }
 
   /**
@@ -509,7 +510,7 @@ class Navbar extends HTMLElement {
     container.style.display = 'flex';
     container.innerHTML = this.searchBadges.map((term, index) => `
       <span class="search-badge">
-        <span>${term}</span>
+         <span>${escapeHtml(term)}</span>
         <button class="btn-close btn-close-white" aria-label="Eliminar filtro" data-index="${index}"></button>
       </span>
     `).join('');

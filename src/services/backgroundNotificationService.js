@@ -1,3 +1,5 @@
+import { escapeHtml } from '../utils/htmlSafety.js';
+
 function getNotificationContainer(maxWidth = '300px') {
   let notificationContainer = document.getElementById('background-update-notifications');
   if (!notificationContainer) {
@@ -82,7 +84,7 @@ export function showBackgroundUpdateNotification(message, type = 'info') {
 
   notification.innerHTML = `
     <div style="display: flex; align-items: center; gap: 8px;">
-      <span>${message}</span>
+       <span>${escapeHtml(message)}</span>
       ${createCloseButton()}
     </div>
   `;
@@ -142,7 +144,7 @@ export function showDetailedChangesNotification(added, removed) {
 
   notification.innerHTML = `
     <div style="display: flex; align-items: flex-start; gap: 8px;">
-      <div style="flex: 1;">${message.replace(/\n/g, '<br>')}</div>
+       <div style="flex: 1;">${escapeHtml(message).replace(/\n/g, '<br>')}</div>
       ${createCloseButton()}
     </div>
   `;

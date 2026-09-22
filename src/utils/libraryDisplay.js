@@ -2,6 +2,7 @@ import { toggleLoader, loadAlphabet } from './ui.js';
 import aplicarColoresPorGenero from './aplicarColoresPorGenero.js';
 import fetchArtistDetails from '../services/artistService.js';
 import { libraryStore } from '../state/libraryStore.js';
+import { escapeHtml, sanitizeHttpUrl } from './htmlSafety.js';
 
 export default async function displayLibrary(items, options = {}) {
     const artistBanner = document.getElementById('artistBanner');
@@ -63,6 +64,7 @@ export default async function displayLibrary(items, options = {}) {
         const wishlistStatus = String(item.status || 'wishlist').toLowerCase();
         const discogsId = String(item.ID || item.discogsId || '').trim();
         const discogsReleaseId = discogsId.replace(/^[^0-9]+/, '');
+        const validDiscogsReleaseId = /^\d+$/.test(discogsReleaseId) ? discogsReleaseId : '';
         let imageUrl =  item.imgFULL && 
                         item.imgFULL.length > 0 && 
                         item.imgFULL !== 'No matching results' && 
@@ -79,6 +81,17 @@ export default async function displayLibrary(items, options = {}) {
           imageUrl = 'https://i.pinimg.com/originals/62/e6/1a/62e61ad9aedd381bb24f768c09d416f6.jpg';
         }
 
+        imageUrl = sanitizeHttpUrl(imageUrl) || 'https://i.pinimg.com/originals/62/e6/1a/62e61ad9aedd381bb24f768c09d416f6.jpg';
+
+        const safeImageUrl = escapeHtml(imageUrl);
+        const safeArtist = escapeHtml(artista);
+        const safeAlbum = escapeHtml(item.Disco);
+        const safeYear = escapeHtml(item.Año);
+        const safeType = escapeHtml(tipo || 'Wishlist');
+        const safeGenre = escapeHtml(genero.toUpperCase().substring(0, 15) || 'WISHLIST');
+        const safeGenrePrincipal = escapeHtml(genero.toLowerCase().split(',')[0] || 'sin-genero');
+        const safeWishlistStatus = escapeHtml(wishlistStatus.toUpperCase());
+        const wishlistStatusClass = wishlistStatus.replace(/[^a-z0-9_-]/g, '') || 'wishlist';
 
         const card = document.createElement('div');
 
@@ -92,17 +105,16 @@ export default async function displayLibrary(items, options = {}) {
             divLetra.id = `letra-${firstLetter}`;
             divLetra.className = `letra-${firstLetter} text-uppercase text-left fw-bold fs-5 mt-3`;
         }
-        const generoPrincipal = genero.toLowerCase().split(',')[0] || 'sin-genero';
         card.className = `col-xxl-2 col-xl-2 col-lg-2 col-md-4 col-sm-6 col-6 h-100`;
         card.innerHTML = `
         <div class="card-with-border rounded-1">
             <div class ="card position-relative overflow-hidden border-0 rounded-1">
-            <img src="${imageUrl}" class="" alt="Carátula ${index}">
-            <div class="borde-overlay" data-genero="${ generoPrincipal }"></div>
+            <img src="${safeImageUrl}" class="" alt="Carátula ${index}">
+            <div class="borde-overlay" data-genero="${safeGenrePrincipal}"></div>
             ${item.Recibido === 'NO' ? '<div class="not-received-badge"><span>NO RECIBIDO</span></div>' : ''}
             <div class="card-img-overlay d-flex flex-column justify-content-end pb-1">
                 <div class="position-absolute top-0 start-0 p-3">
-                ${discogsReleaseId !== '' ? `<a href="https://www.discogs.com/es/release/${discogsReleaseId}" target="_blank" class="btn btn-dark btn-sm btn-discorgs">Discogs</a>` : '' }
+                ${validDiscogsReleaseId ? `<a href="https://www.discogs.com/es/release/${validDiscogsReleaseId}" target="_blank" rel="noopener noreferrer" class="btn btn-dark btn-sm btn-discorgs">Discogs</a>` : '' }
                 </div>
                 <div class="position-absolute top-0 end-0 d-flex flex-column gap-2 p-3 card-action-group">
                 ${wishlistMode && canManageWishlist ? '<button class="btn btn-sm btn-success border-0 btn-wishlist-add card-action-btn" title="Mover al inventario">✓</button>' : ''}
@@ -113,17 +125,17 @@ export default async function displayLibrary(items, options = {}) {
                 ${typeof onRemoveInventory === 'function' && !(wishlistMode && canManageWishlist) ? '<button class="btn btn-sm btn-danger btn-inventory-remove card-action-btn" title="Ocultar del inventario" aria-label="Ocultar del inventario">\n                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>\n                </button>' : ''}
                 </div>
                 <ul class="list-unstyled text-white">
-                 <li class="fw-bold text-hide">${ artista }</li>
-                 <li class="text-hide"><small>${item.Disco}</small></li>
-                 <li class="text-hide"><small>${item.Año}</small></li>
+                 <li class="fw-bold text-hide">${safeArtist}</li>
+                 <li class="text-hide"><small>${safeAlbum}</small></li>
+                 <li class="text-hide"><small>${safeYear}</small></li>
                  <li class="d-flex flex-wrap gap-1"> 
-                   <span class="badge badge-type mt-1">${tipo || 'Wishlist'}</span>
-                   ${wishlistMode ? `<span class="badge badge-wishlist-status mt-1 status-${wishlistStatus}">${wishlistStatus.toUpperCase()}</span>` : ''}
+                   <span class="badge badge-type mt-1">${safeType}</span>
+                   ${wishlistMode ? `<span class="badge badge-wishlist-status mt-1 status-${wishlistStatusClass}">${safeWishlistStatus}</span>` : ''}
                  </li>
                  </ul>
             </div>
           </div>
-          <div class="side-label px-1 py-3" ${item.Recibido === 'NO' ? 'style="z-index: -1;"' : ''}>${ genero.toUpperCase().substring(0, 15) || 'WISHLIST' }</div>
+          <div class="side-label px-1 py-3" ${item.Recibido === 'NO' ? 'style="z-index: -1;"' : ''}>${safeGenre}</div>
         </div>
         `;
 

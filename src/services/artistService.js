@@ -1,6 +1,7 @@
 import configService from './configService.js';
 import { errorHandler } from './errorHandler.js';
 import { getArtistFromCatalog } from './artistCatalogService.js';
+import { escapeHtml, sanitizeHttpUrl } from '../utils/htmlSafety.js';
 
 // Sistema de rate limiting para evitar 429 errors
 export class RateLimiter {
@@ -151,22 +152,26 @@ function displayArtistBanner(artistData) {
     bannerContainer.innerHTML = '';
     const wrapper = document.createElement('div');
     wrapper.className = 'p-4 mb-4 text-white rounded artist-banner';
+    const backgroundImage = sanitizeHttpUrl(artistData.image);
+    const logoUrl = sanitizeHttpUrl(artistData.logo);
+    const safeName = escapeHtml(artistData.name);
+    const safeCount = escapeHtml(artistData.count);
 
     // Solo usar imagen de background si existe y no es de Discogs (para evitar 429)
-    if (artistData.image && !artistData.image.includes('discogs.com')) {
-      wrapper.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${artistData.image}') center/cover no-repeat`;
+    if (backgroundImage && !backgroundImage.includes('discogs.com')) {
+      wrapper.style.background = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${backgroundImage}') center/cover no-repeat`;
     } else {
       wrapper.style.background = 'linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8))';
     }
 
     wrapper.innerHTML = `
       <div class="position-relative d-flex align-items-center gap-3 flex-wrap">
-        ${artistData.logo ? `<img src="${artistData.logo}" alt="logo" style="max-height: 150px;">` : `<h2 class="m-0 my-5">${artistData.name}</h2>`}
+        ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="logo" style="max-height: 150px;">` : `<h2 class="m-0 my-5">${safeName}</h2>`}
 
         <div class="position-absolute top-0 end-0 d-flex gap-2 p-2">
-          ${artistData.count ? `<span class="badge bg-info text-dark align-self-center">${artistData.count} discos</span>` : ''}
-          ${artistData.id ? `<a href="https://www.discogs.com/es/artist/${encodeURIComponent(artistData.id)}" target="_blank" class="btn btn-outline-light btn-sm">Discogs</a>` : ''}
-          ${artistData.mbid ? `<a href="https://musicbrainz.org/artist/${artistData.mbid}" target="_blank" class="btn btn-outline-light btn-sm">MusicBrainz</a>` : ''}
+          ${artistData.count ? `<span class="badge bg-info text-dark align-self-center">${safeCount} discos</span>` : ''}
+          ${artistData.id ? `<a href="https://www.discogs.com/es/artist/${encodeURIComponent(artistData.id)}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm">Discogs</a>` : ''}
+          ${artistData.mbid ? `<a href="https://musicbrainz.org/artist/${encodeURIComponent(artistData.mbid)}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm">MusicBrainz</a>` : ''}
         </div>
       </div>
     `;

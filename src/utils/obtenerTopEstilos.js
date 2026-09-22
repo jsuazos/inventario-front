@@ -19,7 +19,11 @@ export default function obtenerTopEstilos() {
   lista.innerHTML = "";
   top10.forEach(([genero, cantidad]) => {
     const linea = document.createElement("div");
-    linea.innerHTML = `${genero.charAt(0).toUpperCase() + genero.slice(1)} <span class="badge bg-secondary">${cantidad}</span>`;
+    linea.append(document.createTextNode(`${genero.charAt(0).toUpperCase() + genero.slice(1)} `));
+    const badge = document.createElement('span');
+    badge.className = 'badge bg-secondary';
+    badge.textContent = cantidad;
+    linea.appendChild(badge);
     lista.appendChild(linea);
   });
 }
