@@ -619,7 +619,9 @@ async function openInventoryAddModal(recibido = 'SI') {
       Swal.fire({
         icon: 'error',
         title: 'No se pudo guardar',
-        text: 'Intenta de nuevo en unos segundos.',
+        text: error.message === 'Ya tienes este disco registrado con el mismo formato'
+          ? error.message
+          : 'Intenta de nuevo en unos segundos.',
         background: '#1a1a1a',
         color: '#fff'
       });
@@ -1014,26 +1016,39 @@ async function renderCurrentView() {
       wishlistMode: true,
       canManageWishlist: true,
       onAddToInventory: async (item) => {
-        const enrichedItem = await enrichWishlistItemWithDiscogs({
-          ...item,
-          Recibido: 'SI',
-        });
-
-        const savedItem = await addToInventory(enrichedItem);
-        await wishlistStore.remove(item.rowId);
-        upsertInventoryItemLocally(savedItem, savedItem, { addIfMissing: true });
-
-        if (typeof Swal !== 'undefined') {
-          Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: 'Agregado al inventario',
-            showConfirmButton: false,
-            timer: 1800,
-            background: '#1a1a1a',
-            color: '#fff'
+        try {
+          const enrichedItem = await enrichWishlistItemWithDiscogs({
+            ...item,
+            Recibido: 'SI',
           });
+
+          const savedItem = await addToInventory(enrichedItem);
+          await wishlistStore.remove(item.rowId);
+          upsertInventoryItemLocally(savedItem, savedItem, { addIfMissing: true });
+
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'success',
+              title: 'Agregado al inventario',
+              showConfirmButton: false,
+              timer: 1800,
+              background: '#1a1a1a',
+              color: '#fff'
+            });
+          }
+        } catch (error) {
+          if (error.message === 'Ya tienes este disco registrado con el mismo formato' && typeof Swal !== 'undefined') {
+            Swal.fire({
+              icon: 'info',
+              title: 'Disco ya registrado',
+              text: error.message,
+              background: '#1a1a1a',
+              color: '#fff'
+            });
+          }
+          throw error;
         }
       },
       onEditWishlist: async (item) => {
