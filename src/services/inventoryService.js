@@ -19,3 +19,13 @@ export async function markInventoryReceived(originalItem) {
   const response = await apiClient.patch('/inventario/recibido', { originalItem }, { timeout: 15000 });
   return response.item;
 }
+
+export async function getHiddenInventory() {
+  const response = await apiClient.get('/inventario/ocultos', { timeout: 15000 });
+  return response.data || [];
+}
+
+export async function restoreInventoryItem(originalItem) {
+  const response = await apiClient.patch('/inventario/restaurar', { originalItem }, { timeout: 15000 });
+  return response.item;
+}

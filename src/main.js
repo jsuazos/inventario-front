@@ -23,7 +23,7 @@ import { loadArtistCatalog } from './services/artistCatalogService.js';
 import { subscribe, isSubscribed, isSupported, syncExistingSubscription } from './services/pushService.js';
 
 import { enrichWishlistItemWithDiscogs } from './services/discogsService.js';
-import { addToInventory, markInventoryReceived, removeFromInventory, updateInventory } from './services/inventoryService.js';
+import { addToInventory, getHiddenInventory, markInventoryReceived, removeFromInventory, restoreInventoryItem, updateInventory } from './services/inventoryService.js';
 import { splitTypeTags } from './utils/typeTags.js';
 
 let backgroundCheckTimeout = null;
@@ -311,6 +311,10 @@ function parseRoute() {
     return { mode: 'wishlist', user: 'me' };
   }
 
+  if (hash === 'ocultos') {
+    return { mode: 'hidden' };
+  }
+
   return { mode: 'library' };
 }
 
@@ -344,6 +348,19 @@ function buildWishlistBanner(label, isOwnView) {
         <a href="#biblioteca" class="btn btn-outline-light btn-sm">Volver a biblioteca</a>
         <button id="copy-wishlist-link" class="btn btn-info btn-sm text-dark" data-route="#wishlist/${routeUser}">Copiar enlace</button>
       </div>
+    </div>
+  `;
+}
+
+function buildHiddenInventoryBanner() {
+  return `
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 p-3 rounded-3" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+      <div>
+        <small class="text-info text-uppercase">Inventario</small>
+        <h4 class="text-white mb-1">Discos ocultos</h4>
+        <p class="text-secondary mb-0">Restáuralos cuando quieras volver a mostrarlos en tu biblioteca.</p>
+      </div>
+      <a href="#biblioteca" class="btn btn-outline-light btn-sm">Volver a biblioteca</a>
     </div>
   `;
 }
@@ -734,6 +751,7 @@ function setupGlobalActionMenu() {
       <button type="button" class="global-action-item" data-action="recibido">Recibido</button>
       <button type="button" class="global-action-item" data-action="no-recibido">No Recibido</button>
       <button type="button" class="global-action-item" data-action="wishlist">Wishlist</button>
+      <button type="button" class="global-action-item" data-action="ocultos">Discos ocultos</button>
     </div>
     <div class="global-action-dock">
       <div id="global-action-subscribe-slot" class="global-action-subscribe-slot"></div>
@@ -766,6 +784,11 @@ function setupGlobalActionMenu() {
 
       if (action === 'wishlist') {
         await openWishlistAddModal();
+        return;
+      }
+
+      if (action === 'ocultos') {
+        window.location.hash = '#ocultos';
         return;
       }
 
@@ -810,7 +833,7 @@ function setupGlobalActionMenu() {
 async function syncRouteView() {
   const route = parseRoute();
 
-  if (route.mode === 'wishlist') {
+  if (route.mode === 'wishlist' || route.mode === 'hidden') {
     toggleFiltersVisibility(false);
 
     if (!authStore.isLoggedIn) {
@@ -975,7 +998,7 @@ async function renderCurrentView() {
   const route = parseRoute();
   const artistBanner = document.getElementById('artistBanner');
 
-  if (route.mode === 'library' && !authStore.isLoggedIn) {
+  if (!authStore.isLoggedIn) {
     renderLandingPage();
     return;
   }
@@ -1024,6 +1047,38 @@ async function renderCurrentView() {
     return;
   }
 
+  if (route.mode === 'hidden') {
+    const items = await getHiddenInventory();
+
+    await displayLibrary(items, {
+      counterText: `Discos ocultos · ${items.length} item${items.length === 1 ? '' : 's'}`,
+      bannerHtml: buildHiddenInventoryBanner(),
+      fetchArtistBanner: false,
+      showEditButton: false,
+      onRestoreInventory: async (item) => {
+        const restoredItem = await restoreInventoryItem(item);
+        upsertInventoryItemLocally(item, restoredItem, { addIfMissing: true });
+        await renderCurrentView();
+
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Restaurado en tu biblioteca',
+            showConfirmButton: false,
+            timer: 1800,
+            background: '#1a1a1a',
+            color: '#fff'
+          });
+        }
+
+        return restoredItem;
+      },
+    });
+    return;
+  }
+
   await displayLibrary(libraryStore.getFilteredData(), {
     onEditInventory: async (item) => {
       await openInventoryEditModal(item);
@@ -1035,6 +1090,12 @@ async function renderCurrentView() {
     onRemoveInventory: async (item) => {
       const updatedItem = await removeFromInventory(item);
       upsertInventoryItemLocally(item, updatedItem, { removeIfHidden: true });
+      return updatedItem;
+    },
+    onRestoreInventory: async (item) => {
+      const restoredItem = await restoreInventoryItem(item);
+      upsertInventoryItemLocally(item, restoredItem, { addIfMissing: true });
+      return restoredItem;
     },
   });
 

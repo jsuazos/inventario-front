@@ -1,237 +1,109 @@
+# Inventario Musical — Frontend
 
-# 🎵 Inventario Musical - [inventario-front](https://jsuazos.github.io/inventario-front)
+Aplicación web progresiva para administrar una colección musical personal. Permite consultar y filtrar discos, gestionar el inventario y una wishlist, y sincronizar los datos con el backend del proyecto.
 
-Este proyecto es una aplicación web para gestionar un inventario musical, similar a plataformas como Spotify o Tidal. Está desarrollada con tecnologías modernas y ahora incluye características de Progressive Web App (PWA) para una mejor experiencia de usuario.
-Está desarrollado principalmente con **HTML**, **CSS (Bootstrap)** y **JavaScript**, y está desplegado en **GitHub Pages**.
+Demo: <https://jsuazos.github.io/inventario-front/>
 
-🔗 **Demo en vivo:**  
-https://jsuazos.github.io/inventario-front/
+## Funcionalidades
 
----
+- Biblioteca privada por usuario, con búsqueda y filtros por artista, género, año, tipo y estado de recepción.
+- Inicio de sesión y registro para gestionar el inventario.
+- Crear, editar, marcar como recibido y ocultar discos.
+- Deshacer el ocultamiento de un disco y restaurar discos desde la vista **Discos ocultos**.
+- Wishlist personal con estados, edición y opción de mover un disco al inventario.
+- Integración con Discogs, datos de artistas y portadas cuando están disponibles.
+- Caché local separada por usuario mediante IndexedDB y actualización en segundo plano.
+- Notificaciones push opcionales y soporte PWA para instalación y uso con conectividad limitada.
+- Interfaz adaptable para escritorio y dispositivos móviles.
 
-## ✨ Características
+Los discos visibles son los únicos que se muestran en la biblioteca principal. Los ocultos siguen siendo recuperables desde `#ocultos` después de iniciar sesión.
 
-- 🎨 **Diseño moderno** tipo tarjeta (card) con portadas de álbumes.
-- 🔍 **Buscador en tiempo real** que filtra los discos mostrados.
-- 📚 **Índice alfabético interactivo**:
-  - Vertical en escritorio.
-  - Horizontal fijo al pie en móviles.
-  - Permite saltar rápidamente a artistas por letra.
-- 🎧 Filtros por género musical (estructura en desarrollo).
-- 📱 Totalmente **responsive** (adaptado para escritorio y móviles).
-- 💡 Pensado para expandirse como catálogo, colección o vitrina musical personal.
-- **Soporte PWA**: La aplicación ahora puede instalarse en dispositivos móviles y de escritorio, funcionando incluso sin conexión a internet.
-- 🔄 **Actualización automática en segundo plano**: La app verifica automáticamente si hay cambios en la biblioteca cada vez que el usuario ingresa, actualizando la UI sin interrumpir la navegación actual.
-- � **Notificaciones detalladas de cambios**: Muestra exactamente qué artistas y discos fueron agregados o eliminados en cada actualización, con un listado completo de los cambios realizados.
-- �👁️ **Filtrado por visibilidad**: Solo muestra registros donde `Visible == "SI"` según la API.- 🏷️ **Badge de versión del cache**: Muestra la versión actual del service worker/cache en la barra de navegación superior derecha.
----
+## Requisitos
 
-## 📱 Progressive Web App (PWA)
+- Node.js 18 o superior.
+- El backend `inventario-server` en ejecución y configurado.
 
-La aplicación ha sido configurada como una PWA, lo que permite:
+## Desarrollo local
 
-- Instalación en dispositivos móviles y de escritorio.
-- Funcionamiento sin conexión a internet.
-- Experiencia tipo aplicación con pantalla completa y sin barra de navegación del navegador.
+Instala las dependencias:
 
-
-### Archivos clave:
-
-- `manifest.json`: Define el nombre de la app, colores, íconos y comportamiento.
-- `music_icon_192.png` y `music_icon_512.png`: Íconos utilizados por la PWA.
-
-Asegúrate de tener en tu archivo `index.html` la siguiente línea dentro del `<head>`:
-
-```html
-<link rel="manifest" href="manifest.json">
+```bash
+npm install
 ```
 
-Y también:
+Inicia solo el frontend:
 
-```html
-<meta name="theme-color" content="#000000">
+```bash
+npm run dev
 ```
 
-## � Notificaciones Detalladas de Cambios
+Para iniciar frontend y backend juntos, con el backend como proyecto hermano:
 
-La aplicación incluye un sistema avanzado de notificaciones que informa al usuario exactamente qué cambios ocurrieron en la biblioteca musical durante las actualizaciones automáticas.
-
-### Características de las notificaciones:
-
-- **Listado completo**: Muestra todos los discos agregados y eliminados
-- **Formato claro**: Artista - Disco para fácil identificación
-- **Límite inteligente**: Muestra hasta 5 elementos por categoría, con indicador de "y X más"
-- **Posicionamiento**: Notificaciones fijas en la esquina inferior derecha
-- **Tiempo de visualización**: 10 segundos para notificaciones detalladas
-- **Cierre manual**: Botón X para cerrar anticipadamente
-
-### Ejemplo de notificación:
-
-```
-✅ Biblioteca actualizada
-
-➕ Agregados (3):
-  • Artist A - New Album
-  • Artist B - Latest Release
-  • Artist C - Debut Album
-  ... y 2 más
-
-➖ Eliminados (1):
-  • Old Artist - Outdated Album
+```bash
+npm run dev:full
 ```
 
-### Funcionamiento técnico:
+Vite indicará la URL local, habitualmente `http://localhost:5173`.
 
-- **Comparación inteligente**: Usa claves únicas basadas en Artista + Disco + Año
-- **Detección precisa**: Identifica agregados y eliminados por separado
-- **Actualización selectiva**: Solo actualiza cuando hay cambios reales
-- **Interfaz no bloqueante**: Las notificaciones no interrumpen la navegación del usuario
+## Validación
 
-## �📦 Instalación y desarrollo local
+```bash
+npm run lint
+npm test
+npm run build
+```
 
-1. Clona este repositorio:
-   ```bash
-   git clone https://github.com/jsuazos/inventario-front.git
-   ```
+El último comando genera la versión de producción en `dist/`.
 
-2. Instala dependencias:
-   ```bash
-   npm install
-   ```
+## Configuración de la API
 
-3. Ejecuta el servidor de desarrollo (Vite):
-   ```bash
-   npm run dev
-   ```
+La URL del backend se configura en `config.json`. La aplicación selecciona el entorno local al ejecutarse en `localhost` y, en otro caso, el entorno de producción.
 
-4. Abre tu navegador en la URL que indique Vite (por defecto `http://localhost:5173`).
-
-> ⚠️ Si necesitas levantar el backend local para desarrollo completo, usa:
-> ```bash
-> npm run dev:full
-> ```
-> Este comando intenta iniciar el servidor de frontend y el backend juntos (requiere el backend en `../..` según la configuración actual).
-
-
----
-
-## 🔧 Configuración de API
-
-La aplicación usa `config.json` para definir la URL de la API y otros ajustes de entorno.
-
-- **Archivo**: `config.json`
-- **Sección clave**: `entornos.local.apiUrl` / `entornos.produccion.apiUrl`.
-
-Ejemplo:
 ```json
 {
   "entornos": {
     "local": {
-      "apiUrl": "https://inventario-server-pw1j.onrender.com/api"
+      "apiUrl": "http://localhost:3000/api"
     },
     "produccion": {
-      "apiUrl": "https://inventario-server-pw1j.onrender.com/api"
+      "apiUrl": "https://tu-servidor.example/api"
     }
   }
 }
 ```
 
-La app detecta automáticamente si está corriendo en `localhost` para elegir el entorno.
+No incluyas secretos en este repositorio. Las credenciales y los tokens pertenecen a la configuración del backend.
 
-### 📊 Formato de datos esperado
+## Estructura
 
-La API debe devolver datos en el siguiente formato:
-
-```json
-{
-  "data": [
-    {
-      "Artista": "Nombre del Artista",
-      "Disco": "Nombre del Álbum", 
-      "Año": 2023,
-      "Tipo": "CD|VINYL|DIGITAL",
-      "Genero": "Rock|Pop|Jazz",
-      "Visible": "SI"
-    }
-  ]
-}
-```
-
-**Campo `Visible`**: Solo se muestran los registros donde `Visible == "SI"`. Los registros con cualquier otro valor (o sin este campo) serán filtrados automáticamente.
-
----
-
-## 🗂️ Estructura de archivos (actualizada)
-
-```
+```text
 inventario-front/
-├── index.html                      # Entrada principal
-├── manifest.json                   # Configuración PWA
-├── service-worker.js               # Service Worker (caché + offline)
-├── config.json                     # Configuración de entornos / API
-├── package.json                    # Dependencias y scripts
 ├── src/
-│   ├── main.js                     # Punto de entrada del frontend
-│   ├── components/                 # Web Components reutilizables
-│   ├── services/                   # Lógica de datos / API
-│   ├── state/                      # Estado global (store)
-│   ├── styles/                     # Estilos compartidos
-│   └── utils/                      # Helpers y utilidades
-└── public/
-    └── img/                       # Íconos y assets estáticos
+│   ├── components/  # Custom elements de la interfaz
+│   ├── services/    # API, caché, autenticación y proveedores externos
+│   ├── state/       # Estado compartido de biblioteca y wishlist
+│   ├── utils/       # Renderizado, filtros y utilidades
+│   └── main.js      # Arranque y rutas de la aplicación
+├── service-worker.js
+├── manifest.json
+├── config.json
+└── vite.config.js
 ```
 
----
+## Rutas de la interfaz
 
-## 🤖 Rate limiting y manejo de APIs externas
+- `#biblioteca`: colección visible del usuario.
+- `#wishlist/me`: wishlist del usuario autenticado.
+- `#ocultos`: discos ocultos, disponibles para restaurar.
 
-Para evitar errores `429 Too Many Requests` con APIs como Discogs, MusicBrainz y Fanart.tv, el proyecto incorpora:
+## PWA
 
-- **Rate limiter** en las llamadas a APIs externas (1 solicitud cada 2 segundos para evitar bloqueos).
-- **Timeouts** (5s) para evitar que la UI se quede pendiente indefinidamente.
-- **Fallbacks visuales** cuando no hay imagen disponible (evita usar imágenes de Discogs cuando generan 429).
+La app usa `manifest.json` y `service-worker.js` para poder instalarse. La primera carga y las funciones que consultan servicios externos requieren conexión; la caché permite mantener disponibles los datos guardados localmente.
 
-Estas mejoras se encuentran principalmente en `src/services/artistService.js` y en `service-worker.js`.
+## Backend y documentación
 
-## 🔄 Actualización automática en segundo plano
+Consulta los endpoints, autenticación y variables de entorno en el [README del backend](../inventario-server/README.md).
 
-La aplicación incluye un sistema inteligente de actualización automática que:
+## Licencia
 
-- **Verifica cambios automáticamente** cada vez que el usuario ingresa a la aplicación.
-- **No interrumpe la navegación** actual si ya tienes datos guardados localmente.
-- **Compara datos completos** para detectar cambios reales (no solo actualiza por checksum simple).
-- **Muestra notificaciones discretas** en la esquina inferior derecha:
-  - 🔄 "Buscando actualizaciones en segundo plano..." (mientras verifica)
-  - ✅ "Biblioteca actualizada con los últimos cambios" (si hay actualizaciones)
-  - 📋 "No hay cambios disponibles" (si no hay cambios)
-- **Actualiza la UI automáticamente** cuando detecta cambios en la API.
-
-Esta funcionalidad asegura que siempre tengas la información más actualizada sin necesidad de recargar la página manualmente.
-
----
-
-## 📌 Pendientes / mejoras futuras
-
-- [x] Filtro dinámico por género desde el menú lateral.
-- [x] Integración con APIs externas (Discogs, MusicBrainz, Fanart.tv).
-- [x] Actualización automática en segundo plano de la biblioteca.
-- [x] Filtrado por visibilidad (Visible == "SI").
-- [ ] Visualización por álbum, artista o formato.
-- [ ] Reproducción de previews (si se integra Spotify API).
-- [ ] Guardar favoritos localmente o vía backend.
-- [ ] Crear login para realizar modificaciones.
-- [ ] Permitir agregar discos desde el sitio.
-- [x] Convertir a PWA
-
----
-
-## 🧑‍💻 Autor
-
-**Javier Suazo**  
-https://github.com/jsuazos
-
----
-
-## 🖼️ Licencia
-
-Este proyecto es de uso personal y educativo. Puedes adaptarlo o inspirarte libremente, dando el crédito correspondiente.
+Proyecto de uso personal y educativo.

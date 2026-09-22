@@ -21,6 +21,7 @@ export default async function displayLibrary(items, options = {}) {
       onEditInventory = null,
       onRemoveInventory = null,
       onMarkReceived = null,
+      onRestoreInventory = null,
       showEditButton = true,
     } = options;
 
@@ -121,6 +122,7 @@ export default async function displayLibrary(items, options = {}) {
                 ${wishlistMode && canManageWishlist ? '<button class="btn btn-sm btn-dark border-0 btn-edit-card card-action-btn" title="Editar wishlist">\n                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>\n                </button>' : ''}
                 ${wishlistMode && canManageWishlist ? '<button class="btn btn-sm btn-danger btn-wishlist-remove card-action-btn" title="Quitar de wishlist" aria-label="Quitar de wishlist">\n                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>\n                </button>' : ''}
                 ${!wishlistMode && item.Recibido === 'NO' && typeof onMarkReceived === 'function' ? '<button class="btn btn-sm btn-success btn-mark-received card-action-btn" title="Marcar como recibido" aria-label="Marcar como recibido">✓</button>' : ''}
+                ${!wishlistMode && item.Visible === 'NO' && typeof onRestoreInventory === 'function' ? '<button class="btn btn-sm btn-info btn-inventory-restore card-action-btn" title="Restaurar al inventario" aria-label="Restaurar al inventario">↶</button>' : ''}
                 ${showEditButton && !(wishlistMode && canManageWishlist) ? '<button class="btn btn-sm btn-dark border-0 btn-edit-card card-action-btn" title="Editar">\n                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>\n                </button>' : ''}
                 ${typeof onRemoveInventory === 'function' && !(wishlistMode && canManageWishlist) ? '<button class="btn btn-sm btn-danger btn-inventory-remove card-action-btn" title="Ocultar del inventario" aria-label="Ocultar del inventario">\n                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>\n                </button>' : ''}
                 </div>
@@ -278,24 +280,48 @@ export default async function displayLibrary(items, options = {}) {
 
             removeInventoryButton.disabled = true;
             try {
-              await onRemoveInventory(item);
+              const removedItem = await onRemoveInventory(item);
 
               if (typeof Swal !== 'undefined') {
-                Swal.fire({
+                const undo = await Swal.fire({
                   toast: true,
                   position: 'top-end',
                   icon: 'success',
                   title: 'Ocultado del inventario',
-                  showConfirmButton: false,
-                  timer: 1800,
+                  showConfirmButton: typeof onRestoreInventory === 'function',
+                  confirmButtonText: 'Deshacer',
+                  showCancelButton: typeof onRestoreInventory === 'function',
+                  cancelButtonText: 'Cerrar',
+                  timer: 6000,
+                  timerProgressBar: true,
                   background: '#1a1a1a',
                   color: '#fff'
                 });
+
+                if (undo.isConfirmed && typeof onRestoreInventory === 'function') {
+                  await onRestoreInventory(removedItem || item);
+                }
               }
             } catch (error) {
               console.error('Error quitando del inventario:', error);
             } finally {
               removeInventoryButton.disabled = false;
+            }
+          });
+        }
+
+        const restoreInventoryButton = card.querySelector('.btn-inventory-restore');
+        if (restoreInventoryButton && typeof onRestoreInventory === 'function' && !wishlistMode) {
+          restoreInventoryButton.addEventListener('click', async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            restoreInventoryButton.disabled = true;
+            try {
+              await onRestoreInventory(item);
+            } catch (error) {
+              console.error('Error restaurando inventario:', error);
+            } finally {
+              restoreInventoryButton.disabled = false;
             }
           });
         }
