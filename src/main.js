@@ -97,6 +97,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         await wishlistStore.loadMine();
         const freshData = await fetchLibraryFromApi();
         libraryStore.loadData(freshData);
+        await setupPushNotifications();
       } catch (error) {
         console.error('No se pudo cargar la data del usuario:', error);
       }
@@ -258,6 +259,7 @@ function upsertInventoryItemLocally(originalItem, updatedItem, { removeIfHidden 
 }
 
 async function setupPushNotifications() {
+  if (!authStore.isLoggedIn) return;
   if (!isSupported()) return;
   if (Notification.permission === 'denied') return;
 
