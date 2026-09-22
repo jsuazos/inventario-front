@@ -122,9 +122,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Configurar manejo de conexión
   setupOnlineOfflineHandlers();
   
-  let libraryData = libraryStore.getAllData();
-
-  libraryData = await loadLibrary(libraryData);
+  await loadLibrary(libraryStore.getAllData());
 
   // Cargar catálogo de artistas desde la API
   if (navigator.onLine) {
@@ -957,8 +955,6 @@ function renderLandingPage() {
 async function renderCurrentView() {
   const route = parseRoute();
   const artistBanner = document.getElementById('artistBanner');
-  const grid = document.getElementById('libraryGrid');
-  const counter = document.getElementById('resultCount');
 
   if (route.mode === 'library' && !authStore.isLoggedIn) {
     renderLandingPage();

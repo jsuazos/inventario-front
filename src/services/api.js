@@ -112,7 +112,7 @@ export class ApiClient {
   }
 
   async request(method, endpoint, body = null, options = {}) {
-    const { timeout = this.defaultTimeout, retries = this.maxRetries } = options;
+    const { timeout = this.defaultTimeout } = options;
 
     try {
       const { apiUrl } = await configService();

@@ -71,7 +71,7 @@ export function closeDB() {
   if (dbInstance) {
     try {
       dbInstance.close();
-    } catch (e) {
+    } catch {
       // ignorar
     }
     dbInstance = null;
@@ -114,7 +114,7 @@ export async function getLibraryData() {
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
         const result = Array.isArray(request.result) ? request.result : [];
-        resolve(result.map(({ id, ...item }) => item));
+        resolve(result.map(({ id: _id, ...item }) => item));
       };
     });
   } catch (error) {

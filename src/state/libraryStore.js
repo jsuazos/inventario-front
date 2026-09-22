@@ -7,6 +7,7 @@ import { storageService } from '../services/storageService.js';
 import { hasGenreTag, splitGenreTags } from '../utils/genreTags.js';
 import { hasTypeTag } from '../utils/typeTags.js';
 import normalizeLibraryItem from '../utils/normalizeLibraryItem.js';
+import { isVisibleLibraryItem } from '../utils/libraryVisibility.js';
 
 function matchesSearchTerm(item, term) {
   return hasTypeTag(item.Tipo, term) ||
@@ -146,7 +147,7 @@ export class LibraryStore {
       const matchArtist = !artist || item.Artista === artist;
       const matchYear = !year || item.Año.toString() === year;
       const matchRecibido = !recibido || (item.Recibido && item.Recibido === recibido);
-      const matchVisible = item.Visible === 'SI' || item.Visible === true;
+      const matchVisible = isVisibleLibraryItem(item);
 
       return matchSearch && matchType && matchGenre && matchArtist && matchYear && matchRecibido && matchVisible;
     });

@@ -4,11 +4,15 @@
   "homepage": "./",
   "scripts": {
     "dev": "vite",
-    "dev:full": "concurrently \"vite\" \"node ../inventario-server/index.js\""
+    "dev:full": "concurrently \"vite\" \"node ../inventario-server/index.js\"",
+    "build": "vite build",
+    "test": "node --test",
+    "lint": "eslint src test"
   },
   "type": "module",
   "devDependencies": {
     "concurrently": "^8.2.0",
+    "eslint": "^10.11.0",
     "vite": "^5.0.0"
   }
 }

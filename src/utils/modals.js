@@ -1,6 +1,5 @@
 import { fetchConStatusOk } from '../services/api.js';
 import configService from '../services/configService.js';
-import { storageService } from '../services/storageService.js';
 import { libraryStore } from '../state/libraryStore.js';
 import { authStore } from '../state/authStore.js';
 

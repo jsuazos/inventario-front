@@ -4,10 +4,7 @@ import obtenerTopEstilos from '../utils/obtenerTopEstilos.js';
 import obtenerGeneros from '../utils/obtenerGeneros.js';
 import { splitTypeTags } from '../utils/typeTags.js';
 import { apiClient } from './api.js';
-import {
-  showBackgroundUpdateNotification,
-  showDetailedChangesNotification,
-} from './backgroundNotificationService.js';
+import { showDetailedChangesNotification } from './backgroundNotificationService.js';
 import { authStore } from '../state/authStore.js';
 import { libraryStore } from '../state/libraryStore.js';
 import { errorHandler } from './errorHandler.js';
