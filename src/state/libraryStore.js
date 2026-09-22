@@ -37,15 +37,19 @@ export class LibraryStore {
     };
     this.listeners = [];
     this.isLoading = false;
+    this.activeUser = null;
+    this.lastSyncedAt = null;
   }
 
   /**
    * Inicializa el store desde storage
    */
-  async init() {
+  async init(user = null) {
+    this.activeUser = user;
     try {
-      const data = await storageService.getLibraryData();
+      const data = await storageService.getLibraryData(this.activeUser);
       this.data = normalizeLibraryData(data);
+      this.lastSyncedAt = storageService.getLibraryLastSyncedAt(this.activeUser);
       if (!Array.isArray(data)) {
         console.warn('⚠️ Datos de storage no son un array, usando array vacío');
       }
@@ -59,18 +63,23 @@ export class LibraryStore {
     }
   }
 
+  async switchUser(user = null) {
+    await this.init(user);
+  }
+
   /**
    * Carga datos desde API (si es necesario)
    * @param {Array} apiData - Datos desde API
    */
-  loadData(apiData) {
+  loadData(apiData, { syncedAt = new Date().toISOString() } = {}) {
     if (!Array.isArray(apiData)) {
       console.warn('⚠️ Datos inválidos recibidos en loadData:', apiData);
       return;
     }
 
     this.data = normalizeLibraryData(apiData);
-    storageService.saveLibraryData(this.data);
+    this.lastSyncedAt = syncedAt;
+    storageService.saveLibraryData(this.data, this.activeUser, syncedAt);
     this.applyFilters();
     this.notifyListeners();
   }
@@ -189,7 +198,8 @@ export class LibraryStore {
   async clearLibrary() {
     this.data = [];
     this.filteredData = [];
-    await storageService.clearLibraryData();
+    this.lastSyncedAt = null;
+    await storageService.clearLibraryData(this.activeUser);
     this.notifyListeners();
   }
 
@@ -232,6 +242,10 @@ export class LibraryStore {
     return this.isLoading;
   }
 
+  getLastSyncedAt() {
+    return this.lastSyncedAt;
+  }
+
   /**
    * Se suscribe a cambios del store
    * @param {Function} callback - Función a ejecutar cuando cambia el estado
@@ -252,7 +266,8 @@ export class LibraryStore {
         data: this.filteredData,
         allData: this.data,
         filters: this.filters,
-        isLoading: this.isLoading
+        isLoading: this.isLoading,
+        lastSyncedAt: this.lastSyncedAt
       });
     });
   }

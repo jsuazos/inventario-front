@@ -5,13 +5,27 @@
  */
 
 import { errorHandler } from './errorHandler.js';
-import { saveLibraryData as saveToIndexedDB, getLibraryData as getFromIndexedDB, clearAllData, closeDB } from './dbService.js';
+import { saveLibraryData as saveToIndexedDB, getLibraryData as getFromIndexedDB, clearLibraryData as clearFromIndexedDB, closeDB } from './dbService.js';
 
 const STORAGE_KEYS = {
-  libraryData: 'libraryData',
   userPreferences: 'userPreferences',
   cacheVersion: 'cacheVersion'
 };
+const LIBRARY_CACHE_PREFIX = 'libraryData:v2';
+const LIBRARY_SYNC_PREFIX = 'libraryLastSyncedAt:v2';
+const LEGACY_LIBRARY_CACHE_KEY = 'libraryData';
+
+function getUserCacheKey(user) {
+  return encodeURIComponent(user || 'anonymous');
+}
+
+function getLibraryDataKey(user) {
+  return `${LIBRARY_CACHE_PREFIX}:${getUserCacheKey(user)}`;
+}
+
+function getLibrarySyncKey(user) {
+  return `${LIBRARY_SYNC_PREFIX}:${getUserCacheKey(user)}`;
+}
 
 export class StorageService {
 
@@ -19,17 +33,21 @@ export class StorageService {
    * Guarda datos de biblioteca
    * @param {Array} data - Datos de la biblioteca
    */
-  async saveLibraryData(data) {
+  async saveLibraryData(data, user = null, syncedAt = new Date().toISOString()) {
     try {
       const serialized = JSON.stringify(data);
+      const userKey = getUserCacheKey(user);
       
       // Verificar si hay espacio suficiente en localStorage
       if (this.hasEnoughSpace(serialized)) {
-        localStorage.setItem(STORAGE_KEYS.libraryData, serialized);
+        localStorage.setItem(getLibraryDataKey(user), serialized);
+        localStorage.setItem(getLibrarySyncKey(user), syncedAt);
         return true;
       } else {
         // Usar IndexedDB como fallback
-        await saveToIndexedDB(data);
+        await saveToIndexedDB(data, userKey);
+        localStorage.removeItem(getLibraryDataKey(user));
+        localStorage.setItem(getLibrarySyncKey(user), syncedAt);
         return true;
       }
     } catch (error) {
@@ -46,21 +64,24 @@ export class StorageService {
    * Obtiene datos de biblioteca
    * @returns {Array} Datos guardados o array vacío
    */
-  async getLibraryData() {
+  async getLibraryData(user = null) {
     try {
+      const userKey = getUserCacheKey(user);
+      localStorage.removeItem(LEGACY_LIBRARY_CACHE_KEY);
+
       // Intentar obtener de localStorage primero
-      const localData = localStorage.getItem(STORAGE_KEYS.libraryData);
+      const localData = localStorage.getItem(getLibraryDataKey(user));
       if (localData) {
         return JSON.parse(localData);
       }
 
       // Si no hay datos en localStorage, intentar con IndexedDB
-      const indexedData = await getFromIndexedDB();
+      const indexedData = await getFromIndexedDB(userKey);
       return indexedData && indexedData.length > 0 ? indexedData : [];
     } catch (error) {
       errorHandler.handle(error, {
         operation: 'getLibraryData',
-        storedData: localStorage.getItem(STORAGE_KEYS.libraryData)?.substring(0, 100)
+        storedData: localStorage.getItem(getLibraryDataKey(user))?.substring(0, 100)
       });
       return [];
     }
@@ -69,13 +90,15 @@ export class StorageService {
   /**
    * Limpia datos de biblioteca
    */
-  async clearLibraryData() {
+  async clearLibraryData(user = null) {
     try {
-      localStorage.removeItem(STORAGE_KEYS.libraryData);
+      const userKey = getUserCacheKey(user);
+      localStorage.removeItem(getLibraryDataKey(user));
+      localStorage.removeItem(getLibrarySyncKey(user));
       
       // También limpiar de IndexedDB si existe
       if ('indexedDB' in window) {
-        await clearAllData();
+        await clearFromIndexedDB(userKey);
         closeDB();
       }
       
@@ -84,6 +107,10 @@ export class StorageService {
       errorHandler.handle(error, { operation: 'clearLibraryData' });
       return false;
     }
+  }
+
+  getLibraryLastSyncedAt(user = null) {
+    return localStorage.getItem(getLibrarySyncKey(user));
   }
 
   /**
@@ -125,6 +152,9 @@ export class StorageService {
       Object.values(STORAGE_KEYS).forEach(key => {
         localStorage.removeItem(key);
       });
+      Object.keys(localStorage)
+        .filter(key => key.startsWith(LIBRARY_CACHE_PREFIX) || key.startsWith(LIBRARY_SYNC_PREFIX))
+        .forEach(key => localStorage.removeItem(key));
       
       // Limpiar IndexedDB
       if ('indexedDB' in window) {

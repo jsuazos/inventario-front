@@ -11,6 +11,7 @@ export default [
         AbortController: 'readonly',
         AbortSignal: 'readonly',
         Blob: 'readonly',
+        CustomEvent: 'readonly',
         IntersectionObserver: 'readonly',
         MessageChannel: 'readonly',
         HTMLElement: 'readonly',

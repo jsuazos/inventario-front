@@ -9,8 +9,9 @@ const STORE_NAME = 'library';
 let dbPromise = null;
 let dbInstance = null;
 
-function buildItemId(item) {
-  return item?.Orden || `${item?.Artista || ''}-${item?.Disco || ''}-${item?.Año || ''}` || crypto.randomUUID();
+function buildItemId(item, userKey) {
+  const itemKey = item?.Orden || `${item?.Artista || ''}-${item?.Disco || ''}-${item?.Año || ''}` || crypto.randomUUID();
+  return `${userKey}:${itemKey}`;
 }
 
 /**
@@ -82,7 +83,7 @@ export function closeDB() {
 /**
  * Guardar datos en IndexedDB
  */
-export async function saveLibraryData(data) {
+export async function saveLibraryData(data, userKey = 'anonymous') {
   const db = await initDB();
 
   return new Promise((resolve, reject) => {
@@ -92,17 +93,24 @@ export async function saveLibraryData(data) {
     transaction.onerror = () => reject(transaction.error);
     transaction.oncomplete = () => resolve(true);
 
-    store.clear();
-    (Array.isArray(data) ? data : []).forEach(item => {
-      store.put({ ...item, id: buildItemId(item) });
-    });
+    const request = store.getAll();
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      request.result
+        .filter(item => item.userKey === userKey)
+        .forEach(item => store.delete(item.id));
+
+      (Array.isArray(data) ? data : []).forEach(item => {
+        store.put({ ...item, id: buildItemId(item, userKey), userKey });
+      });
+    };
   });
 }
 
 /**
  * Obtener datos de IndexedDB
  */
-export async function getLibraryData() {
+export async function getLibraryData(userKey = 'anonymous') {
   try {
     const db = await initDB();
 
@@ -114,13 +122,34 @@ export async function getLibraryData() {
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
         const result = Array.isArray(request.result) ? request.result : [];
-        resolve(result.map(({ id: _id, ...item }) => item));
+        resolve(result
+          .filter(item => item.userKey === userKey)
+          .map(({ id: _id, userKey: _userKey, ...item }) => item));
       };
     });
   } catch (error) {
     console.warn('IndexedDB no disponible, usando fallback vacio:', error);
     return [];
   }
+}
+
+export async function clearLibraryData(userKey = 'anonymous') {
+  const db = await initDB();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.getAll();
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      request.result
+        .filter(item => item.userKey === userKey)
+        .forEach(item => store.delete(item.id));
+    };
+    transaction.onerror = () => reject(transaction.error);
+    transaction.oncomplete = () => resolve(true);
+  });
 }
 
 /**

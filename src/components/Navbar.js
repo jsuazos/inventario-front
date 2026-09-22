@@ -53,6 +53,7 @@ class Navbar extends HTMLElement {
             <div id="cacheVersionBadge" class="badge bg-info text-dark align-self-center badge-desktop">
                 <small>Cache: <span id="cacheVersion">Cargando...</span></small>
             </div>
+            <button id="refreshLibrary" type="button" class="btn btn-outline-info btn-sm" title="Actualizar biblioteca" aria-label="Actualizar biblioteca">↻</button>
             <div id="connection-status" class="badge bg-success ms-2 badge-desktop">
                 <small>Online</small>
             </div>
@@ -67,6 +68,9 @@ class Navbar extends HTMLElement {
     this.initSearchAutocomplete();
     this.setupConnectionStatus();
     this.updateCacheVersion();
+    this.querySelector('#refreshLibrary')?.addEventListener('click', () => {
+      window.dispatchEvent(new CustomEvent('library-refresh-requested'));
+    });
 
     // Sincronizar badges cuando el store cambie
     const unsubscribeBadges = libraryStore.subscribe(() => {

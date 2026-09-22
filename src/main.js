@@ -65,8 +65,11 @@ function syncGlobalActionDock() {
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
+  // Restaurar sesión antes de abrir la caché correspondiente al usuario.
+  authStore.init();
+
   // Inicializar el store desde localStorage/IndexedDB
-  await libraryStore.init();
+  await libraryStore.init(authStore.user);
 
   // Suscribirse a cambios del store para refrescar la vista
   // Registrado temprano para capturar todas las notificaciones
@@ -80,8 +83,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     renderCurrentView().catch(() => {});
   });
 
-  // Restaurar sesión si existe token válido
-  authStore.init();
   updateLoginUI();
 
   // Sincronizar clase auth-editor en body con el estado de login
@@ -94,6 +95,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     if (isLoggedIn) {
       try {
+        await libraryStore.switchUser(authStore.user);
         await wishlistStore.loadMine();
         const freshData = await fetchLibraryFromApi();
         libraryStore.loadData(freshData);
@@ -102,6 +104,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         console.error('No se pudo cargar la data del usuario:', error);
       }
     } else {
+      await libraryStore.switchUser(null);
       if (parseRoute().mode === 'wishlist' && parseRoute().user === 'me') {
         window.location.hash = '#biblioteca';
         return;
@@ -177,6 +180,22 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Push notifications: adaptado para iOS (requiere Home Screen + user gesture)
   await setupPushNotifications();
+});
+
+window.addEventListener('library-refresh-requested', async () => {
+  if (!authStore.isLoggedIn || !navigator.onLine) {
+    return;
+  }
+
+  libraryStore.setLoading(true);
+  try {
+    const freshData = await fetchLibraryFromApi(true);
+    libraryStore.loadData(freshData);
+  } catch (error) {
+    errorHandler.handleNetworkError(error, 'actualización manual de biblioteca');
+  } finally {
+    libraryStore.setLoading(false);
+  }
 });
 
 function isIOS() {
