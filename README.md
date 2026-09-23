@@ -102,7 +102,7 @@ La app usa `manifest.json` y `service-worker.js` para poder instalarse. La prime
 
 ## Backend y documentación
 
-Consulta los endpoints, autenticación y variables de entorno en el [README del backend](../inventario-server/README.md).
+Consulta los endpoints, autenticación y variables de entorno en el [README del backend](https://github.com/jsuazos/inventario-server/blob/master/README.md).
 
 ## Licencia
 
