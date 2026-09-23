@@ -1,8 +1,38 @@
-const CACHE_VERSION = 'v1.8.3';
+const CACHE_VERSION = 'v1.9.0';
 const CACHE_NAME = `musica-inventario-${CACHE_VERSION}`;
+const APP_SHELL_URLS = [
+  './offline.html',
+  './manifest.json',
+  './img/music_icon_192.png',
+  './img/music_icon_512.png',
+  './img/music_library_icon.ico',
+];
 
-self.addEventListener('install', () => {
-  self.skipWaiting();
+async function precacheApplicationShell() {
+  const cache = await caches.open(CACHE_NAME);
+  await cache.addAll(APP_SHELL_URLS);
+
+  const indexResponse = await fetch('./', { cache: 'reload' });
+  if (!indexResponse.ok) {
+    throw new Error('No se pudo precachear la aplicación');
+  }
+
+  const html = await indexResponse.clone().text();
+  await cache.put('./', indexResponse);
+
+  const assetPaths = [...html.matchAll(/(?:src|href)="([^"]+)"/g)]
+    .map(match => match[1])
+    .filter(path => !path.startsWith('http') && !path.startsWith('data:'));
+  const assetUrls = [...new Set(assetPaths.map(path => new URL(path, self.location.href).href))];
+
+  await Promise.all(assetUrls.map(url => cache.add(url)));
+}
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    precacheApplicationShell()
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', event => {
@@ -45,11 +75,37 @@ self.addEventListener('fetch', event => {
 
   if (event.request.destination === 'document') {
     event.respondWith(
-      fetch(event.request).catch(() =>
-        caches.match(event.request).then(cached => cached || new Response('Offline', { status: 503 }))
-      )
+      fetch(event.request)
+        .then(async response => {
+          const cache = await caches.open(CACHE_NAME);
+          cache.put('./', response.clone());
+          return response;
+        })
+        .catch(async () => {
+          const cached = await caches.match(event.request, { ignoreSearch: true }) || await caches.match('./');
+          return cached || caches.match('./offline.html');
+        })
     );
     return;
+  }
+
+  if (
+    event.request.method === 'GET' &&
+    event.request.url.startsWith(self.location.origin) &&
+    ['script', 'style', 'font'].includes(event.request.destination)
+  ) {
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        if (cached) return cached;
+        return fetch(event.request).then(response => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+          }
+          return response;
+        });
+      })
+    );
   }
 });
 

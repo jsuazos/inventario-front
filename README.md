@@ -13,7 +13,7 @@ Demo: <https://jsuazos.github.io/inventario-front/>
 - Wishlist personal con estados, edición y opción de mover un disco al inventario.
 - Integración con Discogs, datos de artistas y portadas cuando están disponibles.
 - Caché local separada por usuario mediante IndexedDB y actualización en segundo plano.
-- Notificaciones push opcionales y soporte PWA para instalación y uso con conectividad limitada.
+- Notificaciones push opcionales y soporte PWA con precache de la aplicación, página offline y uso de datos locales guardados.
 - Interfaz adaptable para escritorio y dispositivos móviles.
 
 Los discos visibles son los únicos que se muestran en la biblioteca principal. Los ocultos siguen siendo recuperables desde `#ocultos` después de iniciar sesión.
