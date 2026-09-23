@@ -18,6 +18,8 @@ import displayLibrary from "./utils/libraryDisplay.js";
 import { libraryStore } from "./state/libraryStore.js";
 import { wishlistStore } from './state/wishlistStore.js';
 import { errorHandler } from "./services/errorHandler.js";
+import { verifyStoredSession } from './services/authService.js';
+import { getActiveCacheVersion } from './services/cacheVersionService.js';
 import { setupOnlineOfflineHandlers } from './services/dbService.js';
 import { loadArtistCatalog } from './services/artistCatalogService.js';
 import { subscribe, isSubscribed, isSupported, syncExistingSubscription } from './services/pushService.js';
@@ -67,6 +69,19 @@ function syncGlobalActionDock() {
 window.addEventListener("DOMContentLoaded", async () => {
   // Restaurar sesión antes de abrir la caché correspondiente al usuario.
   authStore.init();
+
+  if (navigator.onLine) {
+    try {
+      const session = await verifyStoredSession();
+      if (session?.valido && session.usuario) {
+        authStore.login(session.usuario);
+      } else {
+        authStore.logout();
+      }
+    } catch {
+      authStore.logout();
+    }
+  }
 
   // Inicializar el store desde localStorage/IndexedDB
   await libraryStore.init(authStore.user);
@@ -162,20 +177,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage("GET_CACHE_VERSION");
-
-    navigator.serviceWorker.addEventListener("message", (event) => {
-      if (!event.data?.cacheVersion) {
-        return;
-      }
-
-      const version = event.data.cacheVersion;
-      console.info(`Versión del caché: ${version}`);
-      document.getElementById(
-        "cache-version"
-      ).textContent = `Versión: ${version}`;
-    });
+  const cacheVersion = await getActiveCacheVersion();
+  const cacheVersionElement = document.getElementById('cache-version');
+  if (cacheVersionElement) {
+    cacheVersionElement.textContent = cacheVersion ? `Caché: ${cacheVersion}` : 'Sin caché activa';
   }
 
   // Push notifications: adaptado para iOS (requiere Home Screen + user gesture)

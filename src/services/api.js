@@ -2,11 +2,6 @@ import configService from './configService.js';
 import { errorHandler } from './errorHandler.js';
 import { authStore } from '../state/authStore.js';
 
-function getAuthHeaders() {
-  const token = authStore.getToken();
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
-}
-
 function handleUnauthorized() {
   if (!authStore.isLoggedIn) return;
   authStore.logout();
@@ -50,7 +45,7 @@ async function parseResponseSafely(response) {
 
 export async function fetchConStatusOk(url, opciones = {}) {
   try {
-    const respuesta = await fetch(url, opciones);
+    const respuesta = await fetch(url, { ...opciones, credentials: 'include' });
 
     const data = await respuesta.json();
 
@@ -127,9 +122,9 @@ export class ApiClient {
         signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders(),
           ...options.headers
-        }
+        },
+        credentials: 'include',
       };
 
       if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE')) {

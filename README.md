@@ -7,7 +7,7 @@ Demo: <https://jsuazos.github.io/inventario-front/>
 ## Funcionalidades
 
 - Biblioteca privada por usuario, con búsqueda y filtros por artista, género, año, tipo y estado de recepción.
-- Inicio de sesión y registro para gestionar el inventario.
+- Inicio de sesión y registro con cookie `HttpOnly` para gestionar el inventario sin guardar el token en el navegador.
 - Crear, editar, marcar como recibido y ocultar discos.
 - Deshacer el ocultamiento de un disco y restaurar discos desde la vista **Discos ocultos**.
 - Wishlist personal con estados, edición y opción de mover un disco al inventario.

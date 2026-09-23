@@ -1,56 +1,37 @@
-const AUTH_KEY = 'authToken';
 const USER_KEY = 'authUser';
 
 class AuthStore {
   constructor() {
-    this.token = null;
     this.user = null;
     this.listeners = [];
   }
 
   init() {
-    const stored = localStorage.getItem(AUTH_KEY);
     const user = localStorage.getItem(USER_KEY);
-    if (stored && user) {
-      this.token = stored;
+    localStorage.removeItem('authToken');
+
+    if (user) {
       this.user = user;
-      this.notify();
       return true;
     }
     return false;
   }
 
-  login(token, user) {
-    this.token = token;
+  login(user) {
     this.user = user;
-    localStorage.setItem(AUTH_KEY, token);
     localStorage.setItem(USER_KEY, user);
     this.notify();
   }
 
   logout() {
-    this.token = null;
     this.user = null;
-    localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem('authToken');
     localStorage.removeItem(USER_KEY);
     this.notify();
   }
 
   get isLoggedIn() {
-    return !!this.token;
-  }
-
-  getToken() {
-    return this.token;
-  }
-
-  decodeToken(token) {
-    try {
-      const payload = token.split('.')[1];
-      return JSON.parse(atob(payload));
-    } catch {
-      return null;
-    }
+    return !!this.user;
   }
 
   subscribe(callback) {

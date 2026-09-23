@@ -1,5 +1,4 @@
 import configService from './configService.js';
-import { authStore } from '../state/authStore.js';
 
 const SUB_KEY = 'push-subscribed';
 
@@ -8,10 +7,7 @@ function getApiUrl() {
 }
 
 function getHeaders() {
-  const headers = { 'Content-Type': 'application/json' };
-  const token = authStore.getToken();
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  return headers;
+  return { 'Content-Type': 'application/json' };
 }
 
 async function saveSubscriptionOnServer(subscription) {
@@ -19,6 +15,7 @@ async function saveSubscriptionOnServer(subscription) {
   const response = await fetch(`${apiUrl}/push/subscribe`, {
     method: 'POST',
     headers: getHeaders(),
+    credentials: 'include',
     body: JSON.stringify({ subscription: subscription.toJSON() }),
   });
 
@@ -112,6 +109,7 @@ export async function unsubscribe() {
       await fetch(`${apiUrl}/push/subscribe`, {
         method: 'DELETE',
         headers: getHeaders(),
+        credentials: 'include',
         body: JSON.stringify({ endpoint }),
       });
     }

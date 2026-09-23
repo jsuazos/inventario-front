@@ -1,6 +1,7 @@
 import { libraryStore } from '../state/libraryStore.js';
 import { authStore } from '../state/authStore.js';
 import { escapeHtml } from '../utils/htmlSafety.js';
+import { getActiveCacheVersion } from '../services/cacheVersionService.js';
 
 import { normalizeGenreTag, splitGenreTags } from '../utils/genreTags.js';
 import { normalizeTypeTag, splitTypeTags } from '../utils/typeTags.js';
@@ -13,7 +14,6 @@ class Navbar extends HTMLElement {
     this.searchTimeout = null;
     this.isSelectingSuggestion = false;
     this.justSelectedSuggestion = false;
-    this.versionShown = false;
     this.clickOutsideHandler = null;
     this.searchBadges = [];
     this.filterTimeout = null;
@@ -52,7 +52,7 @@ class Navbar extends HTMLElement {
             <!-- Lado derecho: login y badges -->
             <div id="navbar-login-wrapper"><login-modal></login-modal></div>
             <div id="cacheVersionBadge" class="badge bg-info text-dark align-self-center badge-desktop">
-                <small>Cache: <span id="cacheVersion">Cargando...</span></small>
+                <small>Cache: <span id="cacheVersion">Sin caché activa</span></small>
             </div>
             <button id="refreshLibrary" type="button" class="btn btn-outline-info btn-sm d-none" title="Actualizar biblioteca" aria-label="Actualizar biblioteca">↻</button>
             <div id="connection-status" class="badge bg-success ms-2 badge-desktop">
@@ -574,75 +574,12 @@ class Navbar extends HTMLElement {
     document.addEventListener('visibilitychange', this.connectionStatusHandler);
   }
 
-  /**
-   * Actualiza el badge con la versión del caché
-   */
-  updateCacheVersion() {
-    if (this.versionShown) return;
-    this.versionShown = true;
-
-    try {
-      // Método 1: Obtener versión del Service Worker
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        const messageChannel = new MessageChannel();
-        messageChannel.port1.onmessage = (event) => {
-          if (event.data && event.data.cacheVersion) {
-            this.showVersionBadge(event.data.cacheVersion);
-          } else {
-            console.log('⚠️ Usando versión por defecto');
-            this.showVersionBadge('v2.0.0');
-          }
-        };
-
-        navigator.serviceWorker.controller.postMessage('GET_CACHE_VERSION', [messageChannel.port2]);
-
-        // Timeout para evitar esperar indefinidamente
-        setTimeout(() => {
-          if (!this.versionShown) {
-            console.log('⚠️ Usando versión por defecto');
-            this.showVersionBadge('v2.0.0');
-          }
-        }, 2000);
-
-      } else {
-        // Método 2: Fallback con versión hardcodeada
-        console.log('⚠️ Usando versión por defecto');
-        this.showVersionBadge('v2.0.0');
-      }
-    } catch (error) {
-      console.error('❌ Error obteniendo versión:', error);
-      this.showVersionBadge('Error');
-    }
-  }
-
   async updateCacheVersion() {
     try {
-      console.log('🔍 Intentando obtener versión del cache...');
-
-      // Método 1: Obtener versión del nombre del cache
-      if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        console.log('📦 Caches encontrados:', cacheNames);
-
-        const musicCache = cacheNames.find(name => name.includes('musica-inventario'));
-        if (musicCache) {
-          console.log('🎵 Cache encontrado:', musicCache);
-          const versionMatch = musicCache.match(/musica-inventario-(v[\d\.]+)/);
-          if (versionMatch && versionMatch[1]) {
-            console.log('✅ Versión obtenida:', versionMatch[1]);
-            this.showVersionBadge(versionMatch[1]);
-            return;
-          }
-        }
-      }
-
-      // Método 2: Fallback con versión hardcodeada
-      console.log('⚠️ Usando versión por defecto');
-      this.showVersionBadge('v2.0.0');
-
-    } catch (error) {
-      console.error('❌ Error obteniendo versión:', error);
-      this.showVersionBadge('Error');
+      const version = await getActiveCacheVersion();
+      this.showVersionBadge(version || 'Sin caché activa');
+    } catch {
+      this.showVersionBadge('No disponible');
     }
   }
 
@@ -651,8 +588,6 @@ class Navbar extends HTMLElement {
     const versionSpan = this.querySelector('#cacheVersion');
     if (badge && versionSpan) {
       versionSpan.textContent = version;
-      console.log('🏷️ Badge actualizado con versión:', version);
-      this.versionShown = true;
     }
     const mobileVersion = document.getElementById('cacheVersion-mobile');
     if (mobileVersion) mobileVersion.textContent = version;

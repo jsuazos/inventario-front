@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1.9.0';
+const CACHE_VERSION = 'v2.0.0';
 const CACHE_NAME = `musica-inventario-${CACHE_VERSION}`;
 const APP_SHELL_URLS = [
   './offline.html',

@@ -2,6 +2,7 @@ import { fetchConStatusOk } from '../services/api.js';
 import configService from '../services/configService.js';
 import { libraryStore } from '../state/libraryStore.js';
 import { authStore } from '../state/authStore.js';
+import { closeStoredSession } from '../services/authService.js';
 
 export function clearLibrary() {
     const btn = document.getElementById('btn-clear-library');
@@ -117,7 +118,7 @@ export function showRegisterModal() {
     }
   }).then(result => {
     if (result.isConfirmed && result.value) {
-      authStore.login(result.value.token, result.value.usuario);
+      authStore.login(result.value.usuario);
       updateLoginUI();
       Swal.fire({
         icon: 'success',
@@ -224,7 +225,7 @@ export function showLoginModal() {
     }
   }).then(result => {
     if (result.isConfirmed && result.value) {
-      authStore.login(result.value.token, result.value.usuario);
+      authStore.login(result.value.usuario);
       updateLoginUI();
       Swal.fire({
         icon: 'success',
@@ -256,8 +257,13 @@ function showLogoutConfirm() {
       cancelButton: 'btn btn-secondary me-2'
     },
     buttonsStyling: false
-  }).then(result => {
+  }).then(async result => {
     if (result.isConfirmed) {
+      try {
+        await closeStoredSession();
+      } catch (error) {
+        console.warn('No se pudo cerrar la sesión remota:', error);
+      }
       authStore.logout();
       updateLoginUI();
       Swal.fire({
