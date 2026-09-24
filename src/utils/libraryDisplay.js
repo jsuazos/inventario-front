@@ -141,6 +141,19 @@ export default async function displayLibrary(items, options = {}) {
         </div>
         `;
 
+        const cardContainer = card.querySelector('.card-with-border');
+        cardContainer?.addEventListener('click', event => {
+          if (event.target.closest('a, button')) {
+            return;
+          }
+
+          const wasOpen = cardContainer.classList.contains('is-actions-open');
+          grid.querySelectorAll('.card-with-border.is-actions-open').forEach(openCard => {
+            openCard.classList.remove('is-actions-open');
+          });
+          cardContainer.classList.toggle('is-actions-open', !wasOpen);
+        });
+
         const addToInventoryButton = card.querySelector('.btn-wishlist-add');
         if (addToInventoryButton && typeof onAddToInventory === 'function') {
           addToInventoryButton.addEventListener('click', async (event) => {

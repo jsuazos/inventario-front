@@ -451,9 +451,12 @@ body.sidebar-open {
   background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
 }
 
-.btn-edit-card {
+.btn-discorgs,
+.btn-edit-card,
+.btn-inventory-remove {
   opacity: 0;
-  transition: opacity 0.2s ease;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 .btn-wishlist-add {
   opacity: 0;
@@ -569,28 +572,27 @@ body.sidebar-open {
   border-color: rgba(13, 202, 240, 0.45);
   color: #b9f6ff;
 }
-.card-with-border:hover .btn-edit-card {
-  opacity: 1;
-}
 .card-with-border:hover .btn-wishlist-add {
   opacity: 1;
 }
 .card-with-border:hover .btn-wishlist-remove {
   opacity: 1;
 }
-.card-with-border:hover .btn-inventory-remove {
-  opacity: 1;
-}
 .card-with-border:hover .btn-mark-received {
   opacity: 1;
 }
 
-body.auth-editor .btn-edit-card,
 body.auth-editor .btn-wishlist-add,
 body.auth-editor .btn-wishlist-remove,
-body.auth-editor .btn-inventory-remove,
 body.auth-editor .btn-mark-received {
   opacity: 1;
+}
+
+.card-with-border.is-actions-open .btn-discorgs,
+body.auth-editor .card-with-border.is-actions-open .btn-edit-card,
+body.auth-editor .card-with-border.is-actions-open .btn-inventory-remove {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 body.offline.auth-editor .global-action-menu,
@@ -1516,6 +1518,18 @@ body.swal2-shown .global-action-menu {
 
 .wishlist-form-row-2 .swal2-input {
   margin: 0 !important;
+}
+
+.discogs-autofill-controls {
+  margin: -0.2rem 0 0.85rem;
+  text-align: left;
+}
+
+.discogs-autofill-status {
+  min-height: 1.2rem;
+  margin: 0.45rem 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.78rem;
 }
 
 .wishlist-form-grid .swal2-input,

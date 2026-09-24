@@ -23,7 +23,7 @@ import { setupOnlineOfflineHandlers } from './services/dbService.js';
 import { loadArtistCatalog } from './services/artistCatalogService.js';
 import { subscribe, isSubscribed, isSupported, syncExistingSubscription } from './services/pushService.js';
 
-import { enrichWishlistItemWithDiscogs } from './services/discogsService.js';
+import { enrichWishlistItemWithDiscogs, getDiscogsReleaseData } from './services/discogsService.js';
 import { addToInventory, getHiddenInventory, markInventoryReceived, removeFromInventory, restoreInventoryItem, updateInventory } from './services/inventoryService.js';
 import { splitTypeTags } from './utils/typeTags.js';
 
@@ -433,6 +433,91 @@ function attachWishlistBannerActions() {
   };
 }
 
+function getDiscogsAutofillControls() {
+  return `
+    <div class="discogs-autofill-controls">
+      <button type="button" id="discogs-autofill" class="btn btn-outline-info btn-sm">Completar desde Discogs</button>
+      <p id="discogs-autofill-status" class="discogs-autofill-status" role="status"></p>
+    </div>
+  `;
+}
+
+function setFormInputIfEmpty(input, value) {
+  const normalizedValue = String(value || '').trim();
+  if (!input || !normalizedValue || input.value.trim()) {
+    return false;
+  }
+
+  input.value = normalizedValue;
+  return true;
+}
+
+function setFormSelectIfEmpty(select, value) {
+  const normalizedValue = String(value || '').trim();
+  const isAvailable = [...(select?.options || [])].some(option => option.value === normalizedValue);
+
+  if (!select || !normalizedValue || select.value || !isAvailable) {
+    return false;
+  }
+
+  select.value = normalizedValue;
+  return true;
+}
+
+function setupDiscogsAutofill() {
+  const discogsInput = document.getElementById('wishlist-discogs');
+  const autofillButton = document.getElementById('discogs-autofill');
+  const status = document.getElementById('discogs-autofill-status');
+
+  if (!discogsInput || !autofillButton || !status) {
+    return;
+  }
+
+  const fillFromDiscogs = async () => {
+    const discogsId = discogsInput.value.replace(/\D+/g, '').trim();
+    if (!discogsId) {
+      status.textContent = 'Ingresa un ID de Discogs válido.';
+      return;
+    }
+
+    autofillButton.disabled = true;
+    status.textContent = 'Consultando Discogs…';
+
+    try {
+      const release = await getDiscogsReleaseData(discogsId);
+      if (!release?.discogsId) {
+        status.textContent = 'No se encontró un lanzamiento para ese ID.';
+        return;
+      }
+
+      const fieldsCompleted = [
+        setFormInputIfEmpty(document.getElementById('wishlist-artista'), release.Artista),
+        setFormInputIfEmpty(document.getElementById('wishlist-disco'), release.Disco),
+        setFormInputIfEmpty(document.getElementById('wishlist-anio'), release.Año),
+        setFormSelectIfEmpty(document.getElementById('wishlist-tipo'), release.Tipo),
+      ].filter(Boolean).length;
+
+      discogsInput.value = release.discogsId;
+      status.textContent = fieldsCompleted
+        ? `Se completaron ${fieldsCompleted} campo${fieldsCompleted === 1 ? '' : 's'} desde Discogs.`
+        : 'Los campos ya tenían información; no se reemplazaron.';
+    } catch (error) {
+      console.warn('No se pudo completar el formulario desde Discogs:', error.message);
+      status.textContent = 'No se pudo consultar Discogs. Intenta nuevamente.';
+    } finally {
+      autofillButton.disabled = false;
+    }
+  };
+
+  autofillButton.addEventListener('click', fillFromDiscogs);
+  discogsInput.addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      fillFromDiscogs();
+    }
+  });
+}
+
 async function openWishlistFormModal(initialData = {}, { title = 'Agregar a mi wishlist', confirmText = 'Guardar' } = {}) {
   if (typeof Swal === 'undefined') {
     return null;
@@ -473,6 +558,7 @@ async function openWishlistFormModal(initialData = {}, { title = 'Agregar a mi w
           <input id="wishlist-anio" class="swal2-input" placeholder="Año" autocomplete="off" value="${initialData.Año || ''}">
           <input id="wishlist-discogs" class="swal2-input" placeholder="ID Discogs" autocomplete="off" value="${initialData.discogsId || initialData.ID || ''}">
         </div>
+        ${getDiscogsAutofillControls()}
         <select id="wishlist-tipo" class="swal2-select wishlist-type-select">
           <option value="">Selecciona un tipo</option>
           ${tipoOptions}
@@ -502,6 +588,8 @@ async function openWishlistFormModal(initialData = {}, { title = 'Agregar a mi w
           discogsInput.value = discogsInput.value.replace(/\D+/g, '');
         });
       }
+
+      setupDiscogsAutofill();
     },
     preConfirm: () => {
       const Artista = document.getElementById('wishlist-artista')?.value.trim();
@@ -571,6 +659,7 @@ async function openInventoryFormModal(initialData = {}, { title, confirmText = '
           <input id="wishlist-anio" class="swal2-input" placeholder="Año" autocomplete="off" value="${initialData.Año || ''}">
           <input id="wishlist-discogs" class="swal2-input" placeholder="ID Discogs" autocomplete="off" value="${initialData.discogsId || initialData.ID || ''}">
         </div>
+        ${getDiscogsAutofillControls()}
         <select id="wishlist-tipo" class="swal2-select wishlist-type-select">
           <option value="">Selecciona un tipo</option>
           ${tipoOptions}
@@ -591,6 +680,8 @@ async function openInventoryFormModal(initialData = {}, { title, confirmText = '
           discogsInput.value = discogsInput.value.replace(/\D+/g, '');
         });
       }
+
+      setupDiscogsAutofill();
     },
     preConfirm: () => {
       const Artista = document.getElementById('wishlist-artista')?.value.trim();

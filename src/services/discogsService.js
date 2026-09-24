@@ -88,6 +88,14 @@ function getFormatData(formats = []) {
   };
 }
 
+function getArtistsData(data = {}) {
+  const artists = Array.isArray(data.artists)
+    ? data.artists.map(artist => cleanDiscogsName(artist?.name)).filter(Boolean)
+    : [];
+
+  return cleanDiscogsName(data.artists_sort || artists.join(', '));
+}
+
 function toWishlistDiscogsData(data = {}) {
   const labelData = getLabelData(data);
   const stylesData = getStylesData(data);
@@ -96,6 +104,8 @@ function toWishlistDiscogsData(data = {}) {
 
   return {
     discogsId: data.id ? String(data.id) : '',
+    Artista: getArtistsData(data),
+    Disco: String(data.title || '').trim(),
     img: data.thumb || data.cover_image || '',
     imgFULL: data.images?.[0]?.uri || data.cover_image || data.thumb || '',
     Año: data.year ? String(data.year) : '',
@@ -161,6 +171,8 @@ export async function enrichWishlistItemWithDiscogs(item) {
         return {
           ...item,
           discogsId: exact.discogsId || item.discogsId,
+          Artista: item.Artista || exact.Artista || '',
+          Disco: item.Disco || exact.Disco || '',
           img: exact.img || item.img || '',
           imgFULL: exact.imgFULL || item.imgFULL || '',
           Año: item.Año || exact.Año || '',
