@@ -113,6 +113,7 @@ function finishLoad(data) {
   completeLoad(data || []);
   libraryStore.setLoading(false);
   toggleLoader(false);
+  setLibrarySkeletonVisible(false);
 }
 
 function showLoader() {
@@ -129,12 +130,28 @@ function hideLoader() {
   }
 }
 
+export function setLibrarySkeletonVisible(show) {
+  const skeleton = document.getElementById('librarySkeleton');
+  if (skeleton) {
+    skeleton.classList.toggle('d-none', !show);
+  }
+
+  document.getElementById('libraryTextSkeleton')?.classList.toggle('d-none', !show);
+  document.getElementById('resultCount')?.classList.toggle('d-none', show);
+  document.getElementById('filtersSkeleton')?.classList.toggle('d-none', !show);
+  document.getElementById('filtersContent')?.classList.toggle('d-none', show);
+  document.getElementById('alphabetSkeleton')?.classList.toggle('d-none', !show);
+  document.getElementById('alphabet')?.classList.toggle('d-none', show);
+}
+
 export async function loadLibrary(libraryData) {
   showLoader();
   libraryStore.setLoading(true);
 
   const cachedData = Array.isArray(libraryData) ? libraryData : [];
   const isCacheEmpty = cachedData.length === 0;
+
+  setLibrarySkeletonVisible(isCacheEmpty);
 
   if (isCacheEmpty && navigator.onLine) {
     fetchLibraryFromApi()

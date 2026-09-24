@@ -7,7 +7,7 @@ import './components/LoginModal.js';
 import './components/Alphabet.js';
 import './components/Footer.js';
 
-import { loadLibrary, checkForUpdatesInBackground, fetchLibraryFromApi } from "./services/libraryService.js";
+import { loadLibrary, checkForUpdatesInBackground, fetchLibraryFromApi, setLibrarySkeletonVisible } from "./services/libraryService.js";
 import obtenerTopEstilos from "./utils/obtenerTopEstilos.js";
 import { filterLibrary } from "./utils/libraryFilters.js";
 import { closeSidebar, toggleSidebar } from "./utils/ui.js";
@@ -32,6 +32,7 @@ let backgroundCheckTimeout = null;
 let lastBackgroundCheckAt = 0;
 let globalActionMenu = null;
 let wishlistStatusFilter = 'all';
+let sessionRestoreInFlight = false;
 const WISHLIST_STATUS_OPTIONS = [
   { value: 'wishlist', label: 'Wishlist' },
   { value: 'pedido', label: 'Pedido' },
@@ -55,6 +56,34 @@ function filterWishlistItemsByStatus(items) {
   return items.filter(item => normalizeWishlistStatus(item.status) === wishlistStatusFilter);
 }
 
+async function restoreStoredSession() {
+  if (!navigator.onLine || sessionRestoreInFlight) {
+    return;
+  }
+
+  sessionRestoreInFlight = true;
+  try {
+    const session = await verifyStoredSession();
+    if (session?.valido && session.usuario) {
+      if (authStore.user !== session.usuario) {
+        authStore.login(session.usuario);
+      }
+      return;
+    }
+
+    if (!session?.pending) {
+      authStore.logout();
+      return;
+    }
+
+    setTimeout(() => restoreStoredSession(), 15000);
+  } catch {
+    // Se mantiene la caché local y se reintenta al recuperar conexión.
+  } finally {
+    sessionRestoreInFlight = false;
+  }
+}
+
 function syncGlobalActionDock() {
   const wrapper = document.getElementById('global-action-menu');
   const slot = document.getElementById('global-action-subscribe-slot');
@@ -67,21 +96,10 @@ function syncGlobalActionDock() {
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
-  // Restaurar sesión antes de abrir la caché correspondiente al usuario.
+  // Usar primero el usuario y la caché locales para no bloquear la interfaz.
   authStore.init();
-
-  if (navigator.onLine) {
-    try {
-      const session = await verifyStoredSession();
-      if (session?.valido && session.usuario) {
-        authStore.login(session.usuario);
-      } else {
-        authStore.logout();
-      }
-    } catch {
-      authStore.logout();
-    }
-  }
+  updateLoginUI();
+  modalLogin();
 
   // Inicializar el store desde localStorage/IndexedDB
   await libraryStore.init(authStore.user);
@@ -107,16 +125,21 @@ window.addEventListener("DOMContentLoaded", async () => {
   toggleAuthEditor({ isLoggedIn: authStore.isLoggedIn });
   authStore.subscribe(async ({ isLoggedIn }) => {
     toggleAuthEditor({ isLoggedIn });
+    updateLoginUI();
 
     if (isLoggedIn) {
+      setLibrarySkeletonVisible(true);
       try {
         await libraryStore.switchUser(authStore.user);
         await wishlistStore.loadMine();
         const freshData = await fetchLibraryFromApi();
+        setLibrarySkeletonVisible(false);
         libraryStore.loadData(freshData);
         await setupPushNotifications();
       } catch (error) {
         console.error('No se pudo cargar la data del usuario:', error);
+      } finally {
+        setLibrarySkeletonVisible(false);
       }
     } else {
       await libraryStore.switchUser(null);
@@ -130,11 +153,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
 
   if (authStore.isLoggedIn) {
-    try {
-      await wishlistStore.loadMine();
-    } catch (error) {
+    wishlistStore.loadMine().catch(error => {
       console.error('No se pudo cargar la wishlist inicial:', error);
-    }
+    });
   }
   
   // Configurar manejo de conexión
@@ -157,8 +178,16 @@ window.addEventListener("DOMContentLoaded", async () => {
   toggleSidebar();
   clearLibrary();
 
-  modalLogin();
   setupGlobalActionMenu();
+
+  // La verificación remota no debe impedir mostrar el contenido local.
+  restoreStoredSession();
+  window.addEventListener('online', restoreStoredSession);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      restoreStoredSession();
+    }
+  });
 
   window.addEventListener('hashchange', () => {
     closeSidebar();
@@ -857,6 +886,7 @@ async function syncRouteView() {
 
 function renderLandingPage() {
   toggleFiltersVisibility(false);
+  setLibrarySkeletonVisible(false);
   const artistBanner = document.getElementById('artistBanner');
   const grid = document.getElementById('libraryGrid');
   const counter = document.getElementById('resultCount');

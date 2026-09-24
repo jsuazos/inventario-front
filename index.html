@@ -30,7 +30,20 @@
 
 
     <div id="resultCount" class="text-white mb-3"></div>
+    <div id="libraryTextSkeleton" class="library-text-skeleton d-none" aria-hidden="true">
+      <span class="library-skeleton-line wide"></span>
+      <span class="library-skeleton-line"></span>
+    </div>
     <div id="artistBanner"></div>
+    <section id="librarySkeleton" class="library-skeleton" aria-live="polite" aria-label="Cargando biblioteca">
+      <p class="library-skeleton-label">Restaurando tu biblioteca…</p>
+      <div class="row g-4 mx-1">
+        <div class="col-xxl-2 col-xl-2 col-lg-2 col-md-4 col-sm-6 col-6"><div class="card-with-border library-skeleton-wrap"><div class="card position-relative overflow-hidden border-0 rounded-1 library-skeleton-card"><div class="library-skeleton-cover"></div><div class="library-skeleton-overlay"><div class="library-skeleton-actions"><span></span><span></span></div><div class="library-skeleton-meta"><span class="library-skeleton-line wide"></span><span class="library-skeleton-line"></span><span class="library-skeleton-badge"></span></div></div></div><div class="side-label library-skeleton-side-label"><span></span></div></div></div>
+        <div class="col-xxl-2 col-xl-2 col-lg-2 col-md-4 col-sm-6 col-6"><div class="card-with-border library-skeleton-wrap"><div class="card position-relative overflow-hidden border-0 rounded-1 library-skeleton-card"><div class="library-skeleton-cover"></div><div class="library-skeleton-overlay"><div class="library-skeleton-actions"><span></span><span></span></div><div class="library-skeleton-meta"><span class="library-skeleton-line wide"></span><span class="library-skeleton-line"></span><span class="library-skeleton-badge"></span></div></div></div><div class="side-label library-skeleton-side-label"><span></span></div></div></div>
+        <div class="col-xxl-2 col-xl-2 col-lg-2 col-md-4 col-sm-6 col-6"><div class="card-with-border library-skeleton-wrap"><div class="card position-relative overflow-hidden border-0 rounded-1 library-skeleton-card"><div class="library-skeleton-cover"></div><div class="library-skeleton-overlay"><div class="library-skeleton-actions"><span></span><span></span></div><div class="library-skeleton-meta"><span class="library-skeleton-line wide"></span><span class="library-skeleton-line"></span><span class="library-skeleton-badge"></span></div></div></div><div class="side-label library-skeleton-side-label"><span></span></div></div></div>
+        <div class="col-xxl-2 col-xl-2 col-lg-2 col-md-4 col-sm-6 col-6"><div class="card-with-border library-skeleton-wrap"><div class="card position-relative overflow-hidden border-0 rounded-1 library-skeleton-card"><div class="library-skeleton-cover"></div><div class="library-skeleton-overlay"><div class="library-skeleton-actions"><span></span><span></span></div><div class="library-skeleton-meta"><span class="library-skeleton-line wide"></span><span class="library-skeleton-line"></span><span class="library-skeleton-badge"></span></div></div></div><div class="side-label library-skeleton-side-label"><span></span></div></div></div>
+      </div>
+    </section>
     <div id="libraryGrid" class="row g-4 align-items-start mx-1"></div>
     <app-loader></app-loader> 
   </div>

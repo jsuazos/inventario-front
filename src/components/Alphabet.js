@@ -12,6 +12,9 @@ class Alphabet extends HTMLElement {
       .join('');
 
     this.innerHTML = `
+      <div id="alphabetSkeleton" class="alphabet-skeleton fixed-bottom-ios d-none" aria-hidden="true">
+        ${letras.map(() => '<span></span>').join('')}
+      </div>
       <div id="alphabet" class="alphabet-index fixed-bottom-ios pb-4">
         ${enlaces}
         <div class="badge-mobile d-none justify-content-center gap-2 mt-1">

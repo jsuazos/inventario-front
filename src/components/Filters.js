@@ -3,6 +3,13 @@ import { libraryStore } from '../state/libraryStore.js';
 class Filters extends HTMLElement {
   connectedCallback() {
     this.innerHTML = `
+        <div id="filtersSkeleton" class="filters-skeleton d-none" aria-hidden="true">
+          <span class="filters-skeleton-chip filters-skeleton-shimmer"></span>
+          <span class="filters-skeleton-chip filters-skeleton-shimmer"></span>
+          <span class="filters-skeleton-chip filters-skeleton-shimmer"></span>
+          <span class="filters-skeleton-sort filters-skeleton-shimmer"></span>
+        </div>
+        <div id="filtersContent">
         <div class="d-none d-lg-block mb-3 text-end"></div>
             <div class="search-badges d-flex flex-wrap gap-1 mb-2" style="display:none"></div>
             <div class="row mb-3 d-lg-flex align-items-center" style="gap: 0.5rem;">
@@ -38,6 +45,7 @@ class Filters extends HTMLElement {
                 </div>
               </div>
             </div>
+        </div>
     `;
 
     this.initSortDropdown();

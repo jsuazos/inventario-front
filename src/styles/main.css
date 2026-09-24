@@ -17,6 +17,206 @@ body { background: linear-gradient(to top, #000000, #000000, #222222); color: wh
 .vinyl-loader::after{ content:'';position:absolute;top:50%;left:50%;width:12px;height:12px;background:#ccc;border-radius:50%;transform:translate(-50%,-50%) }
 @keyframes spin{ 0%{ transform:rotate(0) } 100% { transform:rotate(360deg) } }
 
+.library-skeleton {
+  padding: 1rem 0;
+}
+
+.library-skeleton-label {
+  color: #aeb6bd;
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+}
+
+.library-text-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+}
+
+.library-text-skeleton .library-skeleton-line {
+  margin: 0;
+}
+
+.filters-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 58px;
+  margin-bottom: 1rem;
+}
+
+.filters-skeleton-chip,
+.filters-skeleton-sort {
+  display: block;
+  height: 42px;
+  border-radius: 16px;
+}
+
+.filters-skeleton-chip {
+  width: 120px;
+}
+
+.filters-skeleton-sort {
+  width: 118px;
+  margin-left: auto;
+}
+
+.filters-skeleton-shimmer,
+.alphabet-skeleton span {
+  background: linear-gradient(90deg, #242a2f 25%, #3a4249 37%, #242a2f 63%);
+  background-size: 400% 100%;
+  animation: library-skeleton-shimmer 1.25s ease-in-out infinite;
+}
+
+.library-skeleton-card {
+  background: #20262b;
+}
+
+.library-skeleton-cover,
+.library-skeleton-line,
+.library-skeleton-actions span,
+.library-skeleton-badge,
+.library-skeleton-side-label span {
+  background: linear-gradient(90deg, #242a2f 25%, #3a4249 37%, #242a2f 63%);
+  background-size: 400% 100%;
+  animation: library-skeleton-shimmer 1.25s ease-in-out infinite;
+}
+
+.alphabet-skeleton {
+  z-index: 1020;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 0.5rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .alphabet-skeleton {
+    position: fixed;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    width: 31px;
+    padding: 0.4rem;
+    border-radius: 0.5rem 0 0 0.5rem;
+  }
+
+  .alphabet-skeleton span {
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .alphabet-skeleton {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 7px;
+    padding: 0.6rem 0.3rem calc(0.6rem + env(safe-area-inset-bottom));
+    border-radius: 0;
+  }
+
+  .alphabet-skeleton span {
+    width: 7px;
+    height: 10px;
+    border-radius: 999px;
+  }
+
+  .filters-skeleton-chip {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .filters-skeleton-sort {
+    display: none;
+  }
+}
+
+.library-skeleton-cover {
+  height: 100%;
+  aspect-ratio: 1;
+}
+
+.library-skeleton-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent 55%);
+}
+
+.library-skeleton-actions {
+  align-self: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.library-skeleton-actions span {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+.library-skeleton-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.library-skeleton-line {
+  height: 0.7rem;
+  border-radius: 999px;
+  width: 55%;
+}
+
+.library-skeleton-line.wide {
+  width: 78%;
+}
+
+.library-skeleton-badge {
+  width: 44px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+.library-skeleton-side-label {
+  z-index: 2;
+}
+
+.library-skeleton-side-label span {
+  display: block;
+  width: 10px;
+  height: 54%;
+  border-radius: 999px;
+}
+
+@keyframes library-skeleton-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-skeleton-cover,
+  .library-skeleton-line,
+  .library-skeleton-actions span,
+  .library-skeleton-badge,
+  .library-skeleton-side-label span {
+    animation: none;
+  }
+}
+
 .sidebar-custom {
   position: fixed;
   top: 0;
