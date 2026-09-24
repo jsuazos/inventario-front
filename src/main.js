@@ -19,7 +19,6 @@ import { libraryStore } from "./state/libraryStore.js";
 import { wishlistStore } from './state/wishlistStore.js';
 import { errorHandler } from "./services/errorHandler.js";
 import { verifyStoredSession } from './services/authService.js';
-import { getActiveCacheVersion } from './services/cacheVersionService.js';
 import { setupOnlineOfflineHandlers } from './services/dbService.js';
 import { loadArtistCatalog } from './services/artistCatalogService.js';
 import { subscribe, isSubscribed, isSupported, syncExistingSubscription } from './services/pushService.js';
@@ -207,12 +206,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     } catch (error) {
       errorHandler.handleNetworkError(error, 'serviceWorkerRegistration');
     }
-  }
-
-  const cacheVersion = await getActiveCacheVersion();
-  const cacheVersionElement = document.getElementById('cache-version');
-  if (cacheVersionElement) {
-    cacheVersionElement.textContent = cacheVersion ? `Caché: ${cacheVersion}` : 'Sin caché activa';
   }
 
   // Push notifications: adaptado para iOS (requiere Home Screen + user gesture)

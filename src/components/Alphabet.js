@@ -19,7 +19,7 @@ class Alphabet extends HTMLElement {
         ${enlaces}
         <div class="badge-mobile d-none justify-content-center gap-2 mt-1">
           <div id="cacheVersionBadge-mobile" class="badge bg-info text-dark">
-            <small>Cache: <span id="cacheVersion-mobile">-</span></small>
+            <small><span id="cacheVersion-mobile">-</span></small>
           </div>
           <div id="connection-status-mobile" class="badge bg-success">
             <small>Online</small>

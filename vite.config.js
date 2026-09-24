@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 const buildReference = process.env.GITHUB_SHA?.slice(0, 7)
   || process.env.BUILD_ID
   || new Date().toISOString().replace(/\D/g, '').slice(0, 14);
-const cacheVersion = `build-${buildReference}`;
+const cacheVersion = `v${buildReference}`;
 
 export default {
   base: './',

@@ -52,7 +52,7 @@ class Navbar extends HTMLElement {
             <!-- Lado derecho: login y badges -->
             <div id="navbar-login-wrapper"><login-modal></login-modal></div>
             <div id="cacheVersionBadge" class="badge bg-info text-dark align-self-center badge-desktop">
-                <small>Cache: <span id="cacheVersion">Sin caché activa</span></small>
+                <small><span id="cacheVersion">Sin caché activa</span></small>
             </div>
             <button id="refreshLibrary" type="button" class="btn btn-outline-info btn-sm d-none" title="Actualizar biblioteca" aria-label="Actualizar biblioteca">↻</button>
             <div id="connection-status" class="badge bg-success ms-2 badge-desktop">

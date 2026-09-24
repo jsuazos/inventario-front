@@ -12,6 +12,7 @@ class AuthStore {
 
     if (user) {
       this.user = user;
+      this.notify();
       return true;
     }
     return false;

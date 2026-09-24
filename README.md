@@ -98,7 +98,7 @@ inventario-front/
 
 ## PWA
 
-La app usa `manifest.json` y `service-worker.js` para poder instalarse. La primera carga y las funciones que consultan servicios externos requieren conexión; la caché permite mantener disponibles los datos guardados localmente. Cada build genera una versión de caché con el SHA corto del commit, por lo que una publicación nueva reemplaza automáticamente el caché anterior.
+La app usa `manifest.json` y `service-worker.js` para poder instalarse. La primera carga y las funciones que consultan servicios externos requieren conexión; la caché permite mantener disponibles los datos guardados localmente. Cada build genera una versión `v<sha-corto-del-commit>`, por lo que una publicación nueva reemplaza automáticamente el caché anterior.
 
 ## Publicación en GitHub Pages
 
