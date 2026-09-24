@@ -10,7 +10,7 @@ const APP_SHELL_URLS = [
 
 async function precacheApplicationShell() {
   const cache = await caches.open(CACHE_NAME);
-  await cache.addAll(APP_SHELL_URLS);
+  await Promise.allSettled(APP_SHELL_URLS.map(url => cache.add(url)));
 
   const indexResponse = await fetch('./', { cache: 'reload' });
   if (!indexResponse.ok) {
@@ -25,7 +25,7 @@ async function precacheApplicationShell() {
     .filter(path => !path.startsWith('http') && !path.startsWith('data:'));
   const assetUrls = [...new Set(assetPaths.map(path => new URL(path, self.location.href).href))];
 
-  await Promise.all(assetUrls.map(url => cache.add(url)));
+  await Promise.allSettled(assetUrls.map(url => cache.add(url)));
 }
 
 self.addEventListener('install', event => {
