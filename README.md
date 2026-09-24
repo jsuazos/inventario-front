@@ -98,7 +98,11 @@ inventario-front/
 
 ## PWA
 
-La app usa `manifest.json` y `service-worker.js` para poder instalarse. La primera carga y las funciones que consultan servicios externos requieren conexión; la caché permite mantener disponibles los datos guardados localmente.
+La app usa `manifest.json` y `service-worker.js` para poder instalarse. La primera carga y las funciones que consultan servicios externos requieren conexión; la caché permite mantener disponibles los datos guardados localmente. Cada build genera una versión de caché con el SHA corto del commit, por lo que una publicación nueva reemplaza automáticamente el caché anterior.
+
+## Publicación en GitHub Pages
+
+El workflow [deploy-pages.yml](./.github/workflows/deploy-pages.yml) construye Vite y publica `dist/` al hacer push a `main`. Antes del primer despliegue, selecciona **GitHub Actions** como fuente en **Settings → Pages** del repositorio. Así GitHub Pages sirve el build generado y no los archivos fuente.
 
 ## Backend y documentación
 

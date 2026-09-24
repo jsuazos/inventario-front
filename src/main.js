@@ -200,7 +200,10 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   if ("serviceWorker" in navigator) {
     try {
-      navigator.serviceWorker.register("./service-worker.js");
+      const registration = await navigator.serviceWorker.register('./service-worker.js', {
+        updateViaCache: 'none',
+      });
+      registration.update().catch(() => {});
     } catch (error) {
       errorHandler.handleNetworkError(error, 'serviceWorkerRegistration');
     }

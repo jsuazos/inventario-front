@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2.0.1';
+const CACHE_VERSION = '__BUILD_CACHE_VERSION__';
 const CACHE_NAME = `musica-inventario-${CACHE_VERSION}`;
 const APP_SHELL_URLS = [
   './offline.html',
@@ -40,7 +40,7 @@ self.addEventListener('activate', event => {
     caches.keys().then(cacheNames =>
       Promise.all(
         cacheNames
-          .filter(name => name !== CACHE_NAME)
+          .filter(name => name.startsWith('musica-inventario-') && name !== CACHE_NAME)
           .map(name => caches.delete(name))
       )
     ).then(() => self.clients.claim())
